@@ -15,7 +15,7 @@ export function findEarliestSlot(
     (a.startTime?.getTime() || 0) - (b.startTime?.getTime() || 0)
   );
   
-  let proposedStart = startTime;
+  let proposedStart = new Date(startTime.getTime()); // Create new Date instance
   let proposedEnd = new Date(proposedStart.getTime() + task.duration * 3600000);
   
   for (const scheduledTask of resourceTasks) {

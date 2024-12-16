@@ -15,6 +15,7 @@ export function rescheduleAll(tasks: Task[]): Task[] {
   console.log('Tasks after priority sort:', prioritizedTasks.map(t => t.id));
   
   const scheduledTasks: Task[] = [];
+  const baseDate = new Date(); // Use current time as base
   
   // Schedule tasks in order, ensuring all dependencies are met
   for (const task of prioritizedTasks) {
@@ -24,17 +25,23 @@ export function rescheduleAll(tasks: Task[]): Task[] {
     }
     
     // Wait for all dependencies to be scheduled
-    const dependencyEndTimes = task.dependencies.map(depId => {
-      const depTask = scheduledTasks.find(t => t.id === depId);
-      if (!depTask?.endTime) {
-        console.warn(`Warning: Dependency ${depId} for task ${task.id} not yet scheduled`);
-        return new Date();
-      }
-      return depTask.endTime;
-    });
+    const dependencyEndTimes = task.dependencies
+      .map(depId => {
+        const depTask = scheduledTasks.find(t => t.id === depId);
+        if (!depTask?.endTime) {
+          console.warn(`Warning: Dependency ${depId} for task ${task.id} not yet scheduled`);
+          return baseDate;
+        }
+        return depTask.endTime;
+      })
+      .filter(date => date !== null) as Date[];
     
     // Use the latest dependency end time as the earliest possible start
-    const earliestStart = new Date(Math.max(...dependencyEndTimes.map(d => d.getTime())));
+    // If no dependencies or all are unscheduled, use baseDate
+    const earliestStart = dependencyEndTimes.length > 0
+      ? new Date(Math.max(...dependencyEndTimes.map(d => d.getTime())))
+      : baseDate;
+      
     console.log(`Earliest possible start for ${task.id}: ${earliestStart.toISOString()}`);
     
     const startTime = scheduleTask(task, scheduledTasks, earliestStart);
