@@ -27,21 +27,27 @@ const DhtmlxGantt = ({ tasks }: DhtmlxGanttProps) => {
     data: tasks.map(task => ({
       id: task.id,
       text: task.name,
-      start_date: task.startTime,
-      duration: task.duration,
-      parent: task.dependencies[0], // First dependency is treated as parent
+      start_date: task.startTime || new Date(),
+      duration: task.duration || 1,
+      parent: task.dependencies && task.dependencies.length > 0 ? task.dependencies[0] : null,
       progress: task.status === 'completed' ? 1 : 0,
       type: task.type,
       open: true
     })),
-    links: tasks.flatMap(task => 
-      task.dependencies.map(depId => ({
+    links: tasks.reduce((acc, task) => {
+      if (!task.dependencies || !Array.isArray(task.dependencies)) {
+        return acc;
+      }
+      
+      const taskLinks = task.dependencies.map(depId => ({
         id: `${task.id}_${depId}`,
         source: depId,
         target: task.id,
         type: '0'
-      }))
-    )
+      }));
+      
+      return [...acc, ...taskLinks];
+    }, [] as Array<{id: string; source: string; target: string; type: string}>)
   };
 
   console.log('Transformed Gantt tasks:', ganttTasks);
