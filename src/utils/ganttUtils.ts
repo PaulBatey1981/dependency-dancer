@@ -15,30 +15,30 @@ export const getTimeScale = (viewMode: 'day' | 'week' | 'month') => {
 
 export const calculateTaskPosition = (startTime: Date, earliestStart: Date, timeScale: number) => {
   const hoursFromStart = (startTime.getTime() - earliestStart.getTime()) / (1000 * 60 * 60);
-  const position = (hoursFromStart / timeScale) * 100;
-  return position;
+  return (hoursFromStart / timeScale) * 100;
 };
 
 export const calculateTaskWidth = (duration: number, timeScale: number) => {
-  const width = (duration / timeScale) * 100;
-  return width;
+  return (duration / timeScale) * 100;
 };
 
-// Get tasks that depend on this task (children)
+// Get child tasks (tasks that this task depends on)
 const getChildTasks = (parentTask: Task, tasks: Task[]): Task[] => {
-  return tasks.filter(task => {
-    // A task is a child if it depends on this parent task
-    return task.dependencies.includes(parentTask.id);
-  });
+  console.log(`Getting children for task ${parentTask.id} with dependencies:`, parentTask.dependencies);
+  return tasks.filter(task => parentTask.dependencies.includes(task.id));
 };
 
-// Get the parent task of this task
+// Get parent tasks (tasks that depend on this task)
 const getParentTask = (task: Task, tasks: Task[]): Task | undefined => {
-  // If task has no dependencies, it has no parent
-  if (!task.dependencies.length) return undefined;
-  
-  // Find the task that this task depends on
-  return tasks.find(t => task.dependencies.includes(t.id));
+  console.log(`Finding parent for task ${task.id}`);
+  // Find a task that lists this task in its dependencies
+  const parent = tasks.find(t => t.dependencies.includes(task.id));
+  if (parent) {
+    console.log(`Found parent ${parent.id} for task ${task.id}`);
+  } else {
+    console.log(`No parent found for task ${task.id}`);
+  }
+  return parent;
 };
 
 // Check if a task should be visible based on expansion state
