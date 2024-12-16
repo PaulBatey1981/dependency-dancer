@@ -24,8 +24,15 @@ const GanttTaskList = ({ tasks, expandedItems, toggleExpand }: GanttTaskListProp
 
   const getChildTasks = (parentId: string): Task[] => {
     console.log(`Getting children for task ${parentId}`);
-    const children = tasks.filter(task => task.dependencies.includes(parentId));
-    console.log(`Found ${children.length} children for task ${parentId}`);
+    // Find the parent task first
+    const parentTask = tasks.find(t => t.id === parentId);
+    if (!parentTask) {
+      console.log(`Parent task ${parentId} not found`);
+      return [];
+    }
+    // Get all tasks that the parent depends on
+    const children = tasks.filter(task => parentTask.dependencies.includes(task.id));
+    console.log(`Found ${children.length} children for task ${parentId}:`, children.map(c => c.id));
     return children;
   };
 
