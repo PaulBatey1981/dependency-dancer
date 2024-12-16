@@ -25,6 +25,11 @@ export default defineConfig(({ mode }) => ({
   build: {
     commonjsOptions: {
       include: [/@dhtmlx\/trial-react-gantt/]
+    },
+    rollupOptions: {
+      external: [
+        '@dhtmlx/trial-react-gantt/codebase/dhtmlxgantt.css'
+      ]
     }
   }
 }));
