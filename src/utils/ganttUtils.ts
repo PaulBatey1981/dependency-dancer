@@ -31,7 +31,6 @@ const getChildTasks = (parentTask: Task, tasks: Task[]): Task[] => {
 // Get parent tasks (tasks that depend on this task)
 const getParentTask = (task: Task, tasks: Task[]): Task | undefined => {
   console.log(`Finding parent for task ${task.id}`);
-  // Find a task that lists this task in its dependencies
   const parent = tasks.find(t => t.dependencies.includes(task.id));
   if (parent) {
     console.log(`Found parent ${parent.id} for task ${task.id}`);
@@ -109,6 +108,7 @@ export const getTaskLevel = (task: Task, tasks: Task[]): number => {
     currentTask = parent;
   }
 
+  console.log(`Task ${task.id} is at level ${level}`);
   return level;
 };
 
@@ -132,10 +132,12 @@ export const getVerticalPosition = (
   const lineItemOffsets = getLineItemOffsets(tasks);
   const baseOffset = lineItemOffsets.get(rootLineItem.id) || 0;
 
+  // Calculate level offset based on hierarchy depth
+  const hierarchyLevel = getTaskLevel(task, tasks);
+  const levelOffset = hierarchyLevel * (rowHeight * 1.5); // Increased spacing for hierarchy levels
+
   // For line items, position them at their base offset
   if (task.type === 'lineitem') {
-    const lineItems = tasks.filter(t => t.type === 'lineitem');
-    const index = lineItems.findIndex(t => t.id === task.id);
     const position = baseOffset + verticalOffset;
     console.log(`Line item ${task.id} positioned at ${position}px`);
     return position;
@@ -145,16 +147,22 @@ export const getVerticalPosition = (
   const parent = getParentTask(task, tasks);
   if (!parent) {
     console.log(`Task ${task.id} has no parent - using base offset`);
-    return baseOffset + verticalOffset;
+    return baseOffset + verticalOffset + levelOffset;
   }
 
   // Get all visible siblings (including this task) that share the same parent
   const siblings = getChildTasks(parent, tasks)
     .filter(sibling => isTaskVisible(sibling, tasks, expandedItems))
-    .sort((a, b) => tasks.indexOf(a) - tasks.indexOf(b));
+    .sort((a, b) => {
+      // Sort by start time if available, otherwise by task index
+      if (a.startTime && b.startTime) {
+        return a.startTime.getTime() - b.startTime.getTime();
+      }
+      return tasks.indexOf(a) - tasks.indexOf(b);
+    });
   
   const siblingIndex = siblings.findIndex(s => s.id === task.id);
-  const position = baseOffset + verticalOffset + ((siblingIndex + 1) * rowHeight);
+  const position = baseOffset + verticalOffset + levelOffset + (siblingIndex * rowHeight);
   
   console.log(`Child task ${task.id} positioned at ${position}px under parent ${parent.id}`);
   return position;
