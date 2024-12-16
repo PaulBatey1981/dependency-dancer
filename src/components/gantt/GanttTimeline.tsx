@@ -116,7 +116,7 @@ const GanttTimeline = ({ tasks, zoomLevel, viewMode, earliestStart, expandedItem
   return (
     <div 
       className="relative bg-white min-h-full w-full"
-      style={{ paddingTop: '0.5rem' }}
+      style={{ paddingTop: '2rem' }} // Added padding to align with task list
     >
       {/* Grid lines */}
       {getGridLines().map((position, i) => (

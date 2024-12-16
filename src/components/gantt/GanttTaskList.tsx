@@ -83,7 +83,7 @@ const GanttTaskList = ({ tasks, expandedItems, toggleExpand }: GanttTaskListProp
   console.log(`Found ${lineItems.length} line items`);
 
   return (
-    <div className="min-h-full bg-white">
+    <div className="min-h-full bg-white pt-8"> {/* Added pt-8 for top padding to align with timeline content */}
       {lineItems.map(task => renderTask(task))}
     </div>
   );
