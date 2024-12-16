@@ -39,13 +39,17 @@ const GanttTimeline = ({ tasks, zoomLevel, viewMode, earliestStart }: GanttTimel
     new Date(t.startTime!.getTime() + t.duration * 3600000).getTime()
   )));
 
-  const totalHours = (latestEnd.getTime() - earliestStart.getTime()) / (1000 * 60 * 60);
-  const timelineWidth = totalHours / zoomLevel;
+  const totalHours = Math.max(
+    (latestEnd.getTime() - earliestStart.getTime()) / (1000 * 60 * 60),
+    viewMode === 'day' ? 24 : viewMode === 'week' ? 168 : 720 // Minimum width based on view mode
+  );
+  
+  const timelineWidth = Math.max(totalHours / zoomLevel, 1000); // Ensure minimum width
 
   return (
     <div 
-      className="relative min-w-full"
-      style={{ width: `${timelineWidth}px`, height: '100%' }}
+      className="relative min-w-full h-full"
+      style={{ width: `${timelineWidth}px` }}
     >
       {/* Grid lines */}
       {Array.from({ length: Math.ceil(totalHours) }).map((_, i) => (
