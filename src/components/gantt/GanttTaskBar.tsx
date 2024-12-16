@@ -40,19 +40,24 @@ const GanttTaskBar = ({
   return (
     <HoverCard>
       <HoverCardTrigger>
-        <div
-          className={`absolute rounded ${getTaskColor(task.type)} opacity-80 cursor-pointer animate-task-appear ${
-            task.isFixed ? 'border-2 border-task-fixed' : ''
-          }`}
-          style={{
-            left: `${position}%`,
-            width: `${width}%`,
-            top: `${verticalPosition + 4}px`, // Add 4px offset to center the bar
-            marginLeft: `${level * indentWidth}px`,
-            height: `${taskHeight - 8}px`, // Reduce height by 8px (4px top and bottom) for better alignment
-          }}
-        >
-          <span className="text-xs text-white p-1 truncate block">
+        <div className="absolute" style={{
+          left: `${position}%`,
+          top: `${verticalPosition + 4}px`,
+          marginLeft: `${level * indentWidth}px`,
+        }}>
+          <div
+            className={`relative ${getTaskColor(task.type)} opacity-80 rounded ${
+              task.isFixed ? 'border-2 border-task-fixed' : ''
+            }`}
+            style={{
+              width: `${width}%`,
+              height: `${taskHeight - 8}px`,
+            }}
+          />
+          <span 
+            className="absolute left-2 top-1/2 -translate-y-1/2 text-xs text-black whitespace-nowrap"
+            style={{ zIndex: 10 }}
+          >
             {task.name}
           </span>
         </div>
