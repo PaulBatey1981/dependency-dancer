@@ -12,7 +12,7 @@ const Index = () => {
   const deadline = new Date(baseDate);
   
   const [tasks, setTasks] = useState<Task[]>([
-    // Line Item Level
+    // Line Item Level (only this level has explicit priority)
     {
       id: 'final_assembly',
       name: 'Final Assembly - Magnetic Wrap Box',
@@ -20,12 +20,12 @@ const Index = () => {
       resource: 'bench',
       duration: 3, // 180 minutes = 3 hours
       status: 'pending',
-      dependencies: ['wrap_case', 'wrap_base_tray'],
+      dependencies: ['wrap_case', 'wrap_base_tray', 'line_case'],
       priority: 3,
       deadline: deadline
     },
 
-    // Component Level - Case
+    // Component Level - Case (no explicit priority)
     {
       id: 'wrap_case',
       name: 'Wrap Case',
@@ -33,8 +33,7 @@ const Index = () => {
       resource: 'gluing_machine',
       duration: 1.17, // 70 minutes
       status: 'pending',
-      dependencies: ['line_case'],
-      priority: 2
+      dependencies: ['case_wrap_cut', 'case_board_insert', 'case_liner_cut'],
     },
     {
       id: 'line_case',
@@ -43,11 +42,10 @@ const Index = () => {
       resource: 'gluing_machine',
       duration: 0.67, // 40 minutes
       status: 'pending',
-      dependencies: ['case_wrap_cut', 'case_board_insert', 'case_liner_cut'],
-      priority: 2
+      dependencies: ['wrap_case'],
     },
 
-    // Element Level - Case Elements
+    // Element Level - Case Elements (no explicit priority)
     {
       id: 'case_wrap_print',
       name: 'Case Wrap - Print',
@@ -56,7 +54,6 @@ const Index = () => {
       duration: 0.42, // 25 minutes
       status: 'pending',
       dependencies: [],
-      priority: 1
     },
     {
       id: 'case_wrap_laminate',
@@ -66,7 +63,6 @@ const Index = () => {
       duration: 0.33, // 20 minutes
       status: 'pending',
       dependencies: ['case_wrap_print'],
-      priority: 1
     },
     {
       id: 'case_wrap_cut',
@@ -76,7 +72,6 @@ const Index = () => {
       duration: 0.33, // 20 minutes
       status: 'pending',
       dependencies: ['case_wrap_laminate'],
-      priority: 1
     },
     {
       id: 'case_board_cut',
@@ -86,7 +81,6 @@ const Index = () => {
       duration: 0.5, // 30 minutes
       status: 'pending',
       dependencies: [],
-      priority: 1
     },
     {
       id: 'case_board_insert',
@@ -96,7 +90,6 @@ const Index = () => {
       duration: 0.5, // 30 minutes
       status: 'pending',
       dependencies: ['case_board_cut'],
-      priority: 1
     },
     {
       id: 'case_liner_laminate',
@@ -106,7 +99,6 @@ const Index = () => {
       duration: 0.33, // 20 minutes
       status: 'pending',
       dependencies: [],
-      priority: 1
     },
     {
       id: 'case_liner_cut',
@@ -116,10 +108,9 @@ const Index = () => {
       duration: 0.33, // 20 minutes
       status: 'pending',
       dependencies: ['case_liner_laminate'],
-      priority: 1
     },
 
-    // Component Level - Base Tray
+    // Component Level - Base Tray (no explicit priority)
     {
       id: 'wrap_base_tray',
       name: 'Wrap Base Tray',
@@ -128,10 +119,9 @@ const Index = () => {
       duration: 2, // 120 minutes
       status: 'pending',
       dependencies: ['base_tray_board_corner', 'base_tray_wrap_cut'],
-      priority: 2
     },
 
-    // Element Level - Base Tray Elements
+    // Element Level - Base Tray Elements (no explicit priority)
     {
       id: 'base_tray_board_cut',
       name: 'Base Tray Board - Cut',
@@ -140,7 +130,6 @@ const Index = () => {
       duration: 1, // 60 minutes
       status: 'pending',
       dependencies: [],
-      priority: 1
     },
     {
       id: 'base_tray_board_drill',
@@ -150,7 +139,6 @@ const Index = () => {
       duration: 0.5, // 30 minutes
       status: 'pending',
       dependencies: ['base_tray_board_cut'],
-      priority: 1
     },
     {
       id: 'base_tray_board_magnets',
@@ -160,7 +148,6 @@ const Index = () => {
       duration: 1, // 60 minutes
       status: 'pending',
       dependencies: ['base_tray_board_drill'],
-      priority: 1
     },
     {
       id: 'base_tray_board_corner',
@@ -170,7 +157,6 @@ const Index = () => {
       duration: 0.5, // 30 minutes
       status: 'pending',
       dependencies: ['base_tray_board_magnets'],
-      priority: 1
     },
     {
       id: 'base_tray_wrap_print',
@@ -180,7 +166,6 @@ const Index = () => {
       duration: 0.33, // 20 minutes
       status: 'pending',
       dependencies: [],
-      priority: 1
     },
     {
       id: 'base_tray_wrap_laminate',
@@ -190,7 +175,6 @@ const Index = () => {
       duration: 0.25, // 15 minutes
       status: 'pending',
       dependencies: ['base_tray_wrap_print'],
-      priority: 1
     },
     {
       id: 'base_tray_wrap_cut',
@@ -200,7 +184,6 @@ const Index = () => {
       duration: 0.75, // 45 minutes
       status: 'pending',
       dependencies: ['base_tray_wrap_laminate'],
-      priority: 1
     }
   ]);
 
