@@ -21,7 +21,7 @@ export function rescheduleAll(tasks: Task[]): Task[] {
   for (const task of prioritizedTasks) {
     console.log(`Processing task: ${task.id}`);
     
-    if (task.status === 'fixed') {
+    if (task.isFixed) {
       console.log(`Task ${task.id} is fixed, keeping existing schedule`);
       scheduledTasks.push(task);
       continue;
