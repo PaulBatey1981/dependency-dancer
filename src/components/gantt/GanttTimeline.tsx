@@ -6,7 +6,6 @@ import {
   calculateTaskPosition,
   calculateTaskWidth,
   getTaskLevel,
-  getVerticalPosition,
   getGridLines,
 } from '@/utils/ganttUtils';
 
@@ -29,6 +28,7 @@ const GanttTimeline = ({
   const INDENT_WIDTH = 24;
   const TASK_HEIGHT = 32;
   const VERTICAL_OFFSET = 4;
+  const LINE_ITEM_SPACING = 500; // Spacing between line items
 
   const timeScale = getTimeScale(viewMode);
   const gridLines = getGridLines(viewMode);
@@ -43,23 +43,71 @@ const GanttTimeline = ({
   // Create a map to store the base vertical position for each line item
   const lineItemPositions = new Map<string, number>();
   lineItems.forEach((lineItem, index) => {
-    lineItemPositions.set(lineItem.id, index * 500); // 500px spacing between line items
+    const position = index * LINE_ITEM_SPACING;
+    lineItemPositions.set(lineItem.id, position);
+    console.log(`Set offset ${position}px for line item ${lineItem.id}`);
   });
 
-  // Helper function to find the line item for a task
-  function getLineItem(task: Task, allTasks: Task[]): Task | null {
+  // Helper function to find the line item for a task by traversing up the dependency tree
+  function getLineItem(task: Task): Task | null {
     if (task.type === 'lineitem') return task;
     
-    const parent = allTasks.find(t => t.dependencies.includes(task.id));
+    // Find the task that has this task as a dependency (parent)
+    const parent = tasks.find(t => t.dependencies.includes(task.id));
     if (!parent) return null;
     
-    return getLineItem(parent, allTasks);
+    return getLineItem(parent);
   }
 
-  // Sort tasks to match the task list order
+  // Calculate vertical position based on line item and task hierarchy
+  const getVerticalPosition = (task: Task): number => {
+    console.log(`Calculating vertical position for task ${task.id}`);
+    
+    // Get the root line item for this task
+    const lineItem = getLineItem(task);
+    if (!lineItem) {
+      console.warn(`No line item found for task ${task.id}`);
+      return 0;
+    }
+
+    // Get the base position for this line item
+    const lineItemOffset = lineItemPositions.get(lineItem.id) || 0;
+    
+    // Calculate additional offset based on task's level in the hierarchy
+    const level = getTaskLevel(task, tasks);
+    const levelOffset = level * ROW_HEIGHT;
+
+    // Get all visible siblings under the same parent that share the same line item
+    const parent = tasks.find(t => t.dependencies.includes(task.id));
+    if (!parent) {
+      // This is a top-level task
+      return lineItemOffset + VERTICAL_OFFSET;
+    }
+
+    // Get visible siblings that belong to the same line item
+    const siblings = parent.dependencies
+      .map(depId => tasks.find(t => t.id === depId))
+      .filter((t): t is Task => t !== undefined)
+      .filter(sibling => getLineItem(sibling)?.id === lineItem.id)
+      .sort((a, b) => {
+        if (a.startTime && b.startTime) {
+          return a.startTime.getTime() - b.startTime.getTime();
+        }
+        return 0;
+      });
+
+    const siblingIndex = siblings.findIndex(s => s.id === task.id);
+    const siblingOffset = siblingIndex * ROW_HEIGHT;
+
+    const position = lineItemOffset + levelOffset + siblingOffset + VERTICAL_OFFSET;
+    console.log(`Task ${task.id} positioned at ${position}px`);
+    return position;
+  };
+
+  // Sort tasks to maintain consistent order
   const sortedTasks = tasks.slice().sort((a, b) => {
-    const aLineItem = getLineItem(a, tasks);
-    const bLineItem = getLineItem(b, tasks);
+    const aLineItem = getLineItem(a);
+    const bLineItem = getLineItem(b);
     
     if (aLineItem && bLineItem) {
       // Sort by line item ID first
@@ -104,13 +152,11 @@ const GanttTimeline = ({
         
         const position = calculateTaskPosition(task.startTime, earliestStart, timeScale);
         const width = calculateTaskWidth(task.duration, timeScale);
-        const verticalPosition = getVerticalPosition(task, tasks, expandedItems, ROW_HEIGHT, VERTICAL_OFFSET);
+        const verticalPosition = getVerticalPosition(task);
         const level = getTaskLevel(task, tasks);
-        
-        if (verticalPosition < 0) return null;
 
         console.log(`Rendering task ${task.id} at vertical position ${verticalPosition}px`);
-
+        
         return (
           <GanttTaskBar
             key={task.id}
