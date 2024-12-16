@@ -7,45 +7,211 @@ import { Button } from '@/components/ui/button';
 import { toast } from '@/components/ui/use-toast';
 
 const Index = () => {
+  // Set base date for scheduling (2024-12-20 10:00:00 deadline)
+  const baseDate = new Date('2024-12-20T10:00:00');
+  const deadline = new Date(baseDate);
+  
   const [tasks, setTasks] = useState<Task[]>([
+    // Line Item Level
     {
-      id: '1',
-      name: 'Line Item A',
+      id: 'final_assembly',
+      name: 'Final Assembly - Magnetic Wrap Box',
       type: 'lineitem',
-      resource: 'machine1',
-      duration: 4,
+      resource: 'bench',
+      duration: 3, // 180 minutes = 3 hours
+      status: 'pending',
+      dependencies: ['wrap_case', 'wrap_base_tray'],
+      priority: 3,
+      deadline: deadline
+    },
+
+    // Component Level - Case
+    {
+      id: 'wrap_case',
+      name: 'Wrap Case',
+      type: 'component',
+      resource: 'gluing_machine',
+      duration: 1.17, // 70 minutes
+      status: 'pending',
+      dependencies: ['line_case'],
+      priority: 2
+    },
+    {
+      id: 'line_case',
+      name: 'Line Case',
+      type: 'component',
+      resource: 'gluing_machine',
+      duration: 0.67, // 40 minutes
+      status: 'pending',
+      dependencies: ['case_wrap_cut', 'case_board_insert', 'case_liner_cut'],
+      priority: 2
+    },
+
+    // Element Level - Case Elements
+    {
+      id: 'case_wrap_print',
+      name: 'Case Wrap - Print',
+      type: 'element',
+      resource: 'konica',
+      duration: 0.42, // 25 minutes
       status: 'pending',
       dependencies: [],
-      priority: 3,
-      deadline: new Date(Date.now() + 24 * 3600000), // 24 hours from now
+      priority: 1
     },
     {
-      id: '2',
-      name: 'Component B',
-      type: 'component',
-      resource: 'machine2',
-      duration: 2,
-      status: 'pending',
-      dependencies: ['1'],
-      priority: 2,
-      deadline: new Date(Date.now() + 48 * 3600000), // 48 hours from now
-    },
-    {
-      id: '3',
-      name: 'Element C',
+      id: 'case_wrap_laminate',
+      name: 'Case Wrap - Laminate',
       type: 'element',
-      resource: 'machine1',
-      duration: 3,
+      resource: 'dk_europa',
+      duration: 0.33, // 20 minutes
       status: 'pending',
-      dependencies: ['2'],
-      priority: 1,
-      deadline: new Date(Date.now() + 72 * 3600000), // 72 hours from now
+      dependencies: ['case_wrap_print'],
+      priority: 1
     },
+    {
+      id: 'case_wrap_cut',
+      name: 'Case Wrap - Cut',
+      type: 'element',
+      resource: 'zund_m800',
+      duration: 0.33, // 20 minutes
+      status: 'pending',
+      dependencies: ['case_wrap_laminate'],
+      priority: 1
+    },
+    {
+      id: 'case_board_cut',
+      name: 'Case Board - Cut',
+      type: 'element',
+      resource: 'zund_m800',
+      duration: 0.5, // 30 minutes
+      status: 'pending',
+      dependencies: [],
+      priority: 1
+    },
+    {
+      id: 'case_board_insert',
+      name: 'Case Board - Insert Receivers',
+      type: 'element',
+      resource: 'bench',
+      duration: 0.5, // 30 minutes
+      status: 'pending',
+      dependencies: ['case_board_cut'],
+      priority: 1
+    },
+    {
+      id: 'case_liner_laminate',
+      name: 'Case Liner - Laminate',
+      type: 'element',
+      resource: 'dk_europa',
+      duration: 0.33, // 20 minutes
+      status: 'pending',
+      dependencies: [],
+      priority: 1
+    },
+    {
+      id: 'case_liner_cut',
+      name: 'Case Liner - Cut',
+      type: 'element',
+      resource: 'zund_m800',
+      duration: 0.33, // 20 minutes
+      status: 'pending',
+      dependencies: ['case_liner_laminate'],
+      priority: 1
+    },
+
+    // Component Level - Base Tray
+    {
+      id: 'wrap_base_tray',
+      name: 'Wrap Base Tray',
+      type: 'component',
+      resource: 'gluing_machine',
+      duration: 2, // 120 minutes
+      status: 'pending',
+      dependencies: ['base_tray_board_corner', 'base_tray_wrap_cut'],
+      priority: 2
+    },
+
+    // Element Level - Base Tray Elements
+    {
+      id: 'base_tray_board_cut',
+      name: 'Base Tray Board - Cut',
+      type: 'element',
+      resource: 'zund_m800',
+      duration: 1, // 60 minutes
+      status: 'pending',
+      dependencies: [],
+      priority: 1
+    },
+    {
+      id: 'base_tray_board_drill',
+      name: 'Base Tray Board - Drill Holes',
+      type: 'element',
+      resource: 'magnet_drill',
+      duration: 0.5, // 30 minutes
+      status: 'pending',
+      dependencies: ['base_tray_board_cut'],
+      priority: 1
+    },
+    {
+      id: 'base_tray_board_magnets',
+      name: 'Base Tray Board - Insert Magnets',
+      type: 'element',
+      resource: 'bench',
+      duration: 1, // 60 minutes
+      status: 'pending',
+      dependencies: ['base_tray_board_drill'],
+      priority: 1
+    },
+    {
+      id: 'base_tray_board_corner',
+      name: 'Base Tray Board - Corner Tape',
+      type: 'element',
+      resource: 'corner_taper',
+      duration: 0.5, // 30 minutes
+      status: 'pending',
+      dependencies: ['base_tray_board_magnets'],
+      priority: 1
+    },
+    {
+      id: 'base_tray_wrap_print',
+      name: 'Base Tray Wrap - Print',
+      type: 'element',
+      resource: 'konica',
+      duration: 0.33, // 20 minutes
+      status: 'pending',
+      dependencies: [],
+      priority: 1
+    },
+    {
+      id: 'base_tray_wrap_laminate',
+      name: 'Base Tray Wrap - Laminate',
+      type: 'element',
+      resource: 'dk_europa',
+      duration: 0.25, // 15 minutes
+      status: 'pending',
+      dependencies: ['base_tray_wrap_print'],
+      priority: 1
+    },
+    {
+      id: 'base_tray_wrap_cut',
+      name: 'Base Tray Wrap - Cut',
+      type: 'element',
+      resource: 'zund_m800',
+      duration: 0.75, // 45 minutes
+      status: 'pending',
+      dependencies: ['base_tray_wrap_laminate'],
+      priority: 1
+    }
   ]);
 
   const resources: Resource[] = [
-    { id: 'machine1', name: 'Machine 1', capacity: 1 },
-    { id: 'machine2', name: 'Machine 2', capacity: 1 },
+    { id: 'bench', name: 'Bench Work', capacity: 1 },
+    { id: 'konica', name: 'Konica Printer', capacity: 1 },
+    { id: 'dk_europa', name: 'D&K Europa', capacity: 1 },
+    { id: 'zund_m800', name: 'Zund M800', capacity: 1 },
+    { id: 'gluing_machine', name: 'Gluing Machine', capacity: 1 },
+    { id: 'magnet_drill', name: 'Magnet Drill', capacity: 1 },
+    { id: 'corner_taper', name: 'Corner Taper', capacity: 1 }
   ];
 
   const handleReschedule = () => {
@@ -76,7 +242,7 @@ const Index = () => {
 
   return (
     <div className="container mx-auto py-8">
-      <h1 className="text-3xl font-bold mb-8">Production Schedule</h1>
+      <h1 className="text-3xl font-bold mb-8">Magnetic Wrap Box Production Schedule</h1>
       
       <div className="mb-6">
         <Button onClick={handleReschedule} className="mr-4">
