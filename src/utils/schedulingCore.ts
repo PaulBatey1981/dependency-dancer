@@ -6,10 +6,15 @@ import { sortByPriority } from './priorityUtils';
 export function rescheduleAll(tasks: Task[]): Task[] {
   console.log('Starting full reschedule');
   
+  // First do topological sort to respect dependencies
   const sortedTasks = topologicalSort(tasks);
+  
+  // Then adjust order based on priorities (only for line items)
   const prioritizedTasks = sortByPriority(sortedTasks);
+  
   const scheduledTasks: Task[] = [];
   
+  // Schedule tasks in order
   for (const task of prioritizedTasks) {
     if (task.status === 'fixed') {
       scheduledTasks.push(task);
