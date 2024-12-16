@@ -11,7 +11,7 @@ const GanttChart = ({ tasks, resources }: GanttChartProps) => {
 
   return (
     <div className="w-full border rounded-lg bg-white shadow-sm">
-      <GanttTest />
+      <GanttTest tasks={tasks} />
     </div>
   );
 };

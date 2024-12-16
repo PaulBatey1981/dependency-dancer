@@ -1,30 +1,34 @@
 import React from 'react';
 import Timeline from 'react-gantt-timeline';
 import { Card } from '@/components/ui/card';
+import { Task } from '@/types/scheduling';
 
-const GanttTest = () => {
-  // Sample data structure for react-gantt-timeline
-  const data = {
-    data: [
-      {
-        id: 1,
-        start: new Date(2024, 0, 1),
-        end: new Date(2024, 0, 5),
-        name: 'Task 1',
-      },
-      {
-        id: 2,
-        start: new Date(2024, 0, 3),
-        end: new Date(2024, 0, 8),
-        name: 'Task 2',
-      },
-      {
-        id: 3,
-        start: new Date(2024, 0, 6),
-        end: new Date(2024, 0, 10),
-        name: 'Task 3',
-      },
-    ],
+interface GanttTestProps {
+  tasks: Task[];
+}
+
+const GanttTest = ({ tasks }: GanttTestProps) => {
+  // Transform our tasks into the format expected by react-gantt-timeline
+  const transformedData = {
+    data: tasks
+      .filter(task => task.startTime && task.status === 'scheduled') // Only include scheduled tasks
+      .map(task => {
+        const startTime = task.startTime!;
+        const endTime = new Date(startTime.getTime() + task.duration * 3600000); // Convert hours to milliseconds
+        
+        console.log(`Transforming task ${task.id}:`, {
+          start: startTime,
+          end: endTime,
+          name: task.name
+        });
+        
+        return {
+          id: task.id,
+          start: startTime,
+          end: endTime,
+          name: task.name,
+        };
+      }),
     links: []
   };
 
@@ -49,12 +53,12 @@ const GanttTest = () => {
     },
   };
 
-  console.log('Rendering GanttTest with data:', data);
+  console.log('Rendering GanttTest with data:', transformedData);
 
   return (
     <Card className="w-full p-4">
       <div className="h-[600px]">
-        <Timeline data={data} config={config} />
+        <Timeline data={transformedData} config={config} />
       </div>
     </Card>
   );
