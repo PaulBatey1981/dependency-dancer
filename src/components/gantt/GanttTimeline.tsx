@@ -7,6 +7,7 @@ import {
   getTaskLevel,
   getGridLines,
 } from '@/utils/ganttUtils';
+import { topologicalSort } from '@/utils/topologicalSort';
 
 interface GanttTimelineProps {
   tasks: Task[];
@@ -24,7 +25,6 @@ const GanttTimeline = ({
   expandedItems,
 }: GanttTimelineProps) => {
   const ROW_HEIGHT = 40;
-  const INDENT_WIDTH = 24;
   const TASK_HEIGHT = 32;
   const VERTICAL_OFFSET = 4;
   const LINE_ITEM_SPACING = 500;
@@ -39,53 +39,39 @@ const GanttTimeline = ({
 
   console.log('Sorted line items:', lineItems.map(item => item.id));
 
-  // Create a map to store the base vertical position for each line item
-  const lineItemPositions = new Map<string, number>();
-  lineItems.forEach((lineItem, index) => {
-    const position = index * LINE_ITEM_SPACING;
-    lineItemPositions.set(lineItem.id, position);
-    console.log(`Set offset ${position}px for line item ${lineItem.id}`);
-  });
-
-  // Helper function to get all tasks under a line item
-  const getTasksUnderLineItem = (lineItemId: string): Task[] => {
-    const result: Task[] = [];
-    const lineItem = tasks.find(t => t.id === lineItemId);
-    if (!lineItem) return result;
-
-    // Add the line item itself
-    result.push(lineItem);
-
-    // Helper function for recursive traversal
-    const traverse = (taskId: string) => {
-      const task = tasks.find(t => t.id === taskId);
-      if (!task) return;
-
-      // Get all tasks that have this task as a dependency
-      const children = tasks.filter(t => t.dependencies.includes(taskId));
-      
-      // Sort children by ID to maintain consistent order
-      children.sort((a, b) => a.id.localeCompare(b.id));
-      
-      // Add each child and traverse their dependencies
-      children.forEach(child => {
-        result.push(child);
-        traverse(child.id);
-      });
-    };
-
-    // Start traversal from the line item
-    traverse(lineItemId);
-    return result;
+  // Helper function to get child tasks
+  const getChildTasks = (parentId: string): Task[] => {
+    const children = tasks.filter(task => task.dependencies.includes(parentId));
+    return topologicalSort(children);
   };
 
   // Build ordered task list following hierarchy
-  const orderedTasks: Task[] = [];
-  lineItems.forEach(lineItem => {
-    const lineItemTasks = getTasksUnderLineItem(lineItem.id);
-    orderedTasks.push(...lineItemTasks);
-  });
+  const buildOrderedTaskList = () => {
+    const orderedTasks: Task[] = [];
+    const processed = new Set<string>();
 
+    const processTask = (task: Task) => {
+      if (processed.has(task.id)) return;
+      
+      console.log(`Processing task ${task.id} for ordered list`);
+      orderedTasks.push(task);
+      processed.add(task.id);
+
+      // Process children in sorted order
+      const children = getChildTasks(task.id);
+      children.forEach(child => processTask(child));
+    };
+
+    // Process line items in sorted order
+    lineItems.forEach(lineItem => {
+      console.log(`Processing line item ${lineItem.id}`);
+      processTask(lineItem);
+    });
+
+    return orderedTasks;
+  };
+
+  const orderedTasks = buildOrderedTaskList();
   console.log('Final ordered tasks:', orderedTasks.map(task => task.id));
 
   // Calculate vertical position based on task's index in ordered list
@@ -94,21 +80,28 @@ const GanttTimeline = ({
     if (taskIndex === -1) return 0;
 
     // Find the line item this task belongs to
-    const lineItem = lineItems.find(li => 
-      getTasksUnderLineItem(li.id).some(t => t.id === task.id)
-    );
-    
+    const lineItem = lineItems.find(li => {
+      const lineItemTasks = orderedTasks.filter(t => {
+        const lineItemIndex = orderedTasks.findIndex(lt => lt.id === li.id);
+        const taskIndex = orderedTasks.findIndex(ot => ot.id === t.id);
+        return taskIndex >= lineItemIndex && 
+               (taskIndex === lineItemIndex || t.dependencies.includes(li.id));
+      });
+      return lineItemTasks.some(t => t.id === task.id);
+    });
+
     if (!lineItem) return taskIndex * ROW_HEIGHT;
 
-    // Get base offset for this line item
-    const lineItemOffset = lineItemPositions.get(lineItem.id) || 0;
-    
+    // Calculate line item offset
+    const lineItemIndex = lineItems.findIndex(li => li.id === lineItem.id);
+    const lineItemOffset = lineItemIndex * LINE_ITEM_SPACING;
+
     // Calculate level-based indentation
     const level = getTaskLevel(task, tasks);
     const levelOffset = level * (ROW_HEIGHT / 2);
 
-    const position = lineItemOffset + levelOffset + VERTICAL_OFFSET;
-    console.log(`Task ${task.id} positioned at ${position}px (level ${level})`);
+    const position = lineItemOffset + (taskIndex * ROW_HEIGHT) + levelOffset + VERTICAL_OFFSET;
+    console.log(`Task ${task.id} positioned at ${position}px (level ${level}, index ${taskIndex})`);
     return position;
   };
 
@@ -150,7 +143,7 @@ const GanttTimeline = ({
             width={width}
             verticalPosition={verticalPosition}
             level={level}
-            indentWidth={INDENT_WIDTH}
+            indentWidth={ROW_HEIGHT / 2}
             taskHeight={TASK_HEIGHT}
           />
         );
