@@ -24,36 +24,43 @@ export const calculateTaskWidth = (duration: number, timeScale: number) => {
   return width;
 };
 
-// Get tasks that depend on this task (children)
+// Get tasks that this task depends on
+const getParentTasks = (task: Task, tasks: Task[]): Task[] => {
+  return tasks.filter(t => task.dependencies.includes(t.id));
+};
+
+// Get tasks that depend on this task
 const getChildTasks = (task: Task, tasks: Task[]): Task[] => {
   return tasks.filter(t => t.dependencies.includes(task.id));
 };
 
-// Get tasks that this task depends on (parents)
-const getParentTasks = (task: Task, tasks: Task[]): Task[] => {
-  return task.dependencies.map(depId => tasks.find(t => t.id === depId)).filter((t): t is Task => t !== undefined);
-};
-
-// Find the immediate parent of a task
-const findImmediateParent = (task: Task, tasks: Task[]): Task | undefined => {
-  if (task.type === 'lineitem') return undefined;
-  return tasks.find(t => task.dependencies.includes(t.id));
-};
-
-// Check if a task should be visible based on its parent's expansion state
+// Check if a task should be visible based on expansion state
 const isTaskVisible = (task: Task, tasks: Task[], expandedItems: Set<string>): boolean => {
   if (task.type === 'lineitem') return true;
 
-  const parent = findImmediateParent(task, tasks);
-  if (!parent) return true; // If no parent found, task should be visible
+  // Find all parents up to the line item
+  let currentTask = task;
+  const parentChain: Task[] = [];
+  
+  while (currentTask && currentTask.type !== 'lineitem') {
+    const parents = getParentTasks(currentTask, tasks);
+    const parent = parents[0]; // Take first parent
+    if (!parent) break;
+    
+    parentChain.push(parent);
+    currentTask = parent;
+  }
 
-  // Check if parent is expanded and visible
-  return expandedItems.has(parent.id) && isTaskVisible(parent, tasks, expandedItems);
+  // Check if all parents in the chain are expanded
+  return parentChain.every(parent => expandedItems.has(parent.id));
 };
 
 export const getTaskLevel = (task: Task, tasks: Task[]): number => {
+  if (task.type === 'lineitem') return 0;
+  
   const parents = getParentTasks(task, tasks);
   if (parents.length === 0) return 0;
+  
   return Math.max(...parents.map(parent => getTaskLevel(parent, tasks))) + 1;
 };
 
@@ -71,33 +78,32 @@ export const getVerticalPosition = (
     return -1;
   }
 
-  let position = verticalOffset;
-  const level = getTaskLevel(task, tasks);
-
-  // For line items, use their order in the list
+  // For line items, position them at the top level
   if (task.type === 'lineitem') {
     const lineItems = tasks.filter(t => t.type === 'lineitem');
     const index = lineItems.findIndex(t => t.id === task.id);
-    position += index * rowHeight;
+    const position = verticalOffset + (index * rowHeight);
     console.log(`Line item ${task.id} positioned at ${position}px`);
     return position;
   }
 
-  // For child tasks, calculate position based on parent and siblings
-  const parent = findImmediateParent(task, tasks);
+  // For child tasks, find their position based on parent and previous siblings
+  const parents = getParentTasks(task, tasks);
+  const parent = parents[0]; // Take first parent
+  
   if (!parent) return -1;
 
   const parentPosition = getVerticalPosition(parent, tasks, expandedItems, rowHeight, verticalOffset);
   if (parentPosition === -1) return -1;
 
-  const siblings = getChildTasks(parent, tasks);
-  const visibleSiblingsBefore = siblings
-    .filter(s => s.id !== task.id && isTaskVisible(s, tasks, expandedItems))
-    .filter(s => siblings.indexOf(s) < siblings.indexOf(task));
-
-  position = parentPosition + ((visibleSiblingsBefore.length + 1) * rowHeight);
+  // Get all visible siblings under the same parent
+  const siblings = getChildTasks(parent, tasks)
+    .filter(sibling => isTaskVisible(sibling, tasks, expandedItems));
+  
+  const siblingIndex = siblings.findIndex(s => s.id === task.id);
+  const position = parentPosition + ((siblingIndex + 1) * rowHeight);
+  
   console.log(`Child task ${task.id} positioned at ${position}px under parent ${parent.id}`);
-
   return position;
 };
 
