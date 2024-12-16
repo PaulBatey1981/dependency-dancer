@@ -19,6 +19,7 @@ export default {
     },
     extend: {
       colors: {
+        border: "hsl(var(--border))",
         'task-lineitem': '#2563eb',
         'task-component': '#0d9488',
         'task-element': '#4f46e5',
