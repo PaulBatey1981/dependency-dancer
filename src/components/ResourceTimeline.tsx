@@ -20,6 +20,17 @@ const ResourceTimeline = ({ tasks, resources }: ResourceTimelineProps) => {
     }
   };
 
+  const calculateTaskPosition = (startTime: Date) => {
+    // Get the earliest start time among all tasks
+    const earliestStart = new Date(Math.min(...tasks.filter(t => t.startTime).map(t => t.startTime!.getTime())));
+    
+    // Calculate hours from the earliest start time
+    const hoursFromStart = (startTime.getTime() - earliestStart.getTime()) / (1000 * 60 * 60);
+    
+    // Convert to percentage (assuming 24-hour view)
+    return `${(hoursFromStart / 24) * 100}%`;
+  };
+
   return (
     <div className="space-y-6">
       {resources.map(resource => (
@@ -37,7 +48,7 @@ const ResourceTimeline = ({ tasks, resources }: ResourceTimelineProps) => {
                     task.status === 'fixed' ? 'border-2 border-task-fixed' : ''
                   }`}
                   style={{
-                    left: '0%',
+                    left: task.startTime ? calculateTaskPosition(task.startTime) : '0%',
                     width: `${(task.duration / 24) * 100}%`,
                   }}
                 >
