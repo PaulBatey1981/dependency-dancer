@@ -16,6 +16,8 @@ interface GanttTimelineProps {
 const GanttTimeline = ({ tasks, zoomLevel, viewMode, earliestStart, expandedItems }: GanttTimelineProps) => {
   const ROW_HEIGHT = 40; // Match the height of task rows in the list
   const INDENT_WIDTH = 24; // Matches the indent of the task list
+  const TASK_HEIGHT = 32; // Height of the task bar
+  const VERTICAL_OFFSET = 4; // Offset to center the task bar in the row
 
   const getTaskColor = (type: Task['type']) => {
     switch (type) {
@@ -56,32 +58,27 @@ const GanttTimeline = ({ tasks, zoomLevel, viewMode, earliestStart, expandedItem
     return width;
   };
 
-  // Get the level of nesting for a task
   const getTaskLevel = (task: Task): number => {
     const parentTask = tasks.find(t => t.dependencies.includes(task.id));
     if (!parentTask) return 0;
     return getTaskLevel(parentTask) + 1;
   };
 
-  // Calculate vertical position based on task order and hierarchy
   const getVerticalPosition = (task: Task): number => {
     let position = 0;
     const lineItems = tasks.filter(t => t.type === 'lineitem');
     
     if (task.type === 'lineitem') {
       const index = lineItems.findIndex(t => t.id === task.id);
-      return index * ROW_HEIGHT;
+      return (index * ROW_HEIGHT) + VERTICAL_OFFSET;
     }
 
-    // Find the parent task
     const parentTask = tasks.find(t => t.dependencies.includes(task.id));
     if (!parentTask || !expandedItems.has(parentTask.id)) return -1;
 
-    // Get parent's position
     const parentPosition = getVerticalPosition(parentTask);
     if (parentPosition < 0) return -1;
 
-    // Get siblings (tasks with same parent)
     const siblings = tasks.filter(t => parentTask.dependencies.includes(t.id));
     const index = siblings.findIndex(t => t.id === task.id);
 
@@ -130,14 +127,13 @@ const GanttTimeline = ({ tasks, zoomLevel, viewMode, earliestStart, expandedItem
         const verticalPosition = getVerticalPosition(task);
         const level = getTaskLevel(task);
         
-        // Don't render if task should be hidden
         if (verticalPosition < 0) return null;
 
         return (
           <HoverCard key={task.id}>
             <HoverCardTrigger>
               <div
-                className={`absolute h-8 rounded ${getTaskColor(task.type)} opacity-80 cursor-pointer animate-task-appear ${
+                className={`absolute rounded ${getTaskColor(task.type)} opacity-80 cursor-pointer animate-task-appear ${
                   task.isFixed ? 'border-2 border-task-fixed' : ''
                 }`}
                 style={{
@@ -145,6 +141,7 @@ const GanttTimeline = ({ tasks, zoomLevel, viewMode, earliestStart, expandedItem
                   width: `${width}%`,
                   top: `${verticalPosition}px`,
                   marginLeft: `${level * INDENT_WIDTH}px`,
+                  height: `${TASK_HEIGHT}px`,
                 }}
               >
                 <span className="text-xs text-white p-1 truncate block">
