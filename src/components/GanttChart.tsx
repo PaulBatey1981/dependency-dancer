@@ -134,6 +134,7 @@ const GanttChart = ({ tasks }: GanttChartProps) => {
                 zoomLevel={zoomLevel}
                 viewMode={viewMode}
                 earliestStart={earliestStart}
+                expandedItems={expandedItems}
               />
             </div>
           </div>

@@ -10,9 +10,10 @@ interface GanttTimelineProps {
   zoomLevel: number;
   viewMode: 'day' | 'week' | 'month';
   earliestStart: Date;
+  expandedItems: Set<string>;
 }
 
-const GanttTimeline = ({ tasks, zoomLevel, viewMode, earliestStart }: GanttTimelineProps) => {
+const GanttTimeline = ({ tasks, zoomLevel, viewMode, earliestStart, expandedItems }: GanttTimelineProps) => {
   const getTaskColor = (type: Task['type']) => {
     switch (type) {
       case 'lineitem':
@@ -44,26 +45,46 @@ const GanttTimeline = ({ tasks, zoomLevel, viewMode, earliestStart }: GanttTimel
     const hoursFromStart = (startTime.getTime() - earliestStart.getTime()) / (1000 * 60 * 60);
     const timeScale = getTimeScale();
     const position = (hoursFromStart / timeScale) * 100;
-    console.log(`Task position calculation:`, {
-      startTime: startTime.toISOString(),
-      hoursFromStart,
-      position,
-      timeScale,
-      viewMode
-    });
     return position;
   };
 
   const calculateTaskWidth = (duration: number) => {
     const timeScale = getTimeScale();
     const width = (duration / timeScale) * 100;
-    console.log(`Task width calculation:`, { 
-      duration, 
-      width, 
-      timeScale,
-      viewMode 
-    });
     return width;
+  };
+
+  // Get child tasks for a given parent ID
+  const getChildTasks = (parentId: string): Task[] => {
+    return tasks.filter(task => task.dependencies.includes(parentId));
+  };
+
+  // Calculate vertical position for tasks
+  const getVerticalPosition = (task: Task): number => {
+    const baseHeight = 40; // Height of each task row in pixels
+    if (task.type === 'lineitem') {
+      const lineItems = tasks.filter(t => t.type === 'lineitem');
+      const index = lineItems.findIndex(t => t.id === task.id);
+      return index * baseHeight;
+    }
+
+    // Find the parent task
+    const parentTask = tasks.find(t => task.dependencies.includes(t.id));
+    if (!parentTask) return 0;
+
+    // If parent is not expanded, don't show child
+    if (!expandedItems.has(parentTask.id)) return -1;
+
+    // Get siblings (tasks with same parent)
+    const siblings = tasks.filter(t => 
+      t.dependencies.includes(parentTask.id) && 
+      t.id !== task.id
+    );
+    const index = siblings.findIndex(t => t.id === task.id);
+    
+    // Calculate position based on parent's position and sibling index
+    const parentPos = getVerticalPosition(parentTask);
+    return parentPos + ((index + 1) * baseHeight);
   };
 
   // Calculate the latest end time from all tasks
@@ -76,12 +97,6 @@ const GanttTimeline = ({ tasks, zoomLevel, viewMode, earliestStart }: GanttTimel
   const totalDurationHours = Math.ceil(
     (latestEnd.getTime() - earliestStart.getTime()) / (1000 * 60 * 60)
   );
-
-  console.log('Timeline dimensions:', {
-    totalDurationHours,
-    viewMode,
-    timeScale: getTimeScale()
-  });
 
   // Calculate grid lines based on view mode
   const getGridLines = () => {
@@ -116,21 +131,14 @@ const GanttTimeline = ({ tasks, zoomLevel, viewMode, earliestStart }: GanttTimel
 
       {/* Tasks */}
       {tasks.map(task => {
-        if (!task.startTime) {
-          console.log(`Task ${task.id} has no start time`);
-          return null;
-        }
+        if (!task.startTime) return null;
         
         const position = calculateTaskPosition(task.startTime);
         const width = calculateTaskWidth(task.duration);
+        const verticalPosition = getVerticalPosition(task);
         
-        console.log(`Rendering task ${task.id}:`, {
-          name: task.name,
-          position,
-          width,
-          startTime: task.startTime.toISOString(),
-          duration: task.duration
-        });
+        // Don't render if task should be hidden (parent not expanded)
+        if (verticalPosition < 0) return null;
 
         return (
           <HoverCard key={task.id}>
@@ -142,7 +150,7 @@ const GanttTimeline = ({ tasks, zoomLevel, viewMode, earliestStart }: GanttTimel
                 style={{
                   left: `${position}%`,
                   width: `${width}%`,
-                  top: '0.5rem',
+                  top: `${verticalPosition}px`,
                 }}
               >
                 <span className="text-xs text-white p-1 truncate block">
