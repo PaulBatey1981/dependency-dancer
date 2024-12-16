@@ -1,16 +1,18 @@
 import { useState } from 'react';
-import { Task, Resource, TaskStatus } from '@/types/scheduling';
+import { Task, Resource } from '@/types/scheduling';
 import { rescheduleAll } from '@/utils/scheduling';
 import { createProductTasks } from '@/utils/taskFactory';
 import TaskList from '@/components/TaskList';
 import ResourceTimeline from '@/components/ResourceTimeline';
+import GanttChart from '@/components/GanttChart';
 import { Button } from '@/components/ui/button';
 import { toast } from '@/components/ui/use-toast';
 import { useNavigate } from 'react-router-dom';
-import { Settings } from 'lucide-react';
+import { Settings, LayoutGrid, GanttChart as GanttIcon } from 'lucide-react';
 
 const Index = () => {
   const navigate = useNavigate();
+  const [view, setView] = useState<'list' | 'resource' | 'gantt'>('list');
   const baseDate = new Date('2024-12-20T10:00:00');
   const deadline = new Date(baseDate);
 
@@ -75,10 +77,35 @@ const Index = () => {
     <div className="container mx-auto py-8">
       <div className="flex justify-between items-center mb-8">
         <h1 className="text-3xl font-bold">Magnetic Wrap Box Production Schedule</h1>
-        <Button onClick={() => navigate('/settings')} variant="outline">
-          <Settings className="mr-2" />
-          Line Item Settings
-        </Button>
+        <div className="flex gap-4">
+          <div className="flex gap-2">
+            <Button
+              variant={view === 'list' ? 'default' : 'outline'}
+              onClick={() => setView('list')}
+            >
+              <LayoutGrid className="w-4 h-4 mr-2" />
+              List
+            </Button>
+            <Button
+              variant={view === 'resource' ? 'default' : 'outline'}
+              onClick={() => setView('resource')}
+            >
+              <LayoutGrid className="w-4 h-4 mr-2" />
+              Resources
+            </Button>
+            <Button
+              variant={view === 'gantt' ? 'default' : 'outline'}
+              onClick={() => setView('gantt')}
+            >
+              <GanttIcon className="w-4 h-4 mr-2" />
+              Gantt
+            </Button>
+          </div>
+          <Button onClick={() => navigate('/settings')} variant="outline">
+            <Settings className="mr-2" />
+            Line Item Settings
+          </Button>
+        </div>
       </div>
       
       <div className="mb-6">
@@ -87,16 +114,26 @@ const Index = () => {
         </Button>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+      {view === 'list' && (
         <div>
           <h2 className="text-xl font-semibold mb-4">Tasks</h2>
           <TaskList tasks={tasks} onToggleFixed={toggleFixTask} />
         </div>
+      )}
+
+      {view === 'resource' && (
         <div>
           <h2 className="text-xl font-semibold mb-4">Resource Timeline</h2>
           <ResourceTimeline tasks={tasks} resources={resources} />
         </div>
-      </div>
+      )}
+
+      {view === 'gantt' && (
+        <div>
+          <h2 className="text-xl font-semibold mb-4">Gantt Chart</h2>
+          <GanttChart tasks={tasks} resources={resources} />
+        </div>
+      )}
     </div>
   );
 };

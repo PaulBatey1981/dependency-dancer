@@ -26,6 +26,8 @@ export default {
         'task-component': '#0d9488',
         'task-element': '#4f46e5',
         'task-fixed': '#ca8a04',
+        'gantt-grid': '#f1f5f9',
+        'gantt-today': '#fef3c7',
       },
       animation: {
         'task-appear': 'task-appear 0.3s ease-out',
