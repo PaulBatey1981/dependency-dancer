@@ -2,14 +2,26 @@ import React from 'react';
 import { Gantt } from '@dhtmlx/trial-react-gantt';
 import { Task } from '@/types/scheduling';
 
-// Import CSS directly from node_modules
-import '@dhtmlx/trial-react-gantt/dist/dhtmlxgantt.css';
+// Import CSS from CDN as fallback since local import is failing
+const DHTMLX_CSS_URL = 'https://cdn.dhtmlx.com/gantt/edge/dhtmlxgantt.css';
 
 interface DhtmlxGanttProps {
   tasks: Task[];
 }
 
 const DhtmlxGantt = ({ tasks }: DhtmlxGanttProps) => {
+  React.useEffect(() => {
+    // Dynamically add CSS to ensure it's loaded
+    const link = document.createElement('link');
+    link.rel = 'stylesheet';
+    link.href = DHTMLX_CSS_URL;
+    document.head.appendChild(link);
+
+    return () => {
+      document.head.removeChild(link);
+    };
+  }, []);
+
   // Transform our tasks into DHTMLX format
   const ganttTasks = {
     data: tasks.map(task => ({
