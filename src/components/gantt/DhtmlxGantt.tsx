@@ -1,5 +1,5 @@
 import React, { useEffect } from 'react';
-import { Gantt as DhtmlxGanttComponent } from '@dhtmlx/trial-react-gantt';
+import { Gantt } from '@dhtmlx/trial-react-gantt';
 import { Task } from '@/types/scheduling';
 
 // Import CSS from CDN as fallback since local import is failing
@@ -27,34 +27,36 @@ const DhtmlxGantt = ({ tasks }: DhtmlxGanttProps) => {
     data: tasks.map(task => ({
       id: task.id,
       text: task.name,
-      start_date: task.startTime || new Date(),
+      start_date: task.startTime ? new Date(task.startTime) : new Date(),
       duration: task.duration || 1,
-      parent: task.dependencies && task.dependencies.length > 0 ? task.dependencies[0] : null,
+      parent: task.dependencies?.[0] || null,
       progress: task.status === 'completed' ? 1 : 0,
       type: task.type,
       open: true
     })),
-    links: tasks.reduce((acc, task) => {
-      if (!task.dependencies || !Array.isArray(task.dependencies)) {
-        return acc;
-      }
-      
-      const taskLinks = task.dependencies.map(depId => ({
-        id: `${task.id}_${depId}`,
-        source: depId,
-        target: task.id,
-        type: '0'
-      }));
-      
-      return [...acc, ...taskLinks];
-    }, [] as Array<{id: string; source: string; target: string; type: string}>)
+    links: []  // Initialize with empty array to prevent forEach error
   };
+
+  if (tasks.length > 0) {
+    ganttTasks.links = tasks.reduce((acc, task) => {
+      if (task.dependencies && Array.isArray(task.dependencies)) {
+        const taskLinks = task.dependencies.map(depId => ({
+          id: `${task.id}_${depId}`,
+          source: depId,
+          target: task.id,
+          type: '0'
+        }));
+        return [...acc, ...taskLinks];
+      }
+      return acc;
+    }, [] as Array<{id: string; source: string; target: string; type: string}>);
+  }
 
   console.log('Transformed Gantt tasks:', ganttTasks);
 
   return (
     <div className="w-full h-[600px]">
-      <DhtmlxGanttComponent
+      <Gantt
         tasks={ganttTasks}
         zoom="Days"
         columns={[
