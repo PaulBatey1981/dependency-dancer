@@ -23,7 +23,10 @@ const GanttTaskList = ({ tasks, expandedItems, toggleExpand }: GanttTaskListProp
   };
 
   const getChildTasks = (parentId: string): Task[] => {
-    return tasks.filter(task => task.dependencies.includes(parentId));
+    console.log(`Getting children for task ${parentId}`);
+    const children = tasks.filter(task => task.dependencies.includes(parentId));
+    console.log(`Found ${children.length} children for task ${parentId}`);
+    return children;
   };
 
   const renderTask = (task: Task, level: number = 0) => {
@@ -31,7 +34,7 @@ const GanttTaskList = ({ tasks, expandedItems, toggleExpand }: GanttTaskListProp
     const hasChildren = childTasks.length > 0;
     const isExpanded = expandedItems.has(task.id);
 
-    console.log(`Rendering task ${task.id}, expanded: ${isExpanded}, children: ${childTasks.length}`);
+    console.log(`Rendering task ${task.id}, expanded: ${isExpanded}, children: ${childTasks.length}, type: ${task.type}`);
 
     return (
       <div key={task.id}>
@@ -70,6 +73,7 @@ const GanttTaskList = ({ tasks, expandedItems, toggleExpand }: GanttTaskListProp
 
   // Get all line items (top-level tasks)
   const lineItems = tasks.filter(task => task.type === 'lineitem');
+  console.log(`Found ${lineItems.length} line items`);
 
   return (
     <div className="min-h-full bg-white">
