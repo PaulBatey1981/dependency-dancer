@@ -27,6 +27,11 @@ const GanttTest = ({ tasks }: GanttTestProps) => {
           start: startTime,
           end: endTime,
           name: task.name,
+          style: { // Provide styles directly in the data
+            backgroundColor: '#4a90e2',
+            borderRadius: '4px',
+            color: '#fff',
+          }
         };
       }),
     links: []
@@ -36,28 +41,42 @@ const GanttTest = ({ tasks }: GanttTestProps) => {
     header: {
       month: {
         display: true,
+        style: {
+          backgroundColor: '#f4f5f7',
+          fontSize: '16px',
+        }
       },
       dayOfWeek: {
         display: true,
+        style: {
+          backgroundColor: '#f4f5f7'
+        }
       },
       dayTime: {
         display: true,
-      },
-    },
-    zoom: {
-      level: 0,
+        style: {
+          background: '#f4f5f7'
+        }
+      }
     },
     taskList: {
       display: true,
       width: 200,
+      style: {
+        backgroundColor: '#f4f5f7',
+        borderRight: '1px solid #e0e0e0'
+      }
     },
     dataViewPort: {
       rows: {
         height: 40,
-      },
+        style: {
+          backgroundColor: '#fff'
+        }
+      }
     },
     links: {
-      display: true,
+      display: true
     },
     selectedTask: null,
     mode: 'month',
