@@ -13,12 +13,12 @@ const GanttTest = ({ tasks }: GanttTestProps) => {
     data: tasks
       .filter(task => task.startTime && task.status === 'scheduled') // Only include scheduled tasks
       .map(task => {
-        const startTime = task.startTime!;
+        const startTime = new Date(task.startTime!);
         const endTime = new Date(startTime.getTime() + task.duration * 3600000); // Convert hours to milliseconds
         
         console.log(`Transforming task ${task.id}:`, {
-          start: startTime,
-          end: endTime,
+          start: startTime.toISOString(),
+          end: endTime.toISOString(),
           name: task.name
         });
         
@@ -64,7 +64,7 @@ const GanttTest = ({ tasks }: GanttTestProps) => {
     onSelectItem: () => {},
   };
 
-  console.log('Rendering GanttTest with data:', transformedData);
+  console.log('Rendering GanttTest with transformed data:', JSON.stringify(transformedData, null, 2));
 
   return (
     <Card className="w-full p-4">
