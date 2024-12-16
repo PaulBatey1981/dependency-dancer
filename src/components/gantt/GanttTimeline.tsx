@@ -75,39 +75,41 @@ const GanttTimeline = ({ tasks, zoomLevel, viewMode, earliestStart }: GanttTimel
       />
 
       {/* Tasks */}
-      {tasks.filter(task => task.startTime).map(task => (
-        <HoverCard key={task.id}>
-          <HoverCardTrigger>
-            <div
-              className={`absolute h-8 rounded ${getTaskColor(task.type)} opacity-80 cursor-pointer ${
-                task.isFixed ? 'border-2 border-task-fixed' : ''
-              }`}
-              style={{
-                left: `${calculateTaskPosition(task.startTime!)}px`,
-                width: `${calculateTaskWidth(task.duration)}px`,
-                top: '0.5rem',
-              }}
-            >
-              <span className="text-xs text-white p-1 truncate block">
-                {task.name}
-              </span>
-            </div>
-          </HoverCardTrigger>
-          <HoverCardContent>
-            <div className="space-y-2">
-              <h4 className="font-semibold">{task.name}</h4>
-              <div className="text-sm">
-                <p>Type: {task.type}</p>
-                <p>Duration: {task.duration}h</p>
-                <p>Status: {task.status}</p>
-                {task.startTime && (
-                  <p>Start: {task.startTime.toLocaleString()}</p>
-                )}
+      {tasks.map(task => {
+        if (!task.startTime) return null;
+        
+        return (
+          <HoverCard key={task.id}>
+            <HoverCardTrigger>
+              <div
+                className={`absolute h-8 rounded ${getTaskColor(task.type)} opacity-80 cursor-pointer animate-task-appear ${
+                  task.isFixed ? 'border-2 border-task-fixed' : ''
+                }`}
+                style={{
+                  left: `${calculateTaskPosition(task.startTime)}px`,
+                  width: `${calculateTaskWidth(task.duration)}px`,
+                  top: '0.5rem',
+                }}
+              >
+                <span className="text-xs text-white p-1 truncate block">
+                  {task.name}
+                </span>
               </div>
-            </div>
-          </HoverCardContent>
-        </HoverCard>
-      ))}
+            </HoverCardTrigger>
+            <HoverCardContent>
+              <div className="space-y-2">
+                <h4 className="font-semibold">{task.name}</h4>
+                <div className="text-sm">
+                  <p>Type: {task.type}</p>
+                  <p>Duration: {task.duration}h</p>
+                  <p>Status: {task.status}</p>
+                  <p>Start: {task.startTime.toLocaleString()}</p>
+                </div>
+              </div>
+            </HoverCardContent>
+          </HoverCard>
+        );
+      })}
     </div>
   );
 };

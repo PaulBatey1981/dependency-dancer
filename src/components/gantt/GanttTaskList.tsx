@@ -27,22 +27,28 @@ const GanttTaskList = ({ tasks, expandedItems, toggleExpand }: GanttTaskListProp
   };
 
   const renderTask = (task: Task, level: number = 0) => {
-    const hasChildren = getChildTasks(task.id).length > 0;
-    const isExpanded = expandedItems.has(task.id);
     const childTasks = getChildTasks(task.id);
+    const hasChildren = childTasks.length > 0;
+    const isExpanded = expandedItems.has(task.id);
+
+    console.log(`Rendering task ${task.id}:`, {
+      hasChildren,
+      isExpanded,
+      childCount: childTasks.length
+    });
 
     return (
-      <div key={task.id}>
+      <div key={task.id} className="animate-task-appear">
         <div 
-          className="flex items-center py-2 px-2 hover:bg-gray-50"
+          className="flex items-center py-2 px-2 hover:bg-gray-50 cursor-pointer"
           style={{ paddingLeft: `${level * 1.5 + 0.5}rem` }}
+          onClick={() => hasChildren && toggleExpand(task.id)}
         >
           {hasChildren && (
             <Button
               variant="ghost"
               size="icon"
               className="h-6 w-6"
-              onClick={() => toggleExpand(task.id)}
             >
               {isExpanded ? <ChevronDown size={16} /> : <ChevronRight size={16} />}
             </Button>
