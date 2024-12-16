@@ -1,5 +1,6 @@
 import { Task } from '@/types/scheduling';
 import GanttTaskBar from './GanttTaskBar';
+import { topologicalSort } from '@/utils/topologicalSort';
 import {
   getTimeScale,
   calculateTaskPosition,
@@ -27,17 +28,19 @@ const GanttTimeline = ({
   const ROW_HEIGHT = 40;
   const INDENT_WIDTH = 24;
   const TASK_HEIGHT = 32;
-  const VERTICAL_OFFSET = 4; // Re-add this constant
+  const VERTICAL_OFFSET = 4;
 
   const timeScale = getTimeScale(viewMode);
   const gridLines = getGridLines(viewMode);
+
+  // Sort tasks in the same order as they appear in the task list
+  const sortedTasks = topologicalSort(tasks);
 
   return (
     <div 
       className="relative bg-white min-h-full w-full"
       style={{ paddingTop: '2rem' }}
     >
-      {/* Grid lines */}
       {gridLines.map((position, i) => (
         <div
           key={i}
@@ -46,7 +49,6 @@ const GanttTimeline = ({
         />
       ))}
 
-      {/* Today marker */}
       <div
         className="absolute top-0 bottom-0 w-px bg-blue-500"
         style={{
@@ -54,8 +56,7 @@ const GanttTimeline = ({
         }}
       />
 
-      {/* Tasks */}
-      {tasks.map(task => {
+      {sortedTasks.map(task => {
         if (!task.startTime) return null;
         
         const position = calculateTaskPosition(task.startTime, earliestStart, timeScale);

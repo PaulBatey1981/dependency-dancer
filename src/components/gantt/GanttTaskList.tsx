@@ -1,6 +1,7 @@
 import { Task } from '@/types/scheduling';
 import { ChevronRight, ChevronDown } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { topologicalSort } from '@/utils/topologicalSort';
 
 interface GanttTaskListProps {
   tasks: Task[];
@@ -24,16 +25,14 @@ const GanttTaskList = ({ tasks, expandedItems, toggleExpand }: GanttTaskListProp
 
   const getChildTasks = (parentId: string): Task[] => {
     console.log(`Getting children for task ${parentId}`);
-    // Find the parent task first
     const parentTask = tasks.find(t => t.id === parentId);
     if (!parentTask) {
       console.log(`Parent task ${parentId} not found`);
       return [];
     }
-    // Get all tasks that the parent depends on
     const children = tasks.filter(task => parentTask.dependencies.includes(task.id));
     console.log(`Found ${children.length} children for task ${parentId}:`, children.map(c => c.id));
-    return children;
+    return topologicalSort(children);
   };
 
   const renderTask = (task: Task, level: number = 0) => {
@@ -78,12 +77,12 @@ const GanttTaskList = ({ tasks, expandedItems, toggleExpand }: GanttTaskListProp
     );
   };
 
-  // Get all line items (top-level tasks)
-  const lineItems = tasks.filter(task => task.type === 'lineitem');
+  // Get all line items (top-level tasks) and sort them
+  const lineItems = topologicalSort(tasks.filter(task => task.type === 'lineitem'));
   console.log(`Found ${lineItems.length} line items`);
 
   return (
-    <div className="min-h-full bg-white pt-8"> {/* Added pt-8 for top padding to align with timeline content */}
+    <div className="min-h-full bg-white pt-8">
       {lineItems.map(task => renderTask(task))}
     </div>
   );

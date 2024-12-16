@@ -13,10 +13,11 @@ interface GanttChartProps {
 }
 
 const GanttChart = ({ tasks }: GanttChartProps) => {
-  const [zoomLevel, setZoomLevel] = useState(1); // hours per pixel
+  const [zoomLevel, setZoomLevel] = useState(1);
   const [viewMode, setViewMode] = useState<'day' | 'week' | 'month'>('day');
   const [expandedItems, setExpandedItems] = useState<Set<string>>(new Set());
   const timelineRef = useRef<HTMLDivElement>(null);
+  const taskListRef = useRef<HTMLDivElement>(null);
 
   const toggleExpand = (taskId: string) => {
     console.log('Toggling task:', taskId);
@@ -47,6 +48,34 @@ const GanttChart = ({ tasks }: GanttChartProps) => {
       timelineRef.current.scrollLeft = scrollPosition - timelineRef.current.clientWidth / 2;
     }
   };
+
+  // Synchronize vertical scrolling between task list and timeline
+  useEffect(() => {
+    const taskListElement = taskListRef.current;
+    const timelineElement = timelineRef.current;
+
+    if (!taskListElement || !timelineElement) return;
+
+    const handleTaskListScroll = () => {
+      if (timelineElement) {
+        timelineElement.scrollTop = taskListElement.scrollTop;
+      }
+    };
+
+    const handleTimelineScroll = () => {
+      if (taskListElement) {
+        taskListElement.scrollTop = timelineElement.scrollTop;
+      }
+    };
+
+    taskListElement.addEventListener('scroll', handleTaskListScroll);
+    timelineElement.addEventListener('scroll', handleTimelineScroll);
+
+    return () => {
+      taskListElement.removeEventListener('scroll', handleTaskListScroll);
+      timelineElement.removeEventListener('scroll', handleTimelineScroll);
+    };
+  }, []);
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -107,13 +136,16 @@ const GanttChart = ({ tasks }: GanttChartProps) => {
 
       <div className="flex flex-1 border rounded-lg overflow-hidden">
         <div className="w-64 flex-shrink-0 border-r">
-          <ScrollArea className="h-full">
+          <div 
+            ref={taskListRef} 
+            className="h-full overflow-y-auto"
+          >
             <GanttTaskList
               tasks={tasks}
               expandedItems={expandedItems}
               toggleExpand={toggleExpand}
             />
-          </ScrollArea>
+          </div>
         </div>
 
         <div className="flex-1 overflow-hidden">
@@ -125,7 +157,7 @@ const GanttChart = ({ tasks }: GanttChartProps) => {
               viewMode={viewMode}
             />
             <div 
-              className="overflow-x-auto h-[calc(100%-2rem)]"
+              className="overflow-auto h-[calc(100%-2rem)]"
               onWheel={handleWheel}
               ref={timelineRef}
             >
