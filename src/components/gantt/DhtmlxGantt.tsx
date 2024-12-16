@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { Gantt } from '@dhtmlx/trial-react-gantt';
 import { Task } from '@/types/scheduling';
 
@@ -10,7 +10,7 @@ interface DhtmlxGanttProps {
 }
 
 const DhtmlxGantt = ({ tasks }: DhtmlxGanttProps) => {
-  React.useEffect(() => {
+  useEffect(() => {
     // Dynamically add CSS to ensure it's loaded
     const link = document.createElement('link');
     link.rel = 'stylesheet';
@@ -22,7 +22,7 @@ const DhtmlxGantt = ({ tasks }: DhtmlxGanttProps) => {
     };
   }, []);
 
-  // Transform our tasks into DHTMLX format
+  // Transform our tasks into DHTMLX format with null checks
   const ganttTasks = {
     data: tasks.map(task => ({
       id: task.id,
