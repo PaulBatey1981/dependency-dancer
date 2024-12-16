@@ -9,9 +9,7 @@ export default defineConfig(({ mode }) => ({
     port: 8080,
   },
   plugins: [
-    react({
-      jsxRuntime: 'automatic'
-    }),
+    react(),
     mode === 'development' &&
     componentTagger(),
   ].filter(Boolean),
@@ -26,11 +24,6 @@ export default defineConfig(({ mode }) => ({
   build: {
     commonjsOptions: {
       include: [/@dhtmlx\/trial-react-gantt/]
-    },
-    rollupOptions: {
-      external: [
-        '@dhtmlx/trial-react-gantt/codebase/dhtmlxgantt.css'
-      ]
     }
   }
 }));

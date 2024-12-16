@@ -1,7 +1,9 @@
 import React from 'react';
 import { Gantt } from '@dhtmlx/trial-react-gantt';
 import { Task } from '@/types/scheduling';
-import '@dhtmlx/trial-react-gantt/codebase/dhtmlxgantt.css';
+
+// Import CSS directly from node_modules
+import '@dhtmlx/trial-react-gantt/dist/dhtmlxgantt.css';
 
 interface DhtmlxGanttProps {
   tasks: Task[];
