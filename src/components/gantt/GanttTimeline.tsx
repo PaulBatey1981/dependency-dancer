@@ -56,35 +56,44 @@ const GanttTimeline = ({ tasks, zoomLevel, viewMode, earliestStart, expandedItem
 
   // Get child tasks for a given parent ID
   const getChildTasks = (parentId: string): Task[] => {
-    return tasks.filter(task => task.dependencies.includes(parentId));
+    const parentTask = tasks.find(t => t.id === parentId);
+    if (!parentTask) return [];
+    return tasks.filter(task => parentTask.dependencies.includes(task.id));
   };
 
   // Calculate vertical position for tasks
   const getVerticalPosition = (task: Task): number => {
     const baseHeight = 40; // Height of each task row in pixels
+    let position = 0;
+    
+    // Find all line items
+    const lineItems = tasks.filter(t => t.type === 'lineitem');
+    
+    // If this is a line item
     if (task.type === 'lineitem') {
-      const lineItems = tasks.filter(t => t.type === 'lineitem');
       const index = lineItems.findIndex(t => t.id === task.id);
       return index * baseHeight;
     }
-
-    // Find the parent task
-    const parentTask = tasks.find(t => task.dependencies.includes(t.id));
+    
+    // For non-line items, find their parent
+    const parentTask = tasks.find(t => t.dependencies.includes(task.id));
     if (!parentTask) return 0;
-
+    
     // If parent is not expanded, don't show child
     if (!expandedItems.has(parentTask.id)) return -1;
-
-    // Get siblings (tasks with same parent)
-    const siblings = tasks.filter(t => 
-      t.dependencies.includes(parentTask.id) && 
-      t.id !== task.id
-    );
+    
+    // Get parent's position
+    const parentPosition = getVerticalPosition(parentTask);
+    
+    // Get all siblings (tasks with same parent)
+    const siblings = tasks.filter(t => parentTask.dependencies.includes(t.id));
     const index = siblings.findIndex(t => t.id === task.id);
     
     // Calculate position based on parent's position and sibling index
-    const parentPos = getVerticalPosition(parentTask);
-    return parentPos + ((index + 1) * baseHeight);
+    position = parentPosition + ((index + 1) * baseHeight);
+    
+    console.log(`Task ${task.id} position: ${position}px (Parent: ${parentTask.id}, Index: ${index})`);
+    return position;
   };
 
   // Calculate the latest end time from all tasks
@@ -92,11 +101,6 @@ const GanttTimeline = ({ tasks, zoomLevel, viewMode, earliestStart, expandedItem
     .filter(t => t.startTime)
     .map(t => new Date(t.startTime!.getTime() + t.duration * 3600000).getTime())
   ));
-
-  // Calculate total duration based on view mode
-  const totalDurationHours = Math.ceil(
-    (latestEnd.getTime() - earliestStart.getTime()) / (1000 * 60 * 60)
-  );
 
   // Calculate grid lines based on view mode
   const getGridLines = () => {
@@ -111,6 +115,7 @@ const GanttTimeline = ({ tasks, zoomLevel, viewMode, earliestStart, expandedItem
   return (
     <div 
       className="relative bg-white min-h-full w-full"
+      style={{ paddingTop: '0.5rem' }}
     >
       {/* Grid lines */}
       {getGridLines().map((position, i) => (
