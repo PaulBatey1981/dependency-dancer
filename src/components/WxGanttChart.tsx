@@ -6,6 +6,9 @@ interface WxGanttChartProps {
 }
 
 const WxGanttChart = ({ tasks }: WxGanttChartProps) => {
+  // First, transform line items (they will be root/parent tasks)
+  const lineItems = tasks.filter(task => task.type === 'lineitem');
+  
   // Transform our tasks to the format expected by wx-react-gantt
   const wxTasks = tasks.map(task => ({
     id: task.id,
@@ -15,10 +18,13 @@ const WxGanttChart = ({ tasks }: WxGanttChartProps) => {
     duration: task.duration,
     progress: 0,
     type: task.type === 'lineitem' ? 'summary' : 'task',
-    parent: task.dependencies.length > 0 ? task.dependencies[0] : undefined,
+    // For line items, don't set a parent. For others, find their first dependency
+    parent: task.type === 'lineitem' ? undefined : task.dependencies[0],
     open: true,
     lazy: false,
   }));
+
+  console.log('Transformed tasks:', wxTasks);
 
   // Create links from dependencies
   const links = tasks.flatMap(task => 
@@ -62,14 +68,21 @@ const WxGanttChart = ({ tasks }: WxGanttChartProps) => {
     { unit: "day", step: 1, format: "d" },
   ];
 
-  console.log('WxGantt tasks:', wxTasks);
+  // Ensure all tasks have valid dates
+  const validWxTasks = wxTasks.map(task => ({
+    ...task,
+    start: task.start instanceof Date ? task.start : new Date(),
+    end: task.end instanceof Date ? task.end : new Date(Date.now() + task.duration * 3600000)
+  }));
+
+  console.log('WxGantt tasks:', validWxTasks);
   console.log('WxGantt links:', links);
   console.log('WxGantt columns:', columns);
 
   return (
     <div className="h-[600px] w-full">
       <Gantt 
-        tasks={wxTasks} 
+        tasks={validWxTasks} 
         links={links} 
         scales={scales}
         columns={columns}
