@@ -25,10 +25,15 @@ export const calculateTaskWidth = (duration: number, timeScale: number) => {
 };
 
 export const getTaskLevel = (task: Task, tasks: Task[]): number => {
-  // Find tasks that depend on this task (children)
-  const childTasks = tasks.filter(t => t.dependencies.includes(task.id));
-  if (childTasks.length === 0) return 0;
-  return Math.max(...childTasks.map(child => getTaskLevel(child, tasks))) + 1;
+  // If this task has no dependencies, it's at level 0
+  if (task.dependencies.length === 0) return 0;
+  
+  // Get all parent tasks (tasks that this task depends on)
+  const parentTasks = tasks.filter(t => task.dependencies.includes(t.id));
+  if (parentTasks.length === 0) return 0;
+  
+  // Return the maximum level of any parent plus 1
+  return Math.max(...parentTasks.map(parent => getTaskLevel(parent, tasks))) + 1;
 };
 
 export const getVerticalPosition = (
@@ -40,43 +45,50 @@ export const getVerticalPosition = (
 ): number => {
   console.log(`Calculating vertical position for task ${task.id}`);
   
-  // Get all line items (top-level tasks)
-  const lineItems = tasks.filter(t => t.type === 'lineitem');
-  
   // For line items, position based on their order
   if (task.type === 'lineitem') {
+    const lineItems = tasks.filter(t => t.type === 'lineitem');
     const index = lineItems.findIndex(t => t.id === task.id);
     const position = (index * rowHeight) + verticalOffset;
     console.log(`Line item ${task.id} positioned at ${position}px`);
     return position;
   }
 
-  // Find the task that depends on this task (the parent)
-  const parentTask = tasks.find(t => t.dependencies.includes(task.id));
-  if (!parentTask) {
-    console.log(`No parent found for task ${task.id}`);
+  // Find the tasks that this task depends on (parents)
+  const parentTasks = task.dependencies.map(depId => tasks.find(t => t.id === depId)).filter(Boolean) as Task[];
+  
+  // If no parents are found, hide the task
+  if (parentTasks.length === 0) {
+    console.log(`No parents found for task ${task.id}`);
     return -1;
   }
 
-  if (!expandedItems.has(parentTask.id)) {
-    console.log(`Parent ${parentTask.id} is not expanded, hiding task ${task.id}`);
+  // Check if any parent is expanded
+  const anyParentExpanded = parentTasks.some(parent => expandedItems.has(parent.id));
+  if (!anyParentExpanded) {
+    console.log(`No parent is expanded for task ${task.id}, hiding it`);
     return -1;
   }
 
-  // Get parent's position
-  const parentPosition = getVerticalPosition(parentTask, tasks, expandedItems, rowHeight, verticalOffset);
+  // Get the first expanded parent's position
+  const expandedParent = parentTasks.find(parent => expandedItems.has(parent.id));
+  if (!expandedParent) {
+    return -1;
+  }
+
+  const parentPosition = getVerticalPosition(expandedParent, tasks, expandedItems, rowHeight, verticalOffset);
   if (parentPosition < 0) {
-    console.log(`Parent ${parentTask.id} is hidden, hiding task ${task.id}`);
+    console.log(`Parent ${expandedParent.id} is hidden, hiding task ${task.id}`);
     return -1;
   }
 
-  // Get all tasks that this parent depends on (siblings)
-  const siblings = tasks.filter(t => parentTask.dependencies.includes(t.id));
+  // Get all siblings (tasks that share the same parent)
+  const siblings = tasks.filter(t => expandedParent.dependencies.includes(t.id));
   const index = siblings.findIndex(t => t.id === task.id);
 
   // Position based on parent's position and sibling order
   const position = parentPosition + ((index + 1) * rowHeight);
-  console.log(`Task ${task.id} positioned at ${position}px (parent: ${parentTask.id}, index: ${index})`);
+  console.log(`Task ${task.id} positioned at ${position}px (parent: ${expandedParent.id}, index: ${index})`);
   
   return position;
 };
