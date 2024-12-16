@@ -18,20 +18,20 @@ const Index = () => {
       name: 'Final Assembly - Magnetic Wrap Box',
       type: 'lineitem',
       resource: 'bench',
-      duration: 3, // 180 minutes = 3 hours
+      duration: 3,
       status: 'pending',
       dependencies: ['wrap_case', 'wrap_base_tray', 'line_case'],
       priority: 3,
       deadline: deadline
     },
 
-    // Component Level - Case (no explicit priority)
+    // Component Level - Case
     {
       id: 'wrap_case',
       name: 'Wrap Case',
       type: 'component',
       resource: 'gluing_machine',
-      duration: 1.17, // 70 minutes
+      duration: 1.17,
       status: 'pending',
       dependencies: ['case_wrap_cut', 'case_board_insert', 'case_liner_cut'],
     },
@@ -40,18 +40,18 @@ const Index = () => {
       name: 'Line Case',
       type: 'component',
       resource: 'gluing_machine',
-      duration: 0.67, // 40 minutes
+      duration: 0.67,
       status: 'pending',
-      dependencies: ['wrap_case'],
+      dependencies: ['wrap_case'], // Depends on wrap_case being complete
     },
 
-    // Element Level - Case Elements (no explicit priority)
+    // Element Level - Case Elements
     {
       id: 'case_wrap_print',
       name: 'Case Wrap - Print',
       type: 'element',
       resource: 'konica',
-      duration: 0.42, // 25 minutes
+      duration: 0.42,
       status: 'pending',
       dependencies: [],
     },
@@ -60,7 +60,7 @@ const Index = () => {
       name: 'Case Wrap - Laminate',
       type: 'element',
       resource: 'dk_europa',
-      duration: 0.33, // 20 minutes
+      duration: 0.33,
       status: 'pending',
       dependencies: ['case_wrap_print'],
     },
@@ -69,7 +69,7 @@ const Index = () => {
       name: 'Case Wrap - Cut',
       type: 'element',
       resource: 'zund_m800',
-      duration: 0.33, // 20 minutes
+      duration: 0.33,
       status: 'pending',
       dependencies: ['case_wrap_laminate'],
     },
@@ -78,7 +78,7 @@ const Index = () => {
       name: 'Case Board - Cut',
       type: 'element',
       resource: 'zund_m800',
-      duration: 0.5, // 30 minutes
+      duration: 0.5,
       status: 'pending',
       dependencies: [],
     },
@@ -87,7 +87,7 @@ const Index = () => {
       name: 'Case Board - Insert Receivers',
       type: 'element',
       resource: 'bench',
-      duration: 0.5, // 30 minutes
+      duration: 0.5,
       status: 'pending',
       dependencies: ['case_board_cut'],
     },
@@ -96,7 +96,7 @@ const Index = () => {
       name: 'Case Liner - Laminate',
       type: 'element',
       resource: 'dk_europa',
-      duration: 0.33, // 20 minutes
+      duration: 0.33,
       status: 'pending',
       dependencies: [],
     },
@@ -105,29 +105,32 @@ const Index = () => {
       name: 'Case Liner - Cut',
       type: 'element',
       resource: 'zund_m800',
-      duration: 0.33, // 20 minutes
+      duration: 0.33,
       status: 'pending',
       dependencies: ['case_liner_laminate'],
     },
 
-    // Component Level - Base Tray (no explicit priority)
+    // Component Level - Base Tray
     {
       id: 'wrap_base_tray',
       name: 'Wrap Base Tray',
       type: 'component',
       resource: 'gluing_machine',
-      duration: 2, // 120 minutes
+      duration: 2,
       status: 'pending',
-      dependencies: ['base_tray_board_corner', 'base_tray_wrap_cut'],
+      dependencies: [
+        'base_tray_board_corner',  // Must wait for all board processing
+        'base_tray_wrap_cut'       // Must wait for all wrap processing
+      ],
     },
 
-    // Element Level - Base Tray Elements (no explicit priority)
+    // Element Level - Base Tray Elements
     {
       id: 'base_tray_board_cut',
       name: 'Base Tray Board - Cut',
       type: 'element',
       resource: 'zund_m800',
-      duration: 1, // 60 minutes
+      duration: 1,
       status: 'pending',
       dependencies: [],
     },
@@ -136,7 +139,7 @@ const Index = () => {
       name: 'Base Tray Board - Drill Holes',
       type: 'element',
       resource: 'magnet_drill',
-      duration: 0.5, // 30 minutes
+      duration: 0.5,
       status: 'pending',
       dependencies: ['base_tray_board_cut'],
     },
@@ -145,7 +148,7 @@ const Index = () => {
       name: 'Base Tray Board - Insert Magnets',
       type: 'element',
       resource: 'bench',
-      duration: 1, // 60 minutes
+      duration: 1,
       status: 'pending',
       dependencies: ['base_tray_board_drill'],
     },
@@ -154,7 +157,7 @@ const Index = () => {
       name: 'Base Tray Board - Corner Tape',
       type: 'element',
       resource: 'corner_taper',
-      duration: 0.5, // 30 minutes
+      duration: 0.5,
       status: 'pending',
       dependencies: ['base_tray_board_magnets'],
     },
@@ -163,7 +166,7 @@ const Index = () => {
       name: 'Base Tray Wrap - Print',
       type: 'element',
       resource: 'konica',
-      duration: 0.33, // 20 minutes
+      duration: 0.33,
       status: 'pending',
       dependencies: [],
     },
@@ -172,7 +175,7 @@ const Index = () => {
       name: 'Base Tray Wrap - Laminate',
       type: 'element',
       resource: 'dk_europa',
-      duration: 0.25, // 15 minutes
+      duration: 0.25,
       status: 'pending',
       dependencies: ['base_tray_wrap_print'],
     },
@@ -181,7 +184,7 @@ const Index = () => {
       name: 'Base Tray Wrap - Cut',
       type: 'element',
       resource: 'zund_m800',
-      duration: 0.75, // 45 minutes
+      duration: 0.75,
       status: 'pending',
       dependencies: ['base_tray_wrap_laminate'],
     }
