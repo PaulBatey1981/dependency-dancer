@@ -27,6 +27,7 @@ const GanttTimeline = ({
   const ROW_HEIGHT = 40;
   const INDENT_WIDTH = 24;
   const TASK_HEIGHT = 32;
+  const VERTICAL_OFFSET = 4; // Re-add this constant
 
   const timeScale = getTimeScale(viewMode);
   const gridLines = getGridLines(viewMode);
@@ -59,7 +60,7 @@ const GanttTimeline = ({
         
         const position = calculateTaskPosition(task.startTime, earliestStart, timeScale);
         const width = calculateTaskWidth(task.duration, timeScale);
-        const verticalPosition = getVerticalPosition(task, tasks, expandedItems, ROW_HEIGHT);
+        const verticalPosition = getVerticalPosition(task, tasks, expandedItems, ROW_HEIGHT, VERTICAL_OFFSET);
         const level = getTaskLevel(task, tasks);
         
         if (verticalPosition < 0) return null;
