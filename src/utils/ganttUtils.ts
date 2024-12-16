@@ -34,25 +34,30 @@ const getParentTasks = (task: Task, tasks: Task[]): Task[] => {
   return task.dependencies.map(depId => tasks.find(t => t.id === depId)).filter((t): t is Task => t !== undefined);
 };
 
+// Check if a task should be visible based on its parents' expansion state
+const isTaskVisible = (task: Task, tasks: Task[], expandedItems: Set<string>): boolean => {
+  // Line items are always visible
+  if (task.type === 'lineitem') return true;
+
+  // For non-line items, check if all parent tasks up to a line item are expanded
+  let currentTask = task;
+  while (currentTask && currentTask.type !== 'lineitem') {
+    const parents = getParentTasks(currentTask, tasks);
+    const parent = parents[0]; // Assuming each task has one direct parent
+    
+    if (!parent) break;
+    if (!expandedItems.has(parent.id)) return false;
+    
+    currentTask = parent;
+  }
+  
+  return true;
+};
+
 export const getTaskLevel = (task: Task, tasks: Task[]): number => {
   const parents = getParentTasks(task, tasks);
   if (parents.length === 0) return 0;
   return Math.max(...parents.map(parent => getTaskLevel(parent, tasks))) + 1;
-};
-
-const calculateTotalVisibleChildren = (task: Task, tasks: Task[], expandedItems: Set<string>): number => {
-  if (!expandedItems.has(task.id)) return 0;
-  
-  const children = getChildTasks(task, tasks);
-  let total = children.length;
-  
-  for (const child of children) {
-    if (expandedItems.has(child.id)) {
-      total += calculateTotalVisibleChildren(child, tasks, expandedItems);
-    }
-  }
-  
-  return total;
 };
 
 export const getVerticalPosition = (
@@ -64,29 +69,36 @@ export const getVerticalPosition = (
 ): number => {
   console.log(`Calculating vertical position for task ${task.id}`);
 
-  // Get all tasks at the same level
-  const tasksAtSameLevel = tasks.filter(t => getTaskLevel(t, tasks) === getTaskLevel(task, tasks));
-  
-  // Find position among tasks at the same level
-  const indexAtLevel = tasksAtSameLevel.findIndex(t => t.id === task.id);
-  
-  // Base position is determined by level and index
-  let position = verticalOffset + (indexAtLevel * rowHeight);
+  // Check if the task should be visible
+  if (!isTaskVisible(task, tasks, expandedItems)) {
+    console.log(`Task ${task.id} is hidden (parent not expanded)`);
+    return -1;
+  }
 
-  // Add space for expanded parent tasks and their children
+  // For line items, position them at the top level
+  if (task.type === 'lineitem') {
+    const lineItems = tasks.filter(t => t.type === 'lineitem');
+    const index = lineItems.findIndex(t => t.id === task.id);
+    const position = verticalOffset + (index * rowHeight);
+    console.log(`Line item ${task.id} positioned at ${position}px`);
+    return position;
+  }
+
+  // For child tasks, position them under their parent if it's expanded
   const parents = getParentTasks(task, tasks);
-  parents.forEach(parent => {
-    if (expandedItems.has(parent.id)) {
-      const siblingsBefore = getChildTasks(parent, tasks)
-        .filter(sibling => 
-          getTaskLevel(sibling, tasks) === getTaskLevel(task, tasks) &&
-          tasksAtSameLevel.indexOf(sibling) < indexAtLevel
-        );
-      position += siblingsBefore.length * rowHeight;
-    }
-  });
+  const parent = parents[0]; // Assuming each task has one direct parent
+  
+  if (!parent || !expandedItems.has(parent.id)) {
+    return -1;
+  }
 
-  console.log(`Final position for task ${task.id}: ${position}px`);
+  const parentPosition = getVerticalPosition(parent, tasks, expandedItems, rowHeight, verticalOffset);
+  const siblings = getChildTasks(parent, tasks);
+  const siblingIndex = siblings.findIndex(t => t.id === task.id);
+  
+  const position = parentPosition + ((siblingIndex + 1) * rowHeight);
+  console.log(`Child task ${task.id} positioned at ${position}px under parent ${parent.id}`);
+  
   return position;
 };
 
