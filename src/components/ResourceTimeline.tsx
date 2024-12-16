@@ -45,7 +45,7 @@ const ResourceTimeline = ({ tasks, resources }: ResourceTimelineProps) => {
             {tasks
               .filter(task => task.resource === resource.id && task.startTime)
               .map(task => (
-                <HoverCard key={task.id}>
+                <HoverCard key={task.id} openDelay={0} closeDelay={0}>
                   <HoverCardTrigger asChild>
                     <div
                       className={`absolute h-16 mt-2 rounded ${getTaskColor(
@@ -63,7 +63,7 @@ const ResourceTimeline = ({ tasks, resources }: ResourceTimelineProps) => {
                       </span>
                     </div>
                   </HoverCardTrigger>
-                  <HoverCardContent className="w-80">
+                  <HoverCardContent className="w-80 bg-white">
                     <div className="space-y-2">
                       <h4 className="font-semibold">{task.name}</h4>
                       <div className="text-sm">
