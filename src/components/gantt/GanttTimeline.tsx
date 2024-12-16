@@ -48,8 +48,13 @@ const GanttTimeline = ({ tasks, zoomLevel, viewMode, earliestStart }: GanttTimel
     minHours
   );
 
+  const timelineWidth = Math.max(contentHours / zoomLevel, 1000); // Minimum width of 1000px
+
   return (
-    <div className="relative w-full">
+    <div 
+      className="relative bg-white"
+      style={{ width: `${timelineWidth}px`, minWidth: '100%' }}
+    >
       {/* Grid lines */}
       {Array.from({ length: Math.ceil(contentHours) }).map((_, i) => (
         <div

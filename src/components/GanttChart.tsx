@@ -107,20 +107,22 @@ const GanttChart = ({ tasks }: GanttChartProps) => {
       </div>
 
       <div className="flex flex-1 border rounded-lg overflow-hidden">
-        <ScrollArea className="border-r w-64 flex-shrink-0">
-          <GanttTaskList
-            tasks={tasks}
-            expandedItems={expandedItems}
-            toggleExpand={toggleExpand}
-          />
-        </ScrollArea>
+        <div className="w-64 flex-shrink-0 border-r">
+          <ScrollArea>
+            <GanttTaskList
+              tasks={tasks}
+              expandedItems={expandedItems}
+              toggleExpand={toggleExpand}
+            />
+          </ScrollArea>
+        </div>
 
-        <div 
-          className="flex-1 overflow-x-auto bg-white"
-          onWheel={handleWheel}
-          ref={timelineRef}
-        >
-          <div className="inline-block min-w-full">
+        <div className="flex-1 overflow-hidden">
+          <div 
+            className="overflow-x-auto"
+            onWheel={handleWheel}
+            ref={timelineRef}
+          >
             <GanttTimelineHeader
               startDate={earliestStart}
               endDate={latestEnd}
