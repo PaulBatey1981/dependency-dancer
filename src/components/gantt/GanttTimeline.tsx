@@ -40,17 +40,15 @@ const GanttTimeline = ({ tasks, zoomLevel, viewMode, earliestStart }: GanttTimel
   )));
 
   // Calculate total hours needed for timeline
-  const totalHours = Math.max(
-    (latestEnd.getTime() - earliestStart.getTime()) / (1000 * 60 * 60),
-    viewMode === 'day' ? 24 : viewMode === 'week' ? 168 : 720
+  const totalHours = Math.ceil(
+    Math.max(
+      (latestEnd.getTime() - earliestStart.getTime()) / (1000 * 60 * 60),
+      viewMode === 'day' ? 24 : viewMode === 'week' ? 168 : 720
+    )
   );
 
-  // Calculate timeline width based on zoom level
-  const timelineWidth = Math.max(totalHours / zoomLevel, 1000);
-
-  console.log('Timeline tasks:', tasks.filter(t => t.startTime).length);
-  console.log('Timeline width:', timelineWidth);
-  console.log('Total hours:', totalHours);
+  // Calculate timeline width based on zoom level and ensure minimum width
+  const timelineWidth = Math.max(totalHours / zoomLevel, window.innerWidth);
 
   return (
     <div 

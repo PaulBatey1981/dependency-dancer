@@ -31,42 +31,40 @@ const GanttTaskList = ({ tasks, expandedItems, toggleExpand }: GanttTaskListProp
     const hasChildren = childTasks.length > 0;
     const isExpanded = expandedItems.has(task.id);
 
-    console.log(`Rendering task ${task.id}:`, {
-      hasChildren,
-      isExpanded,
-      childCount: childTasks.length
-    });
-
     return (
-      <div key={task.id} className="animate-task-appear">
+      <div key={task.id}>
         <div 
-          className="flex items-center py-2 px-2 hover:bg-gray-50 cursor-pointer"
+          className="flex items-center py-2 px-2 hover:bg-gray-50 cursor-pointer group"
           style={{ paddingLeft: `${level * 1.5 + 0.5}rem` }}
           onClick={() => hasChildren && toggleExpand(task.id)}
         >
-          {hasChildren && (
-            <Button
-              variant="ghost"
-              size="icon"
-              className="h-6 w-6"
-            >
-              {isExpanded ? <ChevronDown size={16} /> : <ChevronRight size={16} />}
-            </Button>
-          )}
-          {!hasChildren && <div className="w-6" />}
-          <div className={`w-3 h-3 rounded-full ${getTaskColor(task.type)} mx-2 flex-shrink-0`} />
-          <span className="text-sm truncate">{task.name}</span>
+          <div className="flex items-center flex-1">
+            {hasChildren ? (
+              <Button
+                variant="ghost"
+                size="icon"
+                className="h-6 w-6 opacity-0 group-hover:opacity-100"
+              >
+                {isExpanded ? <ChevronDown size={16} /> : <ChevronRight size={16} />}
+              </Button>
+            ) : (
+              <div className="w-6" />
+            )}
+            <div className={`w-3 h-3 rounded-full ${getTaskColor(task.type)} mx-2 flex-shrink-0`} />
+            <span className="text-sm truncate">{task.name}</span>
+          </div>
         </div>
-        {isExpanded && childTasks.map(childTask => renderTask(childTask, level + 1))}
+        {isExpanded && (
+          <div className="animate-task-appear">
+            {childTasks.map(childTask => renderTask(childTask, level + 1))}
+          </div>
+        )}
       </div>
     );
   };
 
   // Get all line items (top-level tasks)
   const lineItems = tasks.filter(task => task.type === 'lineitem');
-
-  console.log('Line items:', lineItems.length);
-  console.log('Expanded items:', Array.from(expandedItems));
 
   return (
     <div className="min-h-full bg-white">
