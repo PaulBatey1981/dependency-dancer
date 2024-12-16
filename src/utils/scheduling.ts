@@ -35,7 +35,50 @@ export function topologicalSort(tasks: Task[]): Task[] {
   return order;
 }
 
-// Basic scheduling algorithm
+// Find the earliest available time slot for a task on its resource
+function findEarliestSlot(
+  task: Task,
+  scheduledTasks: Task[],
+  startTime: Date
+): Date {
+  console.log(`Finding earliest slot for task ${task.id} on resource ${task.resource}`);
+  
+  // Get all tasks scheduled on the same resource
+  const resourceTasks = scheduledTasks.filter(
+    t => t.resource === task.resource && t.startTime && t.endTime
+  );
+  
+  // Sort tasks by start time
+  resourceTasks.sort((a, b) => 
+    (a.startTime?.getTime() || 0) - (b.startTime?.getTime() || 0)
+  );
+  
+  let proposedStart = startTime;
+  let proposedEnd = new Date(proposedStart.getTime() + task.duration * 3600000);
+  
+  // Check each scheduled task for overlaps
+  for (const scheduledTask of resourceTasks) {
+    if (!scheduledTask.startTime || !scheduledTask.endTime) continue;
+    
+    // If our proposed slot overlaps with a scheduled task
+    if (proposedStart < scheduledTask.endTime && 
+        proposedEnd > scheduledTask.startTime) {
+      // Move proposed start to after the scheduled task
+      proposedStart = new Date(scheduledTask.endTime.getTime());
+      proposedEnd = new Date(proposedStart.getTime() + task.duration * 3600000);
+    }
+  }
+  
+  // If task has a deadline, verify we can meet it
+  if (task.deadline && proposedEnd > task.deadline) {
+    console.warn(`Warning: Task ${task.id} cannot meet deadline`);
+  }
+  
+  console.log(`Found slot for task ${task.id}: ${proposedStart.toISOString()}`);
+  return proposedStart;
+}
+
+// Schedule a single task
 export function scheduleTask(
   task: Task,
   scheduledTasks: Task[],
@@ -55,38 +98,33 @@ export function scheduleTask(
     );
 
   // Find the earliest available slot after dependencies
-  let proposedStart = depEndTime;
-  let conflictFound = true;
+  return findEarliestSlot(task, scheduledTasks, depEndTime);
+}
 
-  while (conflictFound) {
-    conflictFound = false;
-    for (const scheduled of scheduledTasks) {
-      if (scheduled.resource === task.resource && 
-          scheduled.status === 'fixed' &&
-          proposedStart < (scheduled.endTime || new Date()) &&
-          new Date(proposedStart.getTime() + task.duration * 3600000) > (scheduled.startTime || new Date())) {
-        proposedStart = scheduled.endTime || new Date();
-        conflictFound = true;
-        break;
-      }
-    }
-  }
-
-  console.log(`Scheduled task ${task.id} to start at ${proposedStart}`);
-  return proposedStart;
+// Sort tasks by priority (higher priority first)
+function sortByPriority(tasks: Task[]): Task[] {
+  return [...tasks].sort((a, b) => {
+    // Default priority is 0
+    const priorityA = a.priority || 0;
+    const priorityB = b.priority || 0;
+    return priorityB - priorityA;
+  });
 }
 
 export function rescheduleAll(tasks: Task[]): Task[] {
   console.log('Starting full reschedule');
   
-  // Sort tasks topologically
+  // Sort tasks topologically first
   const sortedTasks = topologicalSort(tasks);
+  
+  // Then sort by priority within dependency constraints
+  const prioritizedTasks = sortByPriority(sortedTasks);
   
   // Keep track of scheduled tasks
   const scheduledTasks: Task[] = [];
   
   // Schedule each task
-  for (const task of sortedTasks) {
+  for (const task of prioritizedTasks) {
     if (task.status === 'fixed') {
       scheduledTasks.push(task);
       continue;

@@ -16,6 +16,8 @@ const Index = () => {
       duration: 4,
       status: 'pending',
       dependencies: [],
+      priority: 3,
+      deadline: new Date(Date.now() + 24 * 3600000), // 24 hours from now
     },
     {
       id: '2',
@@ -25,6 +27,8 @@ const Index = () => {
       duration: 2,
       status: 'pending',
       dependencies: ['1'],
+      priority: 2,
+      deadline: new Date(Date.now() + 48 * 3600000), // 48 hours from now
     },
     {
       id: '3',
@@ -34,6 +38,8 @@ const Index = () => {
       duration: 3,
       status: 'pending',
       dependencies: ['2'],
+      priority: 1,
+      deadline: new Date(Date.now() + 72 * 3600000), // 72 hours from now
     },
   ]);
 

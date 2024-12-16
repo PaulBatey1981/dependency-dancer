@@ -38,6 +38,11 @@ const TaskList = ({ tasks, onToggleFixed }: TaskListProps) => {
                   className={`w-3 h-3 rounded-full ${getTaskColor(task.type)}`}
                 />
                 <h3 className="font-semibold">{task.name}</h3>
+                {task.priority !== undefined && (
+                  <span className="text-xs bg-gray-100 px-2 py-1 rounded">
+                    Priority: {task.priority}
+                  </span>
+                )}
               </div>
               <p className="text-sm text-gray-500">
                 Duration: {task.duration}h | Resource: {task.resource}
@@ -45,6 +50,11 @@ const TaskList = ({ tasks, onToggleFixed }: TaskListProps) => {
               {task.startTime && (
                 <p className="text-sm text-gray-500">
                   Start: {task.startTime.toLocaleString()}
+                </p>
+              )}
+              {task.deadline && (
+                <p className="text-sm text-gray-500">
+                  Deadline: {task.deadline.toLocaleString()}
                 </p>
               )}
             </div>
