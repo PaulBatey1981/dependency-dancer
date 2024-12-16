@@ -47,9 +47,9 @@ const GanttTaskBar = ({
           style={{
             left: `${position}%`,
             width: `${width}%`,
-            top: `${verticalPosition}px`,
+            top: `${verticalPosition + 4}px`, // Add 4px offset to center the bar
             marginLeft: `${level * indentWidth}px`,
-            height: `${taskHeight}px`,
+            height: `${taskHeight - 8}px`, // Reduce height by 8px (4px top and bottom) for better alignment
           }}
         >
           <span className="text-xs text-white p-1 truncate block">
