@@ -13,8 +13,6 @@ interface GanttTimelineProps {
 }
 
 const GanttTimeline = ({ tasks, zoomLevel, viewMode, earliestStart }: GanttTimelineProps) => {
-  console.log('Timeline render with zoom level:', zoomLevel);
-  
   const getTaskColor = (type: Task['type']) => {
     switch (type) {
       case 'lineitem':
@@ -28,21 +26,43 @@ const GanttTimeline = ({ tasks, zoomLevel, viewMode, earliestStart }: GanttTimel
     }
   };
 
+  // Calculate time scale based on view mode
+  const getTimeScale = () => {
+    switch (viewMode) {
+      case 'day':
+        return 24; // 24 hours
+      case 'week':
+        return 24 * 7; // 168 hours
+      case 'month':
+        return 24 * 30; // ~720 hours
+      default:
+        return 24;
+    }
+  };
+
   const calculateTaskPosition = (startTime: Date) => {
     const hoursFromStart = (startTime.getTime() - earliestStart.getTime()) / (1000 * 60 * 60);
-    const position = (hoursFromStart / zoomLevel) * 100;
+    const timeScale = getTimeScale();
+    const position = (hoursFromStart / timeScale) * 100;
     console.log(`Task position calculation:`, {
       startTime: startTime.toISOString(),
       hoursFromStart,
       position,
-      zoomLevel
+      timeScale,
+      viewMode
     });
     return position;
   };
 
   const calculateTaskWidth = (duration: number) => {
-    const width = (duration / zoomLevel) * 100;
-    console.log(`Task width calculation:`, { duration, width, zoomLevel });
+    const timeScale = getTimeScale();
+    const width = (duration / timeScale) * 100;
+    console.log(`Task width calculation:`, { 
+      duration, 
+      width, 
+      timeScale,
+      viewMode 
+    });
     return width;
   };
 
@@ -52,29 +72,33 @@ const GanttTimeline = ({ tasks, zoomLevel, viewMode, earliestStart }: GanttTimel
     .map(t => new Date(t.startTime!.getTime() + t.duration * 3600000).getTime())
   ));
 
-  // Calculate total duration in hours
+  // Calculate total duration based on view mode
   const totalDurationHours = Math.ceil(
     (latestEnd.getTime() - earliestStart.getTime()) / (1000 * 60 * 60)
   );
 
   console.log('Timeline dimensions:', {
     totalDurationHours,
-    zoomLevel,
-    calculatedWidth: totalDurationHours / zoomLevel
+    viewMode,
+    timeScale: getTimeScale()
   });
 
-  // Calculate the number of grid lines needed
-  const gridLines = Array.from({ length: Math.ceil(totalDurationHours) }).map((_, i) => {
-    const position = (i / totalDurationHours) * 100;
-    return position;
-  });
+  // Calculate grid lines based on view mode
+  const getGridLines = () => {
+    const timeScale = getTimeScale();
+    const intervals = viewMode === 'day' ? 24 : viewMode === 'week' ? 7 : 30;
+    return Array.from({ length: intervals }).map((_, i) => {
+      const position = (i / intervals) * 100;
+      return position;
+    });
+  };
 
   return (
     <div 
       className="relative bg-white min-h-full w-full"
     >
       {/* Grid lines */}
-      {gridLines.map((position, i) => (
+      {getGridLines().map((position, i) => (
         <div
           key={i}
           className="absolute top-0 bottom-0 border-l border-gantt-grid"
