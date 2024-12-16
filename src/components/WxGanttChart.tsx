@@ -16,6 +16,7 @@ const WxGanttChart = ({ tasks }: WxGanttChartProps) => {
     progress: 0,
     type: task.type === 'lineitem' ? 'summary' : 'task',
     parent: task.dependencies.length > 0 ? task.dependencies[0] : undefined,
+    open: true,
     lazy: false,
   }));
 
@@ -29,6 +30,33 @@ const WxGanttChart = ({ tasks }: WxGanttChartProps) => {
     }))
   );
 
+  // Define columns for the grid area
+  const columns = [
+    { id: "text", header: "Task name", flexGrow: 2 },
+    {
+      id: "start",
+      header: "Start date",
+      flexGrow: 1,
+      align: "center",
+    },
+    {
+      id: "duration",
+      header: "Duration (hours)",
+      align: "center",
+      flexGrow: 1,
+    },
+    {
+      id: "resource",
+      header: "Resource",
+      align: "center",
+      flexGrow: 1,
+      template: (task: any) => {
+        const originalTask = tasks.find(t => t.id === task.id);
+        return originalTask?.resource || '';
+      }
+    }
+  ];
+
   const scales = [
     { unit: "month", step: 1, format: "MMMM yyy" },
     { unit: "day", step: 1, format: "d" },
@@ -36,6 +64,7 @@ const WxGanttChart = ({ tasks }: WxGanttChartProps) => {
 
   console.log('WxGantt tasks:', wxTasks);
   console.log('WxGantt links:', links);
+  console.log('WxGantt columns:', columns);
 
   return (
     <div className="h-[600px] w-full">
@@ -43,6 +72,7 @@ const WxGanttChart = ({ tasks }: WxGanttChartProps) => {
         tasks={wxTasks} 
         links={links} 
         scales={scales}
+        columns={columns}
       />
     </div>
   );
