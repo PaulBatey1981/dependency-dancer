@@ -33,6 +33,7 @@ const Index = () => {
       resource: 'gluing_machine',
       duration: 1.17,
       status: 'pending',
+      // Now depends on ALL case element tasks
       dependencies: ['case_wrap_cut', 'case_board_insert', 'case_liner_cut'],
     },
     {
@@ -42,7 +43,8 @@ const Index = () => {
       resource: 'gluing_machine',
       duration: 0.67,
       status: 'pending',
-      dependencies: ['wrap_case'], // Depends on wrap_case being complete
+      // Must wait for wrap_case to complete
+      dependencies: ['wrap_case'],
     },
 
     // Element Level - Case Elements
@@ -53,7 +55,7 @@ const Index = () => {
       resource: 'konica',
       duration: 0.42,
       status: 'pending',
-      dependencies: [],
+      dependencies: [], // First task in its chain
     },
     {
       id: 'case_wrap_laminate',
@@ -118,9 +120,11 @@ const Index = () => {
       resource: 'gluing_machine',
       duration: 2,
       status: 'pending',
+      // Must wait for ALL base tray tasks to complete
       dependencies: [
-        'base_tray_board_corner',  // Must wait for all board processing
-        'base_tray_wrap_cut'       // Must wait for all wrap processing
+        'base_tray_board_corner',
+        'base_tray_wrap_cut',
+        'base_tray_board_magnets'
       ],
     },
 
