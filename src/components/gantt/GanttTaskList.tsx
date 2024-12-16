@@ -31,30 +31,35 @@ const GanttTaskList = ({ tasks, expandedItems, toggleExpand }: GanttTaskListProp
     const hasChildren = childTasks.length > 0;
     const isExpanded = expandedItems.has(task.id);
 
+    console.log(`Rendering task ${task.id}, expanded: ${isExpanded}, children: ${childTasks.length}`);
+
     return (
       <div key={task.id}>
         <div 
-          className="flex items-center py-2 px-2 hover:bg-gray-50 cursor-pointer group"
+          className="flex items-center py-2 px-2 hover:bg-gray-50 group"
           style={{ paddingLeft: `${level * 1.5 + 0.5}rem` }}
-          onClick={() => hasChildren && toggleExpand(task.id)}
         >
           <div className="flex items-center flex-1">
-            {hasChildren ? (
+            {hasChildren && (
               <Button
                 variant="ghost"
                 size="icon"
-                className="h-6 w-6 opacity-0 group-hover:opacity-100"
+                className="h-6 w-6"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  console.log(`Toggling expansion for task ${task.id}`);
+                  toggleExpand(task.id);
+                }}
               >
                 {isExpanded ? <ChevronDown size={16} /> : <ChevronRight size={16} />}
               </Button>
-            ) : (
-              <div className="w-6" />
             )}
+            {!hasChildren && <div className="w-6" />}
             <div className={`w-3 h-3 rounded-full ${getTaskColor(task.type)} mx-2 flex-shrink-0`} />
             <span className="text-sm truncate">{task.name}</span>
           </div>
         </div>
-        {isExpanded && (
+        {isExpanded && hasChildren && (
           <div className="animate-task-appear">
             {childTasks.map(childTask => renderTask(childTask, level + 1))}
           </div>
