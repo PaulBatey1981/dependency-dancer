@@ -1,7 +1,6 @@
-import React, { useEffect, useRef } from 'react';
+import React from 'react';
 import { Gantt } from '@dhtmlx/trial-react-gantt';
 import { Task } from '@/types/scheduling';
-// Import CSS in a way that Vite can handle
 import '@dhtmlx/trial-react-gantt/codebase/dhtmlxgantt.css';
 
 interface DhtmlxGanttProps {
