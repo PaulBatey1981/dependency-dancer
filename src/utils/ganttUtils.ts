@@ -24,20 +24,20 @@ export const calculateTaskWidth = (duration: number, timeScale: number) => {
   return width;
 };
 
-// Get tasks that this task depends on (parents)
+// A task is a child if it depends on another task
 const getParentTasks = (task: Task, tasks: Task[]): Task[] => {
-  return tasks.filter(t => task.dependencies.includes(t.id));
+  return task.dependencies.map(depId => tasks.find(t => t.id === depId)).filter((t): t is Task => t !== undefined);
 };
 
-// Get tasks that depend on this task (children)
+// A task is a parent if other tasks depend on it
 const getChildTasks = (task: Task, tasks: Task[]): Task[] => {
   return tasks.filter(t => t.dependencies.includes(task.id));
 };
 
 export const getTaskLevel = (task: Task, tasks: Task[]): number => {
-  const parentTasks = getParentTasks(task, tasks);
-  if (parentTasks.length === 0) return 0;
-  return Math.max(...parentTasks.map(parent => getTaskLevel(parent, tasks))) + 1;
+  const parents = getParentTasks(task, tasks);
+  if (parents.length === 0) return 0;
+  return Math.max(...parents.map(parent => getTaskLevel(parent, tasks))) + 1;
 };
 
 const calculateTotalVisibleChildren = (task: Task, tasks: Task[], expandedItems: Set<string>): number => {
@@ -47,7 +47,9 @@ const calculateTotalVisibleChildren = (task: Task, tasks: Task[], expandedItems:
   let total = children.length;
   
   for (const child of children) {
-    total += calculateTotalVisibleChildren(child, tasks, expandedItems);
+    if (expandedItems.has(child.id)) {
+      total += calculateTotalVisibleChildren(child, tasks, expandedItems);
+    }
   }
   
   return total;
@@ -62,12 +64,12 @@ export const getVerticalPosition = (
 ): number => {
   console.log(`Calculating vertical position for task ${task.id}`);
 
-  // Get all line items
-  const lineItems = tasks.filter(t => t.type === 'lineitem');
-  
-  // For line items, calculate position including space for expanded children
+  // For line items (top-level tasks)
   if (task.type === 'lineitem') {
+    // Get all line items
+    const lineItems = tasks.filter(t => t.type === 'lineitem');
     let position = verticalOffset;
+    
     for (const lineItem of lineItems) {
       if (lineItem.id === task.id) {
         console.log(`Found position for line item ${task.id}: ${position}px`);
@@ -77,12 +79,12 @@ export const getVerticalPosition = (
       
       // If this line item is expanded, add space for its children
       if (expandedItems.has(lineItem.id)) {
-        const children = getChildTasks(lineItem, tasks);
+        const children = tasks.filter(t => t.dependencies.includes(lineItem.id));
         for (const child of children) {
           position += rowHeight; // Space for each child
           // If the child is expanded, add space for its children
           if (expandedItems.has(child.id)) {
-            const grandchildren = getChildTasks(child, tasks);
+            const grandchildren = tasks.filter(t => t.dependencies.includes(child.id));
             position += grandchildren.length * rowHeight;
           }
         }
@@ -91,7 +93,7 @@ export const getVerticalPosition = (
     return position;
   }
 
-  // For non-line items, find their parents
+  // For non-line items, find their parent
   const parents = getParentTasks(task, tasks);
   const expandedParent = parents.find(p => expandedItems.has(p.id));
   
@@ -104,8 +106,13 @@ export const getVerticalPosition = (
   const parentPosition = getVerticalPosition(expandedParent, tasks, expandedItems, rowHeight, verticalOffset);
   if (parentPosition < 0) return -1;
 
-  // Get all children of the parent to determine this task's position among siblings
-  const siblings = getChildTasks(expandedParent, tasks);
+  // Get all siblings (tasks that share the same parent)
+  const siblings = tasks.filter(t => 
+    t.dependencies.includes(expandedParent.id) && 
+    t.type === task.type
+  );
+  
+  // Find this task's position among its siblings
   const siblingIndex = siblings.findIndex(s => s.id === task.id);
   
   // Calculate position based on parent position and sibling order
