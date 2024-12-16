@@ -50,9 +50,13 @@ const GanttTimeline = ({ tasks, zoomLevel, viewMode, earliestStart }: GanttTimel
 
   const timelineWidth = Math.max(contentHours / zoomLevel, 1000); // Minimum width of 1000px
 
+  console.log('Timeline tasks:', tasks.filter(t => t.startTime).length);
+  console.log('Timeline width:', timelineWidth);
+  console.log('First task position:', tasks[0]?.startTime ? calculateTaskPosition(tasks[0].startTime) : 'No start time');
+
   return (
     <div 
-      className="relative bg-white"
+      className="relative bg-white h-full"
       style={{ width: `${timelineWidth}px`, minWidth: '100%' }}
     >
       {/* Grid lines */}
@@ -73,15 +77,15 @@ const GanttTimeline = ({ tasks, zoomLevel, viewMode, earliestStart }: GanttTimel
       />
 
       {/* Tasks */}
-      {tasks.map(task => task.startTime && (
+      {tasks.filter(task => task.startTime).map(task => (
         <HoverCard key={task.id}>
           <HoverCardTrigger>
             <div
-              className={`absolute h-8 rounded ${getTaskColor(task.type)} opacity-80 cursor-pointer animate-task-appear ${
+              className={`absolute h-8 rounded ${getTaskColor(task.type)} opacity-80 cursor-pointer ${
                 task.isFixed ? 'border-2 border-task-fixed' : ''
               }`}
               style={{
-                left: `${calculateTaskPosition(task.startTime)}px`,
+                left: `${calculateTaskPosition(task.startTime!)}px`,
                 width: `${calculateTaskWidth(task.duration)}px`,
                 top: '0.5rem',
               }}

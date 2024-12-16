@@ -1,5 +1,6 @@
 import { Task } from '@/types/scheduling';
 import { ChevronRight, ChevronDown } from 'lucide-react';
+import { Button } from '@/components/ui/button';
 
 interface GanttTaskListProps {
   tasks: Task[];
@@ -32,19 +33,22 @@ const GanttTaskList = ({ tasks, expandedItems, toggleExpand }: GanttTaskListProp
     return (
       <div key={task.id}>
         <div 
-          className={`flex items-center py-2 ${level > 0 ? 'pl-6' : ''}`}
-          style={{ paddingLeft: `${level * 1.5}rem` }}
+          className="flex items-center py-2 px-2 hover:bg-gray-50"
+          style={{ paddingLeft: `${level * 1.5 + 0.5}rem` }}
         >
           {hasChildren && (
-            <button
+            <Button
+              variant="ghost"
+              size="icon"
+              className="h-6 w-6"
               onClick={() => toggleExpand(task.id)}
-              className="mr-2 p-1 hover:bg-gray-100 rounded"
             >
               {isExpanded ? <ChevronDown size={16} /> : <ChevronRight size={16} />}
-            </button>
+            </Button>
           )}
-          <div className={`w-3 h-3 rounded-full ${getTaskColor(task.type)} mr-2`} />
-          <span className="font-medium">{task.name}</span>
+          {!hasChildren && <div className="w-6" />}
+          <div className={`w-3 h-3 rounded-full ${getTaskColor(task.type)} mx-2 flex-shrink-0`} />
+          <span className="text-sm truncate">{task.name}</span>
         </div>
         {isExpanded && getChildTasks(task.id).map(childTask => renderTask(childTask, level + 1))}
       </div>
@@ -54,8 +58,11 @@ const GanttTaskList = ({ tasks, expandedItems, toggleExpand }: GanttTaskListProp
   // Get all line items (top-level tasks)
   const lineItems = tasks.filter(task => task.type === 'lineitem');
 
+  console.log('Line items:', lineItems.length);
+  console.log('Expanded items:', Array.from(expandedItems));
+
   return (
-    <div className="w-64 border-r bg-white">
+    <div className="min-h-full bg-white">
       {lineItems.map(task => renderTask(task))}
     </div>
   );

@@ -58,6 +58,19 @@ const GanttChart = ({ tasks }: GanttChartProps) => {
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, []);
 
+  // Scroll to the earliest task on mount
+  useEffect(() => {
+    if (timelineRef.current && tasks.length > 0) {
+      const tasksWithStartTime = tasks.filter(t => t.startTime);
+      if (tasksWithStartTime.length > 0) {
+        const earliestStart = new Date(Math.min(...tasksWithStartTime.map(t => t.startTime!.getTime())));
+        const hoursFromStart = 0; // Start at the beginning
+        const scrollPosition = (hoursFromStart / zoomLevel);
+        timelineRef.current.scrollLeft = scrollPosition;
+      }
+    }
+  }, [tasks, zoomLevel]);
+
   if (!tasks.length) return null;
 
   const earliestStart = new Date(Math.min(...tasks.filter(t => t.startTime).map(t => t.startTime!.getTime())));
@@ -108,7 +121,7 @@ const GanttChart = ({ tasks }: GanttChartProps) => {
 
       <div className="flex flex-1 border rounded-lg overflow-hidden">
         <div className="w-64 flex-shrink-0 border-r">
-          <ScrollArea>
+          <ScrollArea className="h-full">
             <GanttTaskList
               tasks={tasks}
               expandedItems={expandedItems}
@@ -119,7 +132,7 @@ const GanttChart = ({ tasks }: GanttChartProps) => {
 
         <div className="flex-1 overflow-hidden">
           <div 
-            className="overflow-x-auto"
+            className="overflow-x-auto h-full"
             onWheel={handleWheel}
             ref={timelineRef}
           >
