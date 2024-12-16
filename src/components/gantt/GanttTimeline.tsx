@@ -39,28 +39,26 @@ const GanttTimeline = ({ tasks, zoomLevel, viewMode, earliestStart }: GanttTimel
     new Date(t.startTime!.getTime() + t.duration * 3600000).getTime()
   )));
 
-  // Calculate minimum timeline width based on view mode
-  const minHours = viewMode === 'day' ? 24 : viewMode === 'week' ? 168 : 720;
-  
-  // Calculate actual content width based on tasks
-  const contentHours = Math.max(
+  // Calculate total hours needed for timeline
+  const totalHours = Math.max(
     (latestEnd.getTime() - earliestStart.getTime()) / (1000 * 60 * 60),
-    minHours
+    viewMode === 'day' ? 24 : viewMode === 'week' ? 168 : 720
   );
 
-  const timelineWidth = Math.max(contentHours / zoomLevel, 1000); // Minimum width of 1000px
+  // Calculate timeline width based on zoom level
+  const timelineWidth = Math.max(totalHours / zoomLevel, 1000);
 
   console.log('Timeline tasks:', tasks.filter(t => t.startTime).length);
   console.log('Timeline width:', timelineWidth);
-  console.log('First task position:', tasks[0]?.startTime ? calculateTaskPosition(tasks[0].startTime) : 'No start time');
+  console.log('Total hours:', totalHours);
 
   return (
     <div 
-      className="relative bg-white h-full"
-      style={{ width: `${timelineWidth}px`, minWidth: '100%' }}
+      className="relative bg-white min-h-full"
+      style={{ width: `${timelineWidth}px` }}
     >
       {/* Grid lines */}
-      {Array.from({ length: Math.ceil(contentHours) }).map((_, i) => (
+      {Array.from({ length: Math.ceil(totalHours) }).map((_, i) => (
         <div
           key={i}
           className="absolute top-0 bottom-0 border-l border-gantt-grid"

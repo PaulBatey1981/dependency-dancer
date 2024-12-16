@@ -19,6 +19,7 @@ const GanttChart = ({ tasks }: GanttChartProps) => {
   const timelineRef = useRef<HTMLDivElement>(null);
 
   const toggleExpand = (taskId: string) => {
+    console.log('Toggling task:', taskId);
     const newExpanded = new Set(expandedItems);
     if (newExpanded.has(taskId)) {
       newExpanded.delete(taskId);
@@ -26,6 +27,7 @@ const GanttChart = ({ tasks }: GanttChartProps) => {
       newExpanded.add(taskId);
     }
     setExpandedItems(newExpanded);
+    console.log('New expanded items:', Array.from(newExpanded));
   };
 
   const handleWheel = (e: React.WheelEvent) => {
@@ -58,18 +60,15 @@ const GanttChart = ({ tasks }: GanttChartProps) => {
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, []);
 
-  // Scroll to the earliest task on mount
+  // Initialize timeline position
   useEffect(() => {
     if (timelineRef.current && tasks.length > 0) {
       const tasksWithStartTime = tasks.filter(t => t.startTime);
       if (tasksWithStartTime.length > 0) {
-        const earliestStart = new Date(Math.min(...tasksWithStartTime.map(t => t.startTime!.getTime())));
-        const hoursFromStart = 0; // Start at the beginning
-        const scrollPosition = (hoursFromStart / zoomLevel);
-        timelineRef.current.scrollLeft = scrollPosition;
+        timelineRef.current.scrollLeft = 0;
       }
     }
-  }, [tasks, zoomLevel]);
+  }, [tasks]);
 
   if (!tasks.length) return null;
 
@@ -131,23 +130,25 @@ const GanttChart = ({ tasks }: GanttChartProps) => {
         </div>
 
         <div className="flex-1 overflow-hidden">
-          <div 
-            className="overflow-x-auto h-full"
-            onWheel={handleWheel}
-            ref={timelineRef}
-          >
+          <div className="h-full">
             <GanttTimelineHeader
               startDate={earliestStart}
               endDate={latestEnd}
               zoomLevel={zoomLevel}
               viewMode={viewMode}
             />
-            <GanttTimeline
-              tasks={tasks}
-              zoomLevel={zoomLevel}
-              viewMode={viewMode}
-              earliestStart={earliestStart}
-            />
+            <div 
+              className="overflow-x-auto h-[calc(100%-2rem)]"
+              onWheel={handleWheel}
+              ref={timelineRef}
+            >
+              <GanttTimeline
+                tasks={tasks}
+                zoomLevel={zoomLevel}
+                viewMode={viewMode}
+                earliestStart={earliestStart}
+              />
+            </div>
           </div>
         </div>
       </div>
