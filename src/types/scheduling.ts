@@ -1,6 +1,6 @@
 export type TaskType = 'lineitem' | 'component' | 'element';
 
-export type TaskStatus = 'pending' | 'scheduled' | 'fixed';
+export type TaskStatus = 'unscheduled' | 'scheduled' | 'wip' | 'paused' | 'on_hold' | 'completed';
 
 export interface Task {
   id: string;
@@ -11,6 +11,7 @@ export interface Task {
   deadline?: Date;
   priority?: number;
   status: TaskStatus;
+  isFixed: boolean;
   dependencies: string[]; // array of task IDs
   startTime?: Date;
   endTime?: Date;

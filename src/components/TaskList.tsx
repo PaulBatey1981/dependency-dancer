@@ -22,13 +22,30 @@ const TaskList = ({ tasks, onToggleFixed }: TaskListProps) => {
     }
   };
 
+  const getStatusBadgeColor = (status: Task['status']) => {
+    switch (status) {
+      case 'wip':
+        return 'bg-blue-100 text-blue-800';
+      case 'paused':
+        return 'bg-yellow-100 text-yellow-800';
+      case 'on_hold':
+        return 'bg-orange-100 text-orange-800';
+      case 'completed':
+        return 'bg-green-100 text-green-800';
+      case 'scheduled':
+        return 'bg-purple-100 text-purple-800';
+      default:
+        return 'bg-gray-100 text-gray-800';
+    }
+  };
+
   return (
     <div className="space-y-4">
       {tasks.map(task => (
         <Card
           key={task.id}
           className={`p-4 animate-task-appear ${
-            task.status === 'fixed' ? 'border-task-fixed border-2' : ''
+            task.isFixed ? 'border-task-fixed border-2' : ''
           }`}
         >
           <div className="flex items-center justify-between">
@@ -43,6 +60,9 @@ const TaskList = ({ tasks, onToggleFixed }: TaskListProps) => {
                     Priority: {task.priority}
                   </span>
                 )}
+                <span className={`text-xs px-2 py-1 rounded ${getStatusBadgeColor(task.status)}`}>
+                  {task.status.replace('_', ' ').toUpperCase()}
+                </span>
               </div>
               <p className="text-sm text-gray-500">
                 Duration: {task.duration}h | Resource: {task.resource}
@@ -62,9 +82,9 @@ const TaskList = ({ tasks, onToggleFixed }: TaskListProps) => {
               variant="ghost"
               size="icon"
               onClick={() => onToggleFixed(task.id)}
-              className={task.status === 'fixed' ? 'text-task-fixed' : ''}
+              className={task.isFixed ? 'text-task-fixed' : ''}
             >
-              {task.status === 'fixed' ? <Lock /> : <Unlock />}
+              {task.isFixed ? <Lock /> : <Unlock />}
             </Button>
           </div>
         </Card>

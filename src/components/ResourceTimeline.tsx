@@ -26,13 +26,8 @@ const ResourceTimeline = ({ tasks, resources }: ResourceTimelineProps) => {
   };
 
   const calculateTaskPosition = (startTime: Date) => {
-    // Get the earliest start time among all tasks
     const earliestStart = new Date(Math.min(...tasks.filter(t => t.startTime).map(t => t.startTime!.getTime())));
-    
-    // Calculate hours from the earliest start time
     const hoursFromStart = (startTime.getTime() - earliestStart.getTime()) / (1000 * 60 * 60);
-    
-    // Convert to percentage (assuming 24-hour view)
     return `${(hoursFromStart / 24) * 100}%`;
   };
 
@@ -51,7 +46,7 @@ const ResourceTimeline = ({ tasks, resources }: ResourceTimelineProps) => {
                       className={`absolute h-16 mt-2 rounded ${getTaskColor(
                         task.type
                       )} opacity-80 cursor-pointer ${
-                        task.status === 'fixed' ? 'border-2 border-task-fixed' : ''
+                        task.isFixed ? 'border-2 border-task-fixed' : ''
                       }`}
                       style={{
                         left: task.startTime ? calculateTaskPosition(task.startTime) : '0%',
@@ -70,6 +65,7 @@ const ResourceTimeline = ({ tasks, resources }: ResourceTimelineProps) => {
                         <p>Type: {task.type}</p>
                         <p>Duration: {task.duration}h</p>
                         <p>Status: {task.status}</p>
+                        <p>Fixed: {task.isFixed ? 'Yes' : 'No'}</p>
                         {task.priority !== undefined && (
                           <p>Priority: {task.priority}</p>
                         )}
