@@ -33,29 +33,17 @@ const GanttTimeline = ({
   const timeScale = getTimeScale(viewMode);
   const gridLines = getGridLines(viewMode);
 
-  // Get line items in reverse order to match the task list
+  // Get line items sorted by ID in ascending order (MWB1 before MWB2)
   const lineItems = tasks
     .filter(task => task.type === 'lineitem')
-    .reverse();
+    .sort((a, b) => a.id.localeCompare(b.id));
+
+  console.log('Sorted line items:', lineItems.map(item => item.id));
 
   // Create a map to store the base vertical position for each line item
   const lineItemPositions = new Map<string, number>();
   lineItems.forEach((lineItem, index) => {
     lineItemPositions.set(lineItem.id, index * 500); // 500px spacing between line items
-  });
-
-  // Sort tasks to match the task list order
-  const sortedTasks = tasks.slice().sort((a, b) => {
-    const aLineItem = getLineItem(a, tasks);
-    const bLineItem = getLineItem(b, tasks);
-    
-    if (aLineItem && bLineItem) {
-      const aIndex = lineItems.findIndex(item => item.id === aLineItem.id);
-      const bIndex = lineItems.findIndex(item => item.id === bLineItem.id);
-      if (aIndex !== bIndex) return aIndex - bIndex;
-    }
-    
-    return 0;
   });
 
   // Helper function to find the line item for a task
@@ -67,6 +55,29 @@ const GanttTimeline = ({
     
     return getLineItem(parent, allTasks);
   }
+
+  // Sort tasks to match the task list order
+  const sortedTasks = tasks.slice().sort((a, b) => {
+    const aLineItem = getLineItem(a, tasks);
+    const bLineItem = getLineItem(b, tasks);
+    
+    if (aLineItem && bLineItem) {
+      // Sort by line item ID first
+      const lineItemComparison = aLineItem.id.localeCompare(bLineItem.id);
+      if (lineItemComparison !== 0) return lineItemComparison;
+      
+      // If tasks belong to the same line item, maintain their dependency order
+      if (aLineItem.id === bLineItem.id) {
+        const aIndex = tasks.findIndex(t => t.id === a.id);
+        const bIndex = tasks.findIndex(t => t.id === b.id);
+        return aIndex - bIndex;
+      }
+    }
+    
+    return 0;
+  });
+
+  console.log('Sorted tasks order:', sortedTasks.map(task => task.id));
 
   return (
     <div 
