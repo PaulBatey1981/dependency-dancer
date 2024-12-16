@@ -28,31 +28,36 @@ const GanttTimeline = ({ tasks, zoomLevel, viewMode, earliestStart }: GanttTimel
 
   const calculateTaskPosition = (startTime: Date) => {
     const hoursFromStart = (startTime.getTime() - earliestStart.getTime()) / (1000 * 60 * 60);
-    return `${hoursFromStart / zoomLevel}px`;
+    return hoursFromStart / zoomLevel;
   };
 
   const calculateTaskWidth = (duration: number) => {
-    return `${duration / zoomLevel}px`;
+    return duration / zoomLevel;
   };
 
   const latestEnd = new Date(Math.max(...tasks.filter(t => t.startTime).map(t => 
     new Date(t.startTime!.getTime() + t.duration * 3600000).getTime()
   )));
 
-  const totalHours = Math.max(
+  // Calculate minimum timeline width based on view mode
+  const minHours = viewMode === 'day' ? 24 : viewMode === 'week' ? 168 : 720;
+  
+  // Calculate actual content width based on tasks
+  const contentHours = Math.max(
     (latestEnd.getTime() - earliestStart.getTime()) / (1000 * 60 * 60),
-    viewMode === 'day' ? 24 : viewMode === 'week' ? 168 : 720 // Minimum width based on view mode
+    minHours
   );
   
-  const timelineWidth = Math.max(totalHours / zoomLevel, 1000); // Ensure minimum width
+  // Calculate final timeline width in pixels, ensuring it fills the container
+  const timelineWidth = Math.max(contentHours / zoomLevel, window.innerWidth);
 
   return (
     <div 
-      className="relative min-w-full h-full"
-      style={{ width: `${timelineWidth}px` }}
+      className="relative w-full h-full"
+      style={{ minWidth: `${timelineWidth}px` }}
     >
       {/* Grid lines */}
-      {Array.from({ length: Math.ceil(totalHours) }).map((_, i) => (
+      {Array.from({ length: Math.ceil(contentHours) }).map((_, i) => (
         <div
           key={i}
           className="absolute top-0 bottom-0 border-l border-gantt-grid"
@@ -64,7 +69,7 @@ const GanttTimeline = ({ tasks, zoomLevel, viewMode, earliestStart }: GanttTimel
       <div
         className="absolute top-0 bottom-0 w-px bg-blue-500"
         style={{
-          left: calculateTaskPosition(new Date()),
+          left: `${calculateTaskPosition(new Date())}px`,
         }}
       />
 
@@ -77,8 +82,8 @@ const GanttTimeline = ({ tasks, zoomLevel, viewMode, earliestStart }: GanttTimel
                 task.isFixed ? 'border-2 border-task-fixed' : ''
               }`}
               style={{
-                left: calculateTaskPosition(task.startTime),
-                width: calculateTaskWidth(task.duration),
+                left: `${calculateTaskPosition(task.startTime)}px`,
+                width: `${calculateTaskWidth(task.duration)}px`,
                 top: '0.5rem',
               }}
             >
