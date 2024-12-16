@@ -1,12 +1,15 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Task, Resource } from '@/types/scheduling';
 import { rescheduleAll } from '@/utils/scheduling';
 import TaskList from '@/components/TaskList';
 import ResourceTimeline from '@/components/ResourceTimeline';
 import { Button } from '@/components/ui/button';
 import { toast } from '@/components/ui/use-toast';
+import { useNavigate } from 'react-router-dom';
+import { Settings } from 'lucide-react';
 
 const Index = () => {
+  const navigate = useNavigate();
   // Set base date for scheduling (2024-12-20 10:00:00 deadline)
   const baseDate = new Date('2024-12-20T10:00:00');
   const deadline = new Date(baseDate);
@@ -183,10 +186,19 @@ const Index = () => {
     }
   ];
 
-  const [tasks, setTasks] = useState<Task[]>([
-    ...createProductTasks('MWB1', deadline),
-    ...createProductTasks('MWB2', deadline)
-  ]);
+  const [tasks, setTasks] = useState<Task[]>(() => {
+    const savedTasks = localStorage.getItem('schedulingTasks');
+    if (savedTasks) {
+      const parsedTasks = JSON.parse(savedTasks);
+      // Convert string dates back to Date objects
+      return parsedTasks.map((task: any) => ({
+        ...task,
+        startTime: task.startTime ? new Date(task.startTime) : undefined,
+        deadline: task.deadline ? new Date(task.deadline) : undefined
+      }));
+    }
+    return [...createProductTasks('MWB1', deadline), ...createProductTasks('MWB2', deadline)];
+  });
 
   const resources: Resource[] = [
     { id: 'bench', name: 'Bench Work', capacity: 1 },
@@ -202,6 +214,7 @@ const Index = () => {
     try {
       const scheduledTasks = rescheduleAll(tasks);
       setTasks(scheduledTasks);
+      localStorage.setItem('schedulingTasks', JSON.stringify(scheduledTasks));
       toast({
         title: "Schedule updated",
         description: "All tasks have been rescheduled successfully.",
@@ -217,16 +230,26 @@ const Index = () => {
   };
 
   const toggleFixTask = (taskId: string) => {
-    setTasks(prev => prev.map(task => 
-      task.id === taskId
-        ? { ...task, status: task.status === 'fixed' ? 'scheduled' : 'fixed' }
-        : task
-    ));
+    setTasks(prev => {
+      const updatedTasks = prev.map(task => 
+        task.id === taskId
+          ? { ...task, status: task.status === 'fixed' ? 'scheduled' : 'fixed' }
+          : task
+      );
+      localStorage.setItem('schedulingTasks', JSON.stringify(updatedTasks));
+      return updatedTasks;
+    });
   };
 
   return (
     <div className="container mx-auto py-8">
-      <h1 className="text-3xl font-bold mb-8">Magnetic Wrap Box Production Schedule</h1>
+      <div className="flex justify-between items-center mb-8">
+        <h1 className="text-3xl font-bold">Magnetic Wrap Box Production Schedule</h1>
+        <Button onClick={() => navigate('/settings')} variant="outline">
+          <Settings className="mr-2" />
+          Line Item Settings
+        </Button>
+      </div>
       
       <div className="mb-6">
         <Button onClick={handleReschedule} className="mr-4">
