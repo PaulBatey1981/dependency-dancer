@@ -1,5 +1,5 @@
 import { Task, Resource } from '@/types/scheduling';
-import DhtmlxGantt from './gantt/DhtmlxGantt';
+import GanttTest from './gantt/GanttTest';
 
 interface GanttChartProps {
   tasks: Task[];
@@ -11,7 +11,7 @@ const GanttChart = ({ tasks, resources }: GanttChartProps) => {
 
   return (
     <div className="w-full border rounded-lg bg-white shadow-sm">
-      <DhtmlxGantt tasks={tasks} />
+      <GanttTest />
     </div>
   );
 };

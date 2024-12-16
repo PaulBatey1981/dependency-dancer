@@ -4,7 +4,7 @@ import { rescheduleAll } from '@/utils/scheduling';
 import { createProductTasks } from '@/utils/taskFactory';
 import TaskList from '@/components/TaskList';
 import ResourceTimeline from '@/components/ResourceTimeline';
-import GanttTest from '@/components/gantt/GanttTest';
+import GanttChart from '@/components/GanttChart';
 import { Button } from '@/components/ui/button';
 import { toast } from '@/components/ui/use-toast';
 import { useNavigate } from 'react-router-dom';
@@ -131,7 +131,7 @@ const Index = () => {
       {view === 'gantt' && (
         <div>
           <h2 className="text-xl font-semibold mb-4">Gantt Chart</h2>
-          <GanttTest />
+          <GanttChart tasks={tasks} resources={resources} />
         </div>
       )}
     </div>
