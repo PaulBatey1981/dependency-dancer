@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Task, Resource } from '@/types/scheduling';
+import { Task, Resource, TaskStatus } from '@/types/scheduling';
 import { rescheduleAll } from '@/utils/scheduling';
 import TaskList from '@/components/TaskList';
 import ResourceTimeline from '@/components/ResourceTimeline';
@@ -14,7 +14,6 @@ const Index = () => {
   const baseDate = new Date('2024-12-20T10:00:00');
   const deadline = new Date(baseDate);
   
-  // Helper function to create tasks with a prefix
   const createProductTasks = (prefix: string, deadline: Date) => [
     {
       id: `${prefix}_final_assembly`,
@@ -233,7 +232,7 @@ const Index = () => {
     setTasks(prev => {
       const updatedTasks = prev.map(task => 
         task.id === taskId
-          ? { ...task, status: task.status === 'fixed' ? 'scheduled' : 'fixed' }
+          ? { ...task, status: task.status === 'fixed' ? ('scheduled' as TaskStatus) : ('fixed' as TaskStatus) }
           : task
       );
       localStorage.setItem('schedulingTasks', JSON.stringify(updatedTasks));
