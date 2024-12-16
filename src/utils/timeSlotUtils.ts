@@ -21,8 +21,10 @@ export function findEarliestSlot(
   for (const scheduledTask of resourceTasks) {
     if (!scheduledTask.startTime || !scheduledTask.endTime) continue;
     
+    // Check if there's an overlap
     if (proposedStart < scheduledTask.endTime && 
         proposedEnd > scheduledTask.startTime) {
+      // Move to end of current task
       proposedStart = new Date(scheduledTask.endTime.getTime());
       proposedEnd = new Date(proposedStart.getTime() + task.duration * 3600000);
     }
@@ -42,16 +44,5 @@ export function scheduleTask(
   startTime: Date = new Date()
 ): Date {
   console.log(`Scheduling task: ${task.id}`);
-  
-  const depEndTime = task.dependencies
-    .map(depId => {
-      const depTask = scheduledTasks.find(t => t.id === depId);
-      return depTask?.endTime || startTime;
-    })
-    .reduce((latest, current) => 
-      current > latest ? current : latest, 
-      startTime
-    );
-
-  return findEarliestSlot(task, scheduledTasks, depEndTime);
+  return findEarliestSlot(task, scheduledTasks, startTime);
 }

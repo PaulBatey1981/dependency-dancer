@@ -33,7 +33,6 @@ const Index = () => {
       resource: 'gluing_machine',
       duration: 1.17,
       status: 'pending',
-      // Now depends on ALL case element tasks
       dependencies: ['case_wrap_cut', 'case_board_insert', 'case_liner_cut'],
     },
     {
@@ -43,7 +42,6 @@ const Index = () => {
       resource: 'gluing_machine',
       duration: 0.67,
       status: 'pending',
-      // Must wait for wrap_case to complete
       dependencies: ['wrap_case'],
     },
 
@@ -120,7 +118,6 @@ const Index = () => {
       resource: 'gluing_machine',
       duration: 2,
       status: 'pending',
-      // Must wait for ALL base tray tasks to complete
       dependencies: [
         'base_tray_board_corner',
         'base_tray_wrap_cut',
