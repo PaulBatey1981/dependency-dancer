@@ -9,19 +9,14 @@ export default defineConfig(({ mode }) => ({
     port: 8080,
   },
   plugins: [
-    react({
-      jsxRuntime: 'automatic'
-    }),
+    react(),
     mode === 'development' &&
     componentTagger(),
   ].filter(Boolean),
   resolve: {
     alias: {
       "@": path.resolve(__dirname, "./src"),
-      "react": path.resolve(__dirname, "node_modules/react"),
-      "react-dom": path.resolve(__dirname, "node_modules/react-dom"),
-      "react/jsx-runtime": path.resolve(__dirname, "node_modules/react/jsx-runtime")
-    }
+    },
   },
   optimizeDeps: {
     include: ['@dhtmlx/trial-react-gantt']
@@ -30,5 +25,8 @@ export default defineConfig(({ mode }) => ({
     commonjsOptions: {
       include: [/@dhtmlx\/trial-react-gantt/]
     }
+  },
+  esbuild: {
+    jsxInject: `import React from 'react'`
   }
 }));

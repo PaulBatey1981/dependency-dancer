@@ -1,5 +1,5 @@
 import React, { useEffect } from 'react';
-import { Gantt } from '@dhtmlx/trial-react-gantt';
+import { Gantt as DhtmlxGanttComponent } from '@dhtmlx/trial-react-gantt';
 import { Task } from '@/types/scheduling';
 
 // Import CSS from CDN as fallback since local import is failing
@@ -54,7 +54,7 @@ const DhtmlxGantt = ({ tasks }: DhtmlxGanttProps) => {
 
   return (
     <div className="w-full h-[600px]">
-      <Gantt
+      <DhtmlxGanttComponent
         tasks={ganttTasks}
         zoom="Days"
         columns={[
