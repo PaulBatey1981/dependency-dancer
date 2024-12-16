@@ -60,7 +60,6 @@ const GanttChart = ({ tasks }: GanttChartProps) => {
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, []);
 
-  // Initialize timeline position
   useEffect(() => {
     if (timelineRef.current && tasks.length > 0) {
       const tasksWithStartTime = tasks.filter(t => t.startTime);
@@ -81,18 +80,6 @@ const GanttChart = ({ tasks }: GanttChartProps) => {
     <div className="h-[calc(100vh-12rem)] flex flex-col">
       <div className="flex justify-between items-center mb-4">
         <div className="space-x-2">
-          <Button
-            variant="outline"
-            onClick={() => setZoomLevel(prev => Math.max(0.5, prev - 0.1))}
-          >
-            Zoom In
-          </Button>
-          <Button
-            variant="outline"
-            onClick={() => setZoomLevel(prev => Math.min(2, prev + 0.1))}
-          >
-            Zoom Out
-          </Button>
           <Button
             variant={viewMode === 'day' ? 'default' : 'outline'}
             onClick={() => setViewMode('day')}
