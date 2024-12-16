@@ -37,25 +37,34 @@ export const getVerticalPosition = (
   rowHeight: number,
   verticalOffset: number
 ): number => {
-  let position = 0;
+  // Get all line items (top-level tasks)
   const lineItems = tasks.filter(t => t.type === 'lineitem');
-  
+  let position = 0;
+
+  // For line items, position based on their order
   if (task.type === 'lineitem') {
     const index = lineItems.findIndex(t => t.id === task.id);
     return (index * rowHeight) + verticalOffset;
   }
 
+  // Find the parent task that has this task as a dependency
   const parentTask = tasks.find(t => t.dependencies.includes(task.id));
-  if (!parentTask || !expandedItems.has(parentTask.id)) return -1;
+  if (!parentTask || !expandedItems.has(parentTask.id)) {
+    return -1; // Hide if parent is not expanded
+  }
 
+  // Get parent's position
   const parentPosition = getVerticalPosition(parentTask, tasks, expandedItems, rowHeight, verticalOffset);
   if (parentPosition < 0) return -1;
 
+  // Get all siblings (tasks that share the same parent)
   const siblings = tasks.filter(t => parentTask.dependencies.includes(t.id));
   const index = siblings.findIndex(t => t.id === task.id);
 
+  // Position based on parent's position and sibling order
   position = parentPosition + ((index + 1) * rowHeight);
 
+  console.log(`Calculated vertical position for task ${task.id}: ${position}px (parent: ${parentTask.id})`);
   return position;
 };
 
