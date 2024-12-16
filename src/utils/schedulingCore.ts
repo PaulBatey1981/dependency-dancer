@@ -19,29 +19,47 @@ export function rescheduleAll(tasks: Task[]): Task[] {
   
   // Schedule tasks in order, ensuring all dependencies are met
   for (const task of prioritizedTasks) {
+    console.log(`Processing task: ${task.id}`);
+    
     if (task.status === 'fixed') {
+      console.log(`Task ${task.id} is fixed, keeping existing schedule`);
       scheduledTasks.push(task);
       continue;
     }
     
-    // Wait for all dependencies to be scheduled
-    const dependencyEndTimes = task.dependencies
-      .map(depId => {
-        const depTask = scheduledTasks.find(t => t.id === depId);
-        if (!depTask?.endTime) {
-          console.warn(`Warning: Dependency ${depId} for task ${task.id} not yet scheduled`);
-          return baseDate;
-        }
-        return depTask.endTime;
-      })
-      .filter(date => date !== null) as Date[];
+    // Get all dependencies for this task
+    const dependencies = task.dependencies.map(depId => {
+      const depTask = scheduledTasks.find(t => t.id === depId);
+      if (!depTask?.endTime) {
+        console.warn(`Warning: Dependency ${depId} for task ${task.id} not yet scheduled`);
+        return null;
+      }
+      console.log(`Dependency ${depId} ends at ${depTask.endTime.toISOString()}`);
+      return depTask;
+    }).filter(Boolean) as Task[];
     
-    // Use the latest dependency end time as the earliest possible start
-    // If no dependencies or all are unscheduled, use baseDate
-    const earliestStart = dependencyEndTimes.length > 0
-      ? new Date(Math.max(...dependencyEndTimes.map(d => d.getTime())))
+    // Find the latest end time among dependencies
+    const latestDependencyEnd = dependencies.length > 0
+      ? new Date(Math.max(...dependencies.map(d => d.endTime!.getTime())))
       : baseDate;
-      
+    
+    console.log(`Latest dependency end time for ${task.id}: ${latestDependencyEnd.toISOString()}`);
+    
+    // For tasks on the same resource, ensure they're scheduled after any previous tasks
+    const previousResourceTasks = scheduledTasks
+      .filter(t => t.resource === task.resource)
+      .sort((a, b) => (b.endTime?.getTime() || 0) - (a.endTime?.getTime() || 0));
+    
+    const latestResourceEnd = previousResourceTasks.length > 0
+      ? previousResourceTasks[0].endTime!
+      : baseDate;
+    
+    // Use the later of dependency end time or resource availability
+    const earliestStart = new Date(Math.max(
+      latestDependencyEnd.getTime(),
+      latestResourceEnd.getTime()
+    ));
+    
     console.log(`Earliest possible start for ${task.id}: ${earliestStart.toISOString()}`);
     
     const startTime = scheduleTask(task, scheduledTasks, earliestStart);
