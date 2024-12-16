@@ -1,6 +1,5 @@
 import { Task } from '@/types/scheduling';
 import GanttTaskBar from './GanttTaskBar';
-import { topologicalSort } from '@/utils/topologicalSort';
 import {
   getTimeScale,
   calculateTaskPosition,
@@ -28,12 +27,12 @@ const GanttTimeline = ({
   const INDENT_WIDTH = 24;
   const TASK_HEIGHT = 32;
   const VERTICAL_OFFSET = 4;
-  const LINE_ITEM_SPACING = 500; // Spacing between line items
+  const LINE_ITEM_SPACING = 500;
 
   const timeScale = getTimeScale(viewMode);
   const gridLines = getGridLines(viewMode);
 
-  // Get line items sorted by ID in ascending order (MWB1 before MWB2)
+  // Get all line items and sort them by ID
   const lineItems = tasks
     .filter(task => task.type === 'lineitem')
     .sort((a, b) => a.id.localeCompare(b.id));
@@ -48,84 +47,70 @@ const GanttTimeline = ({
     console.log(`Set offset ${position}px for line item ${lineItem.id}`);
   });
 
-  // Helper function to find the line item for a task by traversing up the dependency tree
-  function getLineItem(task: Task): Task | null {
-    if (task.type === 'lineitem') return task;
-    
-    // Find the task that has this task as a dependency (parent)
-    const parent = tasks.find(t => t.dependencies.includes(task.id));
-    if (!parent) return null;
-    
-    return getLineItem(parent);
-  }
+  // Helper function to get all tasks under a line item
+  const getTasksUnderLineItem = (lineItemId: string): Task[] => {
+    const result: Task[] = [];
+    const lineItem = tasks.find(t => t.id === lineItemId);
+    if (!lineItem) return result;
 
-  // Calculate vertical position based on line item and task hierarchy
-  const getVerticalPosition = (task: Task): number => {
-    console.log(`Calculating vertical position for task ${task.id}`);
-    
-    // Get the root line item for this task
-    const lineItem = getLineItem(task);
-    if (!lineItem) {
-      console.warn(`No line item found for task ${task.id}`);
-      return 0;
-    }
+    // Add the line item itself
+    result.push(lineItem);
 
-    // Get the base position for this line item
-    const lineItemOffset = lineItemPositions.get(lineItem.id) || 0;
-    
-    // Calculate additional offset based on task's level in the hierarchy
-    const level = getTaskLevel(task, tasks);
-    const levelOffset = level * ROW_HEIGHT;
+    // Helper function for recursive traversal
+    const traverse = (taskId: string) => {
+      const task = tasks.find(t => t.id === taskId);
+      if (!task) return;
 
-    // Get all visible siblings under the same parent that share the same line item
-    const parent = tasks.find(t => t.dependencies.includes(task.id));
-    if (!parent) {
-      // This is a top-level task
-      return lineItemOffset + VERTICAL_OFFSET;
-    }
-
-    // Get visible siblings that belong to the same line item
-    const siblings = parent.dependencies
-      .map(depId => tasks.find(t => t.id === depId))
-      .filter((t): t is Task => t !== undefined)
-      .filter(sibling => getLineItem(sibling)?.id === lineItem.id)
-      .sort((a, b) => {
-        if (a.startTime && b.startTime) {
-          return a.startTime.getTime() - b.startTime.getTime();
-        }
-        return 0;
+      // Get all tasks that have this task as a dependency
+      const children = tasks.filter(t => t.dependencies.includes(taskId));
+      
+      // Sort children by ID to maintain consistent order
+      children.sort((a, b) => a.id.localeCompare(b.id));
+      
+      // Add each child and traverse their dependencies
+      children.forEach(child => {
+        result.push(child);
+        traverse(child.id);
       });
+    };
 
-    const siblingIndex = siblings.findIndex(s => s.id === task.id);
-    const siblingOffset = siblingIndex * ROW_HEIGHT;
-
-    const position = lineItemOffset + levelOffset + siblingOffset + VERTICAL_OFFSET;
-    console.log(`Task ${task.id} positioned at ${position}px`);
-    return position;
+    // Start traversal from the line item
+    traverse(lineItemId);
+    return result;
   };
 
-  // Sort tasks to maintain consistent order
-  const sortedTasks = tasks.slice().sort((a, b) => {
-    const aLineItem = getLineItem(a);
-    const bLineItem = getLineItem(b);
-    
-    if (aLineItem && bLineItem) {
-      // Sort by line item ID first
-      const lineItemComparison = aLineItem.id.localeCompare(bLineItem.id);
-      if (lineItemComparison !== 0) return lineItemComparison;
-      
-      // If tasks belong to the same line item, maintain their dependency order
-      if (aLineItem.id === bLineItem.id) {
-        const aIndex = tasks.findIndex(t => t.id === a.id);
-        const bIndex = tasks.findIndex(t => t.id === b.id);
-        return aIndex - bIndex;
-      }
-    }
-    
-    return 0;
+  // Build ordered task list following hierarchy
+  const orderedTasks: Task[] = [];
+  lineItems.forEach(lineItem => {
+    const lineItemTasks = getTasksUnderLineItem(lineItem.id);
+    orderedTasks.push(...lineItemTasks);
   });
 
-  console.log('Sorted tasks order:', sortedTasks.map(task => task.id));
+  console.log('Final ordered tasks:', orderedTasks.map(task => task.id));
+
+  // Calculate vertical position based on task's index in ordered list
+  const getVerticalPosition = (task: Task): number => {
+    const taskIndex = orderedTasks.findIndex(t => t.id === task.id);
+    if (taskIndex === -1) return 0;
+
+    // Find the line item this task belongs to
+    const lineItem = lineItems.find(li => 
+      getTasksUnderLineItem(li.id).some(t => t.id === task.id)
+    );
+    
+    if (!lineItem) return taskIndex * ROW_HEIGHT;
+
+    // Get base offset for this line item
+    const lineItemOffset = lineItemPositions.get(lineItem.id) || 0;
+    
+    // Calculate level-based indentation
+    const level = getTaskLevel(task, tasks);
+    const levelOffset = level * (ROW_HEIGHT / 2);
+
+    const position = lineItemOffset + levelOffset + VERTICAL_OFFSET;
+    console.log(`Task ${task.id} positioned at ${position}px (level ${level})`);
+    return position;
+  };
 
   return (
     <div 
@@ -147,7 +132,7 @@ const GanttTimeline = ({
         }}
       />
 
-      {sortedTasks.map(task => {
+      {orderedTasks.map(task => {
         if (!task.startTime) return null;
         
         const position = calculateTaskPosition(task.startTime, earliestStart, timeScale);
