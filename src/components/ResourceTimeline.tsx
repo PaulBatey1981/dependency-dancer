@@ -1,5 +1,10 @@
 import { Task, Resource } from '@/types/scheduling';
 import { Card } from '@/components/ui/card';
+import {
+  HoverCard,
+  HoverCardContent,
+  HoverCardTrigger,
+} from '@/components/ui/hover-card';
 
 interface ResourceTimelineProps {
   tasks: Task[];
@@ -40,22 +45,47 @@ const ResourceTimeline = ({ tasks, resources }: ResourceTimelineProps) => {
             {tasks
               .filter(task => task.resource === resource.id && task.startTime)
               .map(task => (
-                <div
-                  key={task.id}
-                  className={`absolute h-16 mt-2 rounded ${getTaskColor(
-                    task.type
-                  )} opacity-80 ${
-                    task.status === 'fixed' ? 'border-2 border-task-fixed' : ''
-                  }`}
-                  style={{
-                    left: task.startTime ? calculateTaskPosition(task.startTime) : '0%',
-                    width: `${(task.duration / 24) * 100}%`,
-                  }}
-                >
-                  <span className="text-xs text-white p-1 truncate block">
-                    {task.name}
-                  </span>
-                </div>
+                <HoverCard key={task.id}>
+                  <HoverCardTrigger asChild>
+                    <div
+                      className={`absolute h-16 mt-2 rounded ${getTaskColor(
+                        task.type
+                      )} opacity-80 cursor-pointer ${
+                        task.status === 'fixed' ? 'border-2 border-task-fixed' : ''
+                      }`}
+                      style={{
+                        left: task.startTime ? calculateTaskPosition(task.startTime) : '0%',
+                        width: `${(task.duration / 24) * 100}%`,
+                      }}
+                    >
+                      <span className="text-xs text-white p-1 truncate block">
+                        {task.name}
+                      </span>
+                    </div>
+                  </HoverCardTrigger>
+                  <HoverCardContent className="w-80">
+                    <div className="space-y-2">
+                      <h4 className="font-semibold">{task.name}</h4>
+                      <div className="text-sm">
+                        <p>Type: {task.type}</p>
+                        <p>Duration: {task.duration}h</p>
+                        <p>Status: {task.status}</p>
+                        {task.priority !== undefined && (
+                          <p>Priority: {task.priority}</p>
+                        )}
+                        {task.startTime && (
+                          <p>Start: {task.startTime.toLocaleString()}</p>
+                        )}
+                        {task.deadline && (
+                          <p>Deadline: {task.deadline.toLocaleString()}</p>
+                        )}
+                        {task.dependencies.length > 0 && (
+                          <p>Dependencies: {task.dependencies.join(', ')}</p>
+                        )}
+                      </div>
+                    </div>
+                  </HoverCardContent>
+                </HoverCard>
               ))}
           </div>
         </Card>
