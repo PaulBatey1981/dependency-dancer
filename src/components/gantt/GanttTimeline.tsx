@@ -8,7 +8,7 @@ import {
 interface GanttTimelineProps {
   tasks: Task[];
   zoomLevel: number;
-  viewMode: 'day' | 'month';
+  viewMode: 'day' | 'week' | 'month';
   earliestStart: Date;
 }
 
@@ -44,7 +44,7 @@ const GanttTimeline = ({ tasks, zoomLevel, viewMode, earliestStart }: GanttTimel
 
   return (
     <div 
-      className="relative"
+      className="relative min-w-full"
       style={{ width: `${timelineWidth}px`, height: '100%' }}
     >
       {/* Grid lines */}
@@ -69,7 +69,7 @@ const GanttTimeline = ({ tasks, zoomLevel, viewMode, earliestStart }: GanttTimel
         <HoverCard key={task.id}>
           <HoverCardTrigger>
             <div
-              className={`absolute h-8 rounded ${getTaskColor(task.type)} opacity-80 cursor-pointer ${
+              className={`absolute h-8 rounded ${getTaskColor(task.type)} opacity-80 cursor-pointer animate-task-appear ${
                 task.isFixed ? 'border-2 border-task-fixed' : ''
               }`}
               style={{

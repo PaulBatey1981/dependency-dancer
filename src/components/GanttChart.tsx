@@ -14,7 +14,7 @@ interface GanttChartProps {
 
 const GanttChart = ({ tasks }: GanttChartProps) => {
   const [zoomLevel, setZoomLevel] = useState(1); // hours per pixel
-  const [viewMode, setViewMode] = useState<'day' | 'month'>('day');
+  const [viewMode, setViewMode] = useState<'day' | 'week' | 'month'>('day');
   const [expandedItems, setExpandedItems] = useState<Set<string>>(new Set());
   const timelineRef = useRef<HTMLDivElement>(null);
 
@@ -88,6 +88,12 @@ const GanttChart = ({ tasks }: GanttChartProps) => {
             Daily View
           </Button>
           <Button
+            variant={viewMode === 'week' ? 'default' : 'outline'}
+            onClick={() => setViewMode('week')}
+          >
+            Weekly View
+          </Button>
+          <Button
             variant={viewMode === 'month' ? 'default' : 'outline'}
             onClick={() => setViewMode('month')}
           >
@@ -101,8 +107,7 @@ const GanttChart = ({ tasks }: GanttChartProps) => {
       </div>
 
       <div className="flex flex-1 border rounded-lg overflow-hidden">
-        {/* Task list */}
-        <ScrollArea>
+        <ScrollArea className="border-r">
           <GanttTaskList
             tasks={tasks}
             expandedItems={expandedItems}
@@ -110,7 +115,6 @@ const GanttChart = ({ tasks }: GanttChartProps) => {
           />
         </ScrollArea>
 
-        {/* Timeline */}
         <div 
           className="flex-1 overflow-x-auto bg-white"
           onWheel={handleWheel}
