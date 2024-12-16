@@ -24,44 +24,59 @@ export const calculateTaskWidth = (duration: number, timeScale: number) => {
   return width;
 };
 
-// Get tasks that this task depends on
-const getParentTasks = (task: Task, tasks: Task[]): Task[] => {
-  return tasks.filter(t => task.dependencies.includes(t.id));
+// Get tasks that depend on this task (children)
+const getChildTasks = (parentTask: Task, tasks: Task[]): Task[] => {
+  // A task is a child if the parent's ID is in its dependencies
+  return tasks.filter(task => task.dependencies.includes(parentTask.id));
 };
 
-// Get tasks that depend on this task
-const getChildTasks = (task: Task, tasks: Task[]): Task[] => {
-  return tasks.filter(t => t.dependencies.includes(task.id));
+// Get the parent task of this task
+const getParentTask = (task: Task, tasks: Task[]): Task | undefined => {
+  // The parent is the task that this task depends on
+  if (task.dependencies.length === 0) return undefined;
+  return tasks.find(t => t.id === task.dependencies[0]);
 };
 
 // Check if a task should be visible based on expansion state
 const isTaskVisible = (task: Task, tasks: Task[], expandedItems: Set<string>): boolean => {
-  if (task.type === 'lineitem') return true;
-
-  // Find all parents up to the line item
-  let currentTask = task;
-  const parentChain: Task[] = [];
+  console.log(`Checking visibility for task ${task.id}`);
   
-  while (currentTask && currentTask.type !== 'lineitem') {
-    const parents = getParentTasks(currentTask, tasks);
-    const parent = parents[0]; // Take first parent
-    if (!parent) break;
-    
-    parentChain.push(parent);
-    currentTask = parent;
+  if (task.type === 'lineitem') {
+    console.log(`Task ${task.id} is a line item - visible`);
+    return true;
   }
 
-  // Check if all parents in the chain are expanded
-  return parentChain.every(parent => expandedItems.has(parent.id));
+  // Get the parent task
+  const parent = getParentTask(task, tasks);
+  if (!parent) {
+    console.log(`Task ${task.id} has no parent - visible`);
+    return true;
+  }
+
+  // If parent is not expanded, task is not visible
+  if (!expandedItems.has(parent.id)) {
+    console.log(`Parent ${parent.id} of task ${task.id} is not expanded - hidden`);
+    return false;
+  }
+
+  // Recursively check if parent is visible
+  return isTaskVisible(parent, tasks, expandedItems);
 };
 
 export const getTaskLevel = (task: Task, tasks: Task[]): number => {
   if (task.type === 'lineitem') return 0;
+
+  let level = 0;
+  let currentTask = task;
   
-  const parents = getParentTasks(task, tasks);
-  if (parents.length === 0) return 0;
-  
-  return Math.max(...parents.map(parent => getTaskLevel(parent, tasks))) + 1;
+  while (true) {
+    const parent = getParentTask(currentTask, tasks);
+    if (!parent) break;
+    level++;
+    currentTask = parent;
+  }
+
+  return level;
 };
 
 export const getVerticalPosition = (
@@ -87,16 +102,14 @@ export const getVerticalPosition = (
     return position;
   }
 
-  // For child tasks, find their position based on parent and previous siblings
-  const parents = getParentTasks(task, tasks);
-  const parent = parents[0]; // Take first parent
-  
-  if (!parent) return -1;
+  // For child tasks, find their position based on parent and siblings
+  const parent = getParentTask(task, tasks);
+  if (!parent) return verticalOffset;
 
   const parentPosition = getVerticalPosition(parent, tasks, expandedItems, rowHeight, verticalOffset);
   if (parentPosition === -1) return -1;
 
-  // Get all visible siblings under the same parent
+  // Get all visible siblings under the same parent (including this task)
   const siblings = getChildTasks(parent, tasks)
     .filter(sibling => isTaskVisible(sibling, tasks, expandedItems));
   
