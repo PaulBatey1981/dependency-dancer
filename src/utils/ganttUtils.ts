@@ -24,34 +24,31 @@ export const calculateTaskWidth = (duration: number, timeScale: number) => {
   return width;
 };
 
-// A task is a parent if other tasks depend on it
+// Get tasks that depend on this task (children)
 const getChildTasks = (task: Task, tasks: Task[]): Task[] => {
   return tasks.filter(t => t.dependencies.includes(task.id));
 };
 
-// Get tasks that this task depends on
+// Get tasks that this task depends on (parents)
 const getParentTasks = (task: Task, tasks: Task[]): Task[] => {
   return task.dependencies.map(depId => tasks.find(t => t.id === depId)).filter((t): t is Task => t !== undefined);
 };
 
-// Check if a task should be visible based on its parents' expansion state
+// Find the immediate parent of a task
+const findImmediateParent = (task: Task, tasks: Task[]): Task | undefined => {
+  if (task.type === 'lineitem') return undefined;
+  return tasks.find(t => task.dependencies.includes(t.id));
+};
+
+// Check if a task should be visible based on its parent's expansion state
 const isTaskVisible = (task: Task, tasks: Task[], expandedItems: Set<string>): boolean => {
-  // Line items are always visible
   if (task.type === 'lineitem') return true;
 
-  // For non-line items, check if all parent tasks up to a line item are expanded
-  let currentTask = task;
-  while (currentTask && currentTask.type !== 'lineitem') {
-    const parents = getParentTasks(currentTask, tasks);
-    const parent = parents[0]; // Assuming each task has one direct parent
-    
-    if (!parent) break;
-    if (!expandedItems.has(parent.id)) return false;
-    
-    currentTask = parent;
-  }
-  
-  return true;
+  const parent = findImmediateParent(task, tasks);
+  if (!parent) return true; // If no parent found, task should be visible
+
+  // Check if parent is expanded and visible
+  return expandedItems.has(parent.id) && isTaskVisible(parent, tasks, expandedItems);
 };
 
 export const getTaskLevel = (task: Task, tasks: Task[]): number => {
@@ -69,36 +66,38 @@ export const getVerticalPosition = (
 ): number => {
   console.log(`Calculating vertical position for task ${task.id}`);
 
-  // Check if the task should be visible
   if (!isTaskVisible(task, tasks, expandedItems)) {
     console.log(`Task ${task.id} is hidden (parent not expanded)`);
     return -1;
   }
 
-  // For line items, position them at the top level
+  let position = verticalOffset;
+  const level = getTaskLevel(task, tasks);
+
+  // For line items, use their order in the list
   if (task.type === 'lineitem') {
     const lineItems = tasks.filter(t => t.type === 'lineitem');
     const index = lineItems.findIndex(t => t.id === task.id);
-    const position = verticalOffset + (index * rowHeight);
+    position += index * rowHeight;
     console.log(`Line item ${task.id} positioned at ${position}px`);
     return position;
   }
 
-  // For child tasks, position them under their parent if it's expanded
-  const parents = getParentTasks(task, tasks);
-  const parent = parents[0]; // Assuming each task has one direct parent
-  
-  if (!parent || !expandedItems.has(parent.id)) {
-    return -1;
-  }
+  // For child tasks, calculate position based on parent and siblings
+  const parent = findImmediateParent(task, tasks);
+  if (!parent) return -1;
 
   const parentPosition = getVerticalPosition(parent, tasks, expandedItems, rowHeight, verticalOffset);
+  if (parentPosition === -1) return -1;
+
   const siblings = getChildTasks(parent, tasks);
-  const siblingIndex = siblings.findIndex(t => t.id === task.id);
-  
-  const position = parentPosition + ((siblingIndex + 1) * rowHeight);
+  const visibleSiblingsBefore = siblings
+    .filter(s => s.id !== task.id && isTaskVisible(s, tasks, expandedItems))
+    .filter(s => siblings.indexOf(s) < siblings.indexOf(task));
+
+  position = parentPosition + ((visibleSiblingsBefore.length + 1) * rowHeight);
   console.log(`Child task ${task.id} positioned at ${position}px under parent ${parent.id}`);
-  
+
   return position;
 };
 
