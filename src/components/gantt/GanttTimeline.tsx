@@ -13,6 +13,8 @@ interface GanttTimelineProps {
 }
 
 const GanttTimeline = ({ tasks, zoomLevel, viewMode, earliestStart }: GanttTimelineProps) => {
+  console.log('Timeline render with zoom level:', zoomLevel);
+  
   const getTaskColor = (type: Task['type']) => {
     switch (type) {
       case 'lineitem':
@@ -28,35 +30,55 @@ const GanttTimeline = ({ tasks, zoomLevel, viewMode, earliestStart }: GanttTimel
 
   const calculateTaskPosition = (startTime: Date) => {
     const hoursFromStart = (startTime.getTime() - earliestStart.getTime()) / (1000 * 60 * 60);
-    return hoursFromStart / zoomLevel;
+    const position = hoursFromStart / zoomLevel;
+    console.log(`Task position calculation:`, {
+      startTime: startTime.toISOString(),
+      hoursFromStart,
+      position,
+      zoomLevel
+    });
+    return position;
   };
 
   const calculateTaskWidth = (duration: number) => {
-    return duration / zoomLevel;
+    const width = duration / zoomLevel;
+    console.log(`Task width calculation:`, { duration, width, zoomLevel });
+    return width;
   };
 
-  const latestEnd = new Date(Math.max(...tasks.filter(t => t.startTime).map(t => 
-    new Date(t.startTime!.getTime() + t.duration * 3600000).getTime()
-  )));
+  // Calculate the latest end time from all tasks
+  const latestEnd = new Date(Math.max(...tasks
+    .filter(t => t.startTime)
+    .map(t => new Date(t.startTime!.getTime() + t.duration * 3600000).getTime())
+  ));
 
-  // Calculate total hours needed for timeline
-  const totalHours = Math.ceil(
-    Math.max(
-      (latestEnd.getTime() - earliestStart.getTime()) / (1000 * 60 * 60),
-      viewMode === 'day' ? 24 : viewMode === 'week' ? 168 : 720
-    )
+  // Calculate total duration in hours
+  const totalDurationHours = Math.ceil(
+    (latestEnd.getTime() - earliestStart.getTime()) / (1000 * 60 * 60)
   );
 
-  // Calculate timeline width based on zoom level and ensure minimum width
-  const timelineWidth = Math.max(totalHours / zoomLevel, window.innerWidth);
+  console.log('Timeline dimensions:', {
+    totalDurationHours,
+    zoomLevel,
+    calculatedWidth: totalDurationHours / zoomLevel
+  });
+
+  // Ensure minimum width is at least the container width
+  const timelineWidth = Math.max(
+    totalDurationHours / zoomLevel,
+    window.innerWidth - 256 // 256px is the width of the task list sidebar
+  );
 
   return (
     <div 
       className="relative bg-white min-h-full"
-      style={{ width: `${timelineWidth}px`, minWidth: '100%' }}
+      style={{ 
+        width: `${timelineWidth}px`,
+        minWidth: '100%'
+      }}
     >
       {/* Grid lines */}
-      {Array.from({ length: Math.ceil(totalHours) }).map((_, i) => (
+      {Array.from({ length: Math.ceil(totalDurationHours) }).map((_, i) => (
         <div
           key={i}
           className="absolute top-0 bottom-0 border-l border-gantt-grid"
@@ -74,8 +96,22 @@ const GanttTimeline = ({ tasks, zoomLevel, viewMode, earliestStart }: GanttTimel
 
       {/* Tasks */}
       {tasks.map(task => {
-        if (!task.startTime) return null;
+        if (!task.startTime) {
+          console.log(`Task ${task.id} has no start time`);
+          return null;
+        }
         
+        const position = calculateTaskPosition(task.startTime);
+        const width = calculateTaskWidth(task.duration);
+        
+        console.log(`Rendering task ${task.id}:`, {
+          name: task.name,
+          position,
+          width,
+          startTime: task.startTime.toISOString(),
+          duration: task.duration
+        });
+
         return (
           <HoverCard key={task.id}>
             <HoverCardTrigger>
@@ -84,8 +120,8 @@ const GanttTimeline = ({ tasks, zoomLevel, viewMode, earliestStart }: GanttTimel
                   task.isFixed ? 'border-2 border-task-fixed' : ''
                 }`}
                 style={{
-                  left: `${calculateTaskPosition(task.startTime)}px`,
-                  width: `${calculateTaskWidth(task.duration)}px`,
+                  left: `${position}px`,
+                  width: `${width}px`,
                   top: '0.5rem',
                 }}
               >
