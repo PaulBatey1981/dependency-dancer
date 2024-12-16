@@ -24,15 +24,15 @@ export const calculateTaskWidth = (duration: number, timeScale: number) => {
   return width;
 };
 
-export const getTaskLevel = (task: Task, tasks: Task[]): number => {
-  if (task.dependencies.length === 0) return 0;
-  const parentTasks = tasks.filter(t => task.dependencies.includes(t.id));
-  if (parentTasks.length === 0) return 0;
-  return Math.max(...parentTasks.map(parent => getTaskLevel(parent, tasks))) + 1;
+// Get tasks that depend on the given task (children)
+const getChildTasks = (parentTask: Task, tasks: Task[]): Task[] => {
+  return tasks.filter(task => task.dependencies.includes(parentTask.id));
 };
 
-const getChildTasks = (task: Task, tasks: Task[]): Task[] => {
-  return tasks.filter(t => t.dependencies.includes(task.id));
+export const getTaskLevel = (task: Task, tasks: Task[]): number => {
+  const childTasks = getChildTasks(task, tasks);
+  if (childTasks.length === 0) return 0;
+  return Math.max(...childTasks.map(child => getTaskLevel(child, tasks))) + 1;
 };
 
 const calculateTotalVisibleChildren = (task: Task, tasks: Task[], expandedItems: Set<string>): number => {
@@ -69,36 +69,42 @@ export const getVerticalPosition = (
         return position;
       }
       position += rowHeight; // Space for the line item itself
+      
+      // If this line item is expanded, add space for its visible children
       if (expandedItems.has(lineItem.id)) {
-        position += calculateTotalVisibleChildren(lineItem, tasks, expandedItems) * rowHeight;
+        const childTasks = getChildTasks(lineItem, tasks);
+        position += childTasks.length * rowHeight;
+        
+        // Add space for expanded children's children
+        for (const child of childTasks) {
+          if (expandedItems.has(child.id)) {
+            position += calculateTotalVisibleChildren(child, tasks, expandedItems) * rowHeight;
+          }
+        }
       }
     }
     return position;
   }
 
-  // For child tasks, find their parent
-  const parentTask = tasks.find(t => t.dependencies.includes(task.id));
-  if (!parentTask || !expandedItems.has(parentTask.id)) {
+  // For non-line items, find the task they depend on (their parent)
+  const parentId = task.dependencies[0]; // Take the first dependency as the parent
+  const parentTask = tasks.find(t => t.id === parentId);
+  
+  if (!parentTask || !expandedItems.has(parentId)) {
     console.log(`Task ${task.id} is hidden (parent not expanded or not found)`);
     return -1;
   }
 
-  // Calculate position based on parent's position and number of preceding siblings
+  // Get parent's position
   const parentPosition = getVerticalPosition(parentTask, tasks, expandedItems, rowHeight, verticalOffset);
   if (parentPosition < 0) return -1;
 
-  const siblings = getChildTasks(parentTask, tasks);
+  // Get all tasks that depend on the same parent
+  const siblings = tasks.filter(t => t.dependencies.includes(parentId));
   const siblingIndex = siblings.findIndex(s => s.id === task.id);
   
-  let position = parentPosition + rowHeight; // Start after parent
-  
-  // Add space for expanded preceding siblings and their children
-  for (let i = 0; i < siblingIndex; i++) {
-    position += rowHeight; // Space for the sibling itself
-    if (expandedItems.has(siblings[i].id)) {
-      position += calculateTotalVisibleChildren(siblings[i], tasks, expandedItems) * rowHeight;
-    }
-  }
+  // Calculate position based on parent position and sibling order
+  let position = parentPosition + ((siblingIndex + 1) * rowHeight);
 
   console.log(`Calculated position for task ${task.id}: ${position}px`);
   return position;
