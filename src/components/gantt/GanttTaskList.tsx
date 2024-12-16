@@ -29,6 +29,7 @@ const GanttTaskList = ({ tasks, expandedItems, toggleExpand }: GanttTaskListProp
   const renderTask = (task: Task, level: number = 0) => {
     const hasChildren = getChildTasks(task.id).length > 0;
     const isExpanded = expandedItems.has(task.id);
+    const childTasks = getChildTasks(task.id);
 
     return (
       <div key={task.id}>
@@ -50,7 +51,7 @@ const GanttTaskList = ({ tasks, expandedItems, toggleExpand }: GanttTaskListProp
           <div className={`w-3 h-3 rounded-full ${getTaskColor(task.type)} mx-2 flex-shrink-0`} />
           <span className="text-sm truncate">{task.name}</span>
         </div>
-        {isExpanded && getChildTasks(task.id).map(childTask => renderTask(childTask, level + 1))}
+        {isExpanded && childTasks.map(childTask => renderTask(childTask, level + 1))}
       </div>
     );
   };

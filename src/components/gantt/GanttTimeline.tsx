@@ -55,7 +55,7 @@ const GanttTimeline = ({ tasks, zoomLevel, viewMode, earliestStart }: GanttTimel
   return (
     <div 
       className="relative bg-white min-h-full"
-      style={{ width: `${timelineWidth}px` }}
+      style={{ width: `${timelineWidth}px`, minWidth: '100%' }}
     >
       {/* Grid lines */}
       {Array.from({ length: Math.ceil(totalHours) }).map((_, i) => (
