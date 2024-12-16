@@ -64,7 +64,8 @@ const GanttTimeline = ({ tasks, zoomLevel, viewMode, earliestStart, expandedItem
   // Calculate vertical position for tasks
   const getVerticalPosition = (task: Task): number => {
     const baseHeight = 40; // Height of each task row in pixels
-    let position = 0;
+    const padding = 8; // Padding for each task row
+    let position = padding;
     
     // Find all line items
     const lineItems = tasks.filter(t => t.type === 'lineitem');
@@ -72,12 +73,12 @@ const GanttTimeline = ({ tasks, zoomLevel, viewMode, earliestStart, expandedItem
     // If this is a line item
     if (task.type === 'lineitem') {
       const index = lineItems.findIndex(t => t.id === task.id);
-      return index * baseHeight;
+      return (index * baseHeight) + padding;
     }
     
     // For non-line items, find their parent
     const parentTask = tasks.find(t => t.dependencies.includes(task.id));
-    if (!parentTask) return 0;
+    if (!parentTask) return padding;
     
     // If parent is not expanded, don't show child
     if (!expandedItems.has(parentTask.id)) return -1;
