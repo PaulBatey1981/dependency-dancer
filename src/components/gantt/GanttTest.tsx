@@ -51,6 +51,17 @@ const GanttTest = ({ tasks }: GanttTestProps) => {
       display: true,
       width: 200,
     },
+    dataViewPort: {
+      rows: {
+        height: 40,
+      },
+    },
+    links: {
+      display: true,
+    },
+    selectedTask: null,
+    mode: 'month',
+    onSelectItem: () => {},
   };
 
   console.log('Rendering GanttTest with data:', transformedData);
