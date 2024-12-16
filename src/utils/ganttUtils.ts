@@ -41,6 +41,36 @@ const getParentTask = (task: Task, tasks: Task[]): Task | undefined => {
   return parent;
 };
 
+// Find the root line item for a task
+const getRootLineItem = (task: Task, tasks: Task[]): Task => {
+  if (task.type === 'lineitem') {
+    return task;
+  }
+  
+  const parent = getParentTask(task, tasks);
+  if (!parent) {
+    console.warn(`No root line item found for task ${task.id}`);
+    return task; // Fallback to the task itself
+  }
+  
+  return getRootLineItem(parent, tasks);
+};
+
+// Get all line items and their vertical offsets
+const getLineItemOffsets = (tasks: Task[]): Map<string, number> => {
+  const lineItems = tasks.filter(t => t.type === 'lineitem');
+  const offsets = new Map<string, number>();
+  
+  // Calculate space needed for each line item's subtree
+  lineItems.forEach((lineItem, index) => {
+    const verticalOffset = index * 500; // 500px spacing between line items
+    offsets.set(lineItem.id, verticalOffset);
+    console.log(`Set offset ${verticalOffset}px for line item ${lineItem.id}`);
+  });
+  
+  return offsets;
+};
+
 // Check if a task should be visible based on expansion state
 const isTaskVisible = (task: Task, tasks: Task[], expandedItems: Set<string>): boolean => {
   console.log(`Checking visibility for task ${task.id}`);
@@ -97,33 +127,34 @@ export const getVerticalPosition = (
     return -1;
   }
 
-  // For line items, position them at the top level
+  // Get the root line item for this task
+  const rootLineItem = getRootLineItem(task, tasks);
+  const lineItemOffsets = getLineItemOffsets(tasks);
+  const baseOffset = lineItemOffsets.get(rootLineItem.id) || 0;
+
+  // For line items, position them at their base offset
   if (task.type === 'lineitem') {
     const lineItems = tasks.filter(t => t.type === 'lineitem');
     const index = lineItems.findIndex(t => t.id === task.id);
-    const position = verticalOffset + (index * rowHeight);
+    const position = baseOffset + verticalOffset;
     console.log(`Line item ${task.id} positioned at ${position}px`);
     return position;
   }
 
-  // Get the parent task
+  // Get all visible siblings under the same parent
   const parent = getParentTask(task, tasks);
   if (!parent) {
     console.log(`Task ${task.id} has no parent - using base offset`);
-    return verticalOffset;
+    return baseOffset + verticalOffset;
   }
-
-  // Get parent's position
-  const parentPosition = getVerticalPosition(parent, tasks, expandedItems, rowHeight, verticalOffset);
-  if (parentPosition === -1) return -1;
 
   // Get all visible siblings (including this task) that share the same parent
   const siblings = getChildTasks(parent, tasks)
     .filter(sibling => isTaskVisible(sibling, tasks, expandedItems))
-    .sort((a, b) => tasks.indexOf(a) - tasks.indexOf(b)); // Maintain original task order
+    .sort((a, b) => tasks.indexOf(a) - tasks.indexOf(b));
   
   const siblingIndex = siblings.findIndex(s => s.id === task.id);
-  const position = parentPosition + ((siblingIndex + 1) * rowHeight);
+  const position = baseOffset + verticalOffset + ((siblingIndex + 1) * rowHeight);
   
   console.log(`Child task ${task.id} positioned at ${position}px under parent ${parent.id}`);
   return position;
