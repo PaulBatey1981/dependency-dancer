@@ -47,15 +47,9 @@ const GanttTimeline = ({ tasks, zoomLevel, viewMode, earliestStart }: GanttTimel
     (latestEnd.getTime() - earliestStart.getTime()) / (1000 * 60 * 60),
     minHours
   );
-  
-  // Calculate final timeline width in pixels, ensuring it fills the container
-  const timelineWidth = Math.max(contentHours / zoomLevel, window.innerWidth);
 
   return (
-    <div 
-      className="relative w-full h-full"
-      style={{ minWidth: `${timelineWidth}px` }}
-    >
+    <div className="relative w-full">
       {/* Grid lines */}
       {Array.from({ length: Math.ceil(contentHours) }).map((_, i) => (
         <div
