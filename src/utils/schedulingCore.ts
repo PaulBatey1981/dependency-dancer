@@ -27,16 +27,15 @@ export function rescheduleAll(tasks: Task[]): Task[] {
       continue;
     }
     
-    // Get all dependencies for this task
+    // Get all dependencies for this task and ensure they're scheduled
     const dependencies = task.dependencies.map(depId => {
       const depTask = scheduledTasks.find(t => t.id === depId);
       if (!depTask?.endTime) {
-        console.warn(`Warning: Dependency ${depId} for task ${task.id} not yet scheduled`);
-        return null;
+        throw new Error(`Dependency ${depId} for task ${task.id} must be scheduled first`);
       }
       console.log(`Dependency ${depId} ends at ${depTask.endTime.toISOString()}`);
       return depTask;
-    }).filter(Boolean) as Task[];
+    });
     
     // Find the latest end time among dependencies
     const latestDependencyEnd = dependencies.length > 0
@@ -47,8 +46,8 @@ export function rescheduleAll(tasks: Task[]): Task[] {
     
     // For tasks on the same resource, ensure they're scheduled after any previous tasks
     const previousResourceTasks = scheduledTasks
-      .filter(t => t.resource === task.resource)
-      .sort((a, b) => (b.endTime?.getTime() || 0) - (a.endTime?.getTime() || 0));
+      .filter(t => t.resource === task.resource && t.endTime)
+      .sort((a, b) => (b.endTime!.getTime()) - (a.endTime!.getTime()));
     
     const latestResourceEnd = previousResourceTasks.length > 0
       ? previousResourceTasks[0].endTime!

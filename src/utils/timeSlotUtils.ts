@@ -14,7 +14,7 @@ export function findEarliestSlot(
   
   // Sort tasks by start time
   resourceTasks.sort((a, b) => 
-    (a.startTime?.getTime() || 0) - (b.startTime?.getTime() || 0)
+    (a.startTime!.getTime()) - (b.startTime!.getTime())
   );
   
   let proposedStart = new Date(startTime.getTime());
@@ -25,22 +25,16 @@ export function findEarliestSlot(
     slotFound = true;
     
     for (const scheduledTask of resourceTasks) {
-      if (!scheduledTask.startTime || !scheduledTask.endTime) continue;
-      
       // Check if there's an overlap
-      if (proposedStart < scheduledTask.endTime && 
-          proposedEnd > scheduledTask.startTime) {
+      if (proposedStart < scheduledTask.endTime! && 
+          proposedEnd > scheduledTask.startTime!) {
         // Move to end of current task
-        proposedStart = new Date(scheduledTask.endTime.getTime());
+        proposedStart = new Date(scheduledTask.endTime!.getTime());
         proposedEnd = new Date(proposedStart.getTime() + task.duration * 3600000);
         slotFound = false;
         break;
       }
     }
-  }
-  
-  if (task.deadline && proposedEnd > task.deadline) {
-    console.warn(`Warning: Task ${task.id} cannot meet deadline`);
   }
   
   console.log(`Found slot for task ${task.id}: ${proposedStart.toISOString()}`);
