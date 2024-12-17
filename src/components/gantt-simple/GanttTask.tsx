@@ -23,8 +23,6 @@ const GanttTask: React.FC<GanttTaskProps> = ({
 }) => {
   console.log(`Rendering task ${task.id} at position ${calculateTaskPosition(task)}`);
   
-  const verticalPadding = (ROW_HEIGHT - TASK_HEIGHT) / 2;
-  
   return (
     <div
       className={`absolute ${
@@ -36,7 +34,7 @@ const GanttTask: React.FC<GanttTaskProps> = ({
       } flex items-center`}
       style={{
         left: task.type === 'task' ? calculateTaskPosition(task) + INDENT_WIDTH : 0,
-        top: index * ROW_HEIGHT + verticalPadding,
+        top: index * ROW_HEIGHT + ((ROW_HEIGHT - TASK_HEIGHT) / 2),
         width: task.type === 'task' 
           ? calculateTaskWidth(task.duration)
           : '100%',
