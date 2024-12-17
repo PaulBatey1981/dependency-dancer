@@ -1,22 +1,16 @@
 import { useState, useRef } from 'react';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import GanttHeader from './GanttHeader';
+import { Button } from '@/components/ui/button';
 import TaskHierarchy from './TaskHierarchy';
-import Timeline from './Timeline';
-import GanttControls from './GanttControls';
+import GanttTimeline from './GanttTimeline';
 import { SimpleTask } from './types';
-import { 
-  HOUR_WIDTH,
-  ROW_HEIGHT,
-} from './constants';
-import {
-  calculateTimelineWidth,
-  getHourMarkers,
-  getTimeRange,
-  MIN_HOURS_DISPLAY,
-  MAX_HOURS_DISPLAY,
-} from './utils/timeScaleUtils';
+import { ViewMode, getTimelineConfig, getTimelineWidth, getTimeMarkers } from './utils/viewModeUtils';
 
+const SimpleGanttChart = () => {
+  const [viewMode, setViewMode] = useState<ViewMode>('day');
+  const [viewStart, setViewStart] = useState(new Date());
+  const scrollContainerRef = useRef<HTMLDivElement>(null);
+  const taskListRef = useRef<HTMLDivElement>(null);
 const sampleTasks: SimpleTask[] = [
   {
     id: 'lineitem1',
@@ -215,46 +209,27 @@ const sampleTasks: SimpleTask[] = [
   }
 ];
 
-const SimpleGanttChart = () => {
-  const timelineRef = useRef<HTMLDivElement>(null);
-  const taskListRef = useRef<HTMLDivElement>(null);
-  const scrollContainerRef = useRef<HTMLDivElement>(null);
-  const [tasks, setTasks] = useState<SimpleTask[]>(sampleTasks);
-  const [zoom, setZoom] = useState(1);
+  const timelineWidth = getTimelineWidth(viewMode);
+  const timeMarkers = getTimeMarkers(viewStart, viewMode);
 
-  const { earliestStart, latestEnd } = getTimeRange(tasks);
-  const totalTaskHours = Math.ceil((latestEnd.getTime() - earliestStart.getTime()) / (1000 * 60 * 60));
-  
-  console.log('Timeline calculations:', {
-    totalTaskHours,
-    zoom,
-    earliestStart: earliestStart.toISOString(),
-    latestEnd: latestEnd.toISOString()
-  });
-
-  const timelineWidth = calculateTimelineWidth(totalTaskHours, HOUR_WIDTH, zoom);
-  const hourMarkers = getHourMarkers(earliestStart, totalTaskHours, zoom);
-
-  const handleZoomChange = (newZoom: number) => {
-    console.log('Zoom changed:', { oldZoom: zoom, newZoom });
-    setZoom(newZoom);
+  const handleViewModeChange = (newMode: ViewMode) => {
+    setViewMode(newMode);
+    // Reset view start to current time when changing modes
+    setViewStart(getTimelineConfig(newMode).getStart(new Date()));
   };
 
   const snapToNow = () => {
     if (scrollContainerRef.current) {
-      const now = new Date();
-      const hoursFromStart = (now.getTime() - earliestStart.getTime()) / (1000 * 60 * 60);
-      const scrollPosition = (hoursFromStart * HOUR_WIDTH * zoom);
-      console.log('Snapping to now:', { hoursFromStart, scrollPosition });
+      setViewStart(getTimelineConfig(viewMode).getStart(new Date()));
+      // Center the scroll position
       scrollContainerRef.current.scrollTo({
-        left: scrollPosition - scrollContainerRef.current.clientWidth / 2,
+        left: timelineWidth / 2,
         behavior: 'smooth'
       });
     }
   };
 
   const toggleExpand = (taskId: string) => {
-    console.log('Toggling expansion for task:', taskId);
     setTasks(prevTasks => 
       prevTasks.map(task => 
         task.id === taskId 
@@ -264,37 +239,55 @@ const SimpleGanttChart = () => {
     );
   };
 
-  const getRootTasks = () => tasks.filter(task => !task.parentId);
-  const getChildTasks = (parentId: string) => tasks.filter(task => task.parentId === parentId);
-
   return (
     <div className="space-y-4 h-full">
-      <GanttControls 
-        zoom={zoom} 
-        onZoomChange={handleZoomChange}
-        onSnapToNow={snapToNow}
-      />
+      <div className="flex justify-between items-center">
+        <div className="space-x-2">
+          <Button
+            variant={viewMode === 'day' ? 'default' : 'outline'}
+            onClick={() => handleViewModeChange('day')}
+          >
+            Daily View
+          </Button>
+          <Button
+            variant={viewMode === 'week' ? 'default' : 'outline'}
+            onClick={() => handleViewModeChange('week')}
+          >
+            Weekly View
+          </Button>
+          <Button
+            variant={viewMode === 'month' ? 'default' : 'outline'}
+            onClick={() => handleViewModeChange('month')}
+          >
+            Monthly View
+          </Button>
+        </div>
+        <Button onClick={snapToNow}>
+          Snap to Now
+        </Button>
+      </div>
       
-      <div className="h-full border rounded-lg w-full">
-        <GanttHeader hourMarkers={hourMarkers} />
-        <div className="grid grid-cols-[300px,1fr] h-[calc(100%-2rem)]">
-          <div className="min-w-[300px] h-full overflow-hidden border-r">
+      <div className="h-full border rounded-lg">
+        <div className="grid grid-cols-[300px,1fr] h-full">
+          {/* Task List */}
+          <div className="min-w-[300px] border-r">
             <div 
               ref={taskListRef}
               className="h-full overflow-y-auto"
             >
-              {getRootTasks().map(task => (
+              {tasks.map(task => (
                 <TaskHierarchy
                   key={task.id}
                   task={task}
                   level={0}
                   onToggleExpand={toggleExpand}
-                  getChildTasks={getChildTasks}
+                  getChildTasks={(parentId) => tasks.filter(t => t.parentId === parentId)}
                 />
               ))}
             </div>
           </div>
 
+          {/* Timeline */}
           <div 
             ref={scrollContainerRef}
             className="overflow-auto"
@@ -305,21 +298,16 @@ const SimpleGanttChart = () => {
             }}
           >
             <div
-              ref={timelineRef}
               style={{ 
                 width: `${timelineWidth}px`,
-                minWidth: '100%',
-                height: tasks.length * ROW_HEIGHT
+                minWidth: '100%'
               }}
             >
-              <Timeline 
-                hourMarkers={hourMarkers}
+              <GanttTimeline 
                 tasks={tasks}
-                calculateTaskPosition={(task) => {
-                  const hoursFromStart = (task.startTime.getTime() - earliestStart.getTime()) / (1000 * 60 * 60);
-                  return (hoursFromStart / totalTaskHours) * 100;
-                }}
-                calculateTaskWidth={(duration) => (duration / totalTaskHours) * 100}
+                viewMode={viewMode}
+                viewStart={viewStart}
+                timeMarkers={timeMarkers}
               />
             </div>
           </div>
