@@ -33,7 +33,7 @@ const TaskBar = ({
   const getTaskStyles = () => {
     const baseStyles = {
       left: task.type === 'task' ? `${position}%` + (level * INDENT_WIDTH) + 'px' : 0,
-      top: verticalPosition + (ROW_HEIGHT - TASK_HEIGHT) / 2,
+      top: verticalPosition,
       width: task.type === 'task' ? `${width}%` : '100%',
       height: TASK_HEIGHT,
     };
@@ -64,8 +64,8 @@ const TaskBar = ({
           className="absolute rounded-sm transition-colors hover:opacity-90"
           style={getTaskStyles()}
         >
-          <div className="px-2 py-1 truncate flex items-center justify-between h-full">
-            <div className="flex items-center gap-2">
+          <div className="flex items-center justify-between h-full">
+            <div className="flex items-center gap-2 px-2">
               {hasChildren && (
                 <Button
                   variant="ghost"
@@ -83,10 +83,10 @@ const TaskBar = ({
                   )}
                 </Button>
               )}
-              <span>{task.name}</span>
+              <span className="truncate">{task.name}</span>
             </div>
             {task.isFixed && (
-              <Lock className="w-4 h-4 text-blue-500 flex-shrink-0" />
+              <Lock className="w-4 h-4 text-blue-500 flex-shrink-0 mr-2" />
             )}
           </div>
         </div>
