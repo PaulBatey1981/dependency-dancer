@@ -125,8 +125,8 @@ const SimpleGanttChart = () => {
     <div className="space-y-4">
       <div className="h-[400px] border rounded-lg w-full">
         <GanttHeader hourMarkers={hourMarkers} />
-        <div className="grid grid-cols-[300px,1fr]">
-          <ScrollArea className="h-[calc(100%-2rem)] border-r">
+        <div className="grid grid-cols-[300px,1fr] h-[calc(100%-2rem)]">
+          <ScrollArea className="h-full border-r">
             <div className="min-w-[300px]">
               {getRootTasks().map(task => (
                 <TaskHierarchy
@@ -140,7 +140,7 @@ const SimpleGanttChart = () => {
             </div>
           </ScrollArea>
 
-          <ScrollArea className="h-[calc(100%-2rem)]">
+          <ScrollArea className="h-full">
             <div
               ref={timelineRef}
               style={{ 
