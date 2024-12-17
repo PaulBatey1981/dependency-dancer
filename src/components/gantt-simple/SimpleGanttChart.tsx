@@ -12,6 +12,12 @@ import {
   MIN_ZOOM,
   MAX_ZOOM 
 } from './constants';
+import {
+  calculateTimelineWidth,
+  calculateTaskPosition,
+  calculateTaskWidth,
+  getTimeRange
+} from './utils/timelineUtils';
 
 const sampleTasks: SimpleTask[] = [
   {
@@ -214,26 +220,14 @@ const sampleTasks: SimpleTask[] = [
 const SimpleGanttChart = () => {
   const timelineRef = useRef<HTMLDivElement>(null);
   const taskListRef = useRef<HTMLDivElement>(null);
+  const scrollContainerRef = useRef<HTMLDivElement>(null);
   const [tasks, setTasks] = useState<SimpleTask[]>(sampleTasks);
   const [zoom, setZoom] = useState(1);
 
-  const earliestStart = new Date(Math.min(...tasks.map(t => t.startTime.getTime())));
-  const latestEnd = new Date(Math.max(
-    ...tasks.map(t => t.startTime.getTime() + t.duration * 3600000)
-  ));
-
+  const { earliestStart, latestEnd } = getTimeRange(tasks);
   const totalTaskHours = Math.ceil((latestEnd.getTime() - earliestStart.getTime()) / (1000 * 60 * 60));
   const totalHours = Math.max(totalTaskHours, MIN_HOURS_DISPLAY);
-  const timelineWidth = totalHours * HOUR_WIDTH * zoom;
-
-  const calculateTaskPosition = (task: SimpleTask) => {
-    const hoursFromStart = (task.startTime.getTime() - earliestStart.getTime()) / (1000 * 60 * 60);
-    return (hoursFromStart / totalHours) * 100;
-  };
-
-  const calculateTaskWidth = (duration: number) => {
-    return (duration / totalHours) * 100;
-  };
+  const timelineWidth = calculateTimelineWidth(totalHours, HOUR_WIDTH, zoom);
 
   const handleZoomChange = (newZoom: number) => {
     console.log('Zoom changed to:', newZoom);
@@ -241,11 +235,15 @@ const SimpleGanttChart = () => {
   };
 
   const snapToNow = () => {
-    if (timelineRef.current) {
+    if (scrollContainerRef.current) {
       const now = new Date();
       const hoursFromStart = (now.getTime() - earliestStart.getTime()) / (1000 * 60 * 60);
-      const scrollPosition = hoursFromStart * HOUR_WIDTH * zoom;
-      timelineRef.current.scrollLeft = scrollPosition - timelineRef.current.clientWidth / 2;
+      const scrollPosition = (hoursFromStart * HOUR_WIDTH * zoom);
+      console.log('Scrolling to position:', scrollPosition);
+      scrollContainerRef.current.scrollTo({
+        left: scrollPosition - scrollContainerRef.current.clientWidth / 2,
+        behavior: 'smooth'
+      });
     }
   };
 
@@ -283,8 +281,7 @@ const SimpleGanttChart = () => {
           <div className="min-w-[300px] h-full overflow-hidden border-r">
             <div 
               ref={taskListRef}
-              className="h-full"
-              style={{ overflowY: 'hidden' }}
+              className="h-full overflow-y-auto"
             >
               {getRootTasks().map(task => (
                 <TaskHierarchy
@@ -298,15 +295,11 @@ const SimpleGanttChart = () => {
             </div>
           </div>
 
-          <ScrollArea 
-            className="h-full"
-            onWheel={(e) => {
-              if (e.shiftKey || e.deltaX !== 0) {
-                e.preventDefault();
-                if (timelineRef.current) {
-                  timelineRef.current.scrollLeft += e.deltaX || e.deltaY;
-                }
-              } else if (taskListRef.current) {
+          <div 
+            ref={scrollContainerRef}
+            className="overflow-auto"
+            onScroll={(e) => {
+              if (taskListRef.current) {
                 taskListRef.current.scrollTop = e.currentTarget.scrollTop;
               }
             }}
@@ -314,7 +307,7 @@ const SimpleGanttChart = () => {
             <div
               ref={timelineRef}
               style={{ 
-                width: `max(${timelineWidth}px, 100%)`,
+                width: `${timelineWidth}px`,
                 minWidth: '100%',
                 height: tasks.length * ROW_HEIGHT
               }}
@@ -322,11 +315,11 @@ const SimpleGanttChart = () => {
               <Timeline 
                 hourMarkers={hourMarkers}
                 tasks={tasks}
-                calculateTaskPosition={calculateTaskPosition}
-                calculateTaskWidth={calculateTaskWidth}
+                calculateTaskPosition={(task) => calculateTaskPosition(task, earliestStart, totalHours)}
+                calculateTaskWidth={(duration) => calculateTaskWidth(duration, totalHours)}
               />
             </div>
-          </ScrollArea>
+          </div>
         </div>
       </div>
     </div>
