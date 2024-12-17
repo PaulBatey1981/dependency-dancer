@@ -112,7 +112,7 @@ const SimpleGanttChart = () => {
               key={task.id}
               className={`absolute ${
                 task.type === 'lineitem' 
-                  ? 'bg-blue-100 border border-blue-300 font-semibold' 
+                  ? 'bg-blue-50 border border-blue-200 font-semibold' 
                   : 'bg-blue-500'
               } rounded-sm text-sm ${
                 task.type === 'lineitem' ? 'text-blue-800' : 'text-white'
@@ -122,8 +122,9 @@ const SimpleGanttChart = () => {
                 top: index * ROW_HEIGHT + (ROW_HEIGHT - TASK_HEIGHT) / 2,
                 width: task.type === 'task' 
                   ? calculateTaskWidth(task.duration)
-                  : timelineWidth,
+                  : '100%',
                 height: TASK_HEIGHT,
+                paddingRight: task.type === 'lineitem' ? INDENT_WIDTH : 0,
               }}
             >
               <div className="px-2 py-1 truncate">
