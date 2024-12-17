@@ -27,17 +27,22 @@ const WxGanttChart = ({ tasks }: WxGanttChartProps) => {
   const lineItems = tasksWithDates.filter(task => task.type === 'lineitem');
   console.log('Line items:', lineItems.map(item => item.id));
 
-  // Helper function to get child tasks
-  const getChildTasks = (parentTask: Task) => {
+  // Helper function to get child tasks (tasks that depend on this task)
+  const getChildTasks = (parentId: string): Task[] => {
     return tasksWithDates.filter(task => 
-      task.dependencies.includes(parentTask.id)
+      task.dependencies.includes(parentId)
     );
   };
 
-  // Transform tasks to wx-react-gantt format with proper hierarchy
-  const transformTask = (task: Task, parentId: string | null = null) => {
-    const childTasks = getChildTasks(task);
+  // Transform tasks to wx-react-gantt format
+  const transformTask = (task: Task) => {
+    const childTasks = getChildTasks(task.id);
     
+    // Find parent task (task that this task depends on)
+    const parentTask = task.dependencies.length > 0 
+      ? tasksWithDates.find(t => task.dependencies.includes(t.id))
+      : null;
+
     const transformedTask = {
       id: task.id,
       text: task.name,
@@ -46,7 +51,7 @@ const WxGanttChart = ({ tasks }: WxGanttChartProps) => {
       duration: task.duration,
       progress: task.status === 'completed' ? 100 : 0,
       type: task.type === 'lineitem' ? 'project' : 'task',
-      parent: parentId,
+      parent: parentTask?.id || null,
       children: childTasks.map(child => child.id),
       open: true,
       resource: task.resource
@@ -56,28 +61,11 @@ const WxGanttChart = ({ tasks }: WxGanttChartProps) => {
     return transformedTask;
   };
 
-  // Build task hierarchy starting from line items
-  const transformedTasks = [];
-  
-  // First add line items (root level)
-  for (const lineItem of lineItems) {
-    transformedTasks.push(transformTask(lineItem, null));
-  }
-
-  // Then add all other tasks with their proper parent relationships
-  for (const task of tasksWithDates) {
-    if (task.type !== 'lineitem') {
-      // Find the first task that has this task in its dependencies
-      const parentTask = tasksWithDates.find(t => 
-        t.dependencies.includes(task.id)
-      );
-      transformedTasks.push(transformTask(task, parentTask?.id || null));
-    }
-  }
-
+  // Transform all tasks
+  const transformedTasks = tasksWithDates.map(transformTask);
   console.log('Final transformed tasks:', transformedTasks);
 
-  // Create links between tasks
+  // Create links between tasks based on dependencies
   const links = tasksWithDates.flatMap(task => 
     task.dependencies.map((depId, index) => ({
       id: `${depId}_${task.id}_${index}`,
