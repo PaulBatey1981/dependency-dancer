@@ -8,7 +8,7 @@ interface WxGanttChartProps {
 const WxGanttChart = ({ tasks }: WxGanttChartProps) => {
   console.log('Initial tasks:', tasks);
 
-  // First, ensure all tasks have valid dates
+  // First, ensure all tasks have valid dates and dependencies
   const tasksWithDates = tasks.map(task => {
     const now = new Date();
     const startTime = task.startTime || now;
@@ -16,21 +16,19 @@ const WxGanttChart = ({ tasks }: WxGanttChartProps) => {
     return {
       ...task,
       startTime,
-      endTime
+      endTime,
+      dependencies: task.dependencies || []
     };
   });
-
-  // Create a map for quick task lookup
-  const taskMap = new Map(tasksWithDates.map(task => [task.id, task]));
 
   // Get all line items
   const lineItems = tasksWithDates.filter(task => task.type === 'lineitem');
   console.log('Line items:', lineItems.map(item => item.id));
 
-  // Helper function to get child tasks (tasks that this task depends on)
-  const getChildTasks = (parentId: string): Task[] => {
+  // Helper function to get tasks that depend on this task
+  const getDependentTasks = (taskId: string): Task[] => {
     return tasksWithDates.filter(task => 
-      task.dependencies && task.dependencies[0] === parentId
+      task.dependencies?.includes(taskId)
     );
   };
 
@@ -38,13 +36,12 @@ const WxGanttChart = ({ tasks }: WxGanttChartProps) => {
   const transformTask = (task: Task) => {
     if (!task) return null;
 
-    // Get direct child tasks
-    const childTasks = getChildTasks(task.id);
-    console.log(`Child tasks for ${task.id}:`, childTasks.map(t => t.id));
-    
-    // For non-line items, get the first dependency as parent
-    const parentId = task.type !== 'lineitem' && task.dependencies?.length ? 
-      task.dependencies[0] : undefined;
+    // Get tasks that depend on this task (children in Gantt chart)
+    const dependentTasks = getDependentTasks(task.id);
+    console.log(`Tasks depending on ${task.id}:`, dependentTasks.map(t => t.id));
+
+    // For line items, no parent. For others, use first dependency as parent
+    const parentId = task.type === 'lineitem' ? undefined : task.dependencies?.[0];
     
     const transformedTask = {
       id: task.id,
@@ -55,7 +52,7 @@ const WxGanttChart = ({ tasks }: WxGanttChartProps) => {
       progress: task.status === 'completed' ? 100 : 0,
       type: task.type === 'lineitem' ? 'project' : 'task',
       parent: parentId,
-      children: childTasks.map(t => t.id),
+      children: dependentTasks.map(t => t.id),
       open: true,
       resource: task.resource
     };
@@ -64,14 +61,9 @@ const WxGanttChart = ({ tasks }: WxGanttChartProps) => {
     return transformedTask;
   };
 
-  // First transform line items, then their children
-  const transformedTasks = lineItems
+  // Transform all tasks
+  const transformedTasks = tasksWithDates
     .map(transformTask)
-    .concat(
-      tasksWithDates
-        .filter(task => task.type !== 'lineitem')
-        .map(transformTask)
-    )
     .filter((task): task is NonNullable<typeof task> => task !== null);
 
   console.log('Final transformed tasks:', transformedTasks);
