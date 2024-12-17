@@ -20,21 +20,15 @@ const WxGanttChart = ({ tasks }: WxGanttChartProps) => {
     };
   });
 
-  // Get all line items as they will be our root tasks
-  const lineItems = tasksWithDates.filter(task => task.type === 'lineitem');
-  console.log('Line items:', lineItems.map(item => item.id));
+  // Create a map for quick task lookup
+  const taskMap = new Map(tasksWithDates.map(task => [task.id, task]));
 
-  // Transform tasks to wx-react-gantt format
+  // Transform tasks to wx-react-gantt format with proper hierarchy
   const transformTask = (task: Task) => {
-    // Find the parent task by looking through dependencies
-    let parentId = null;
-    if (task.type !== 'lineitem') {
-      // For non-line items, find their parent by checking which tasks have this task in their dependencies
-      const parent = tasksWithDates.find(t => t.dependencies.includes(task.id));
-      if (parent) {
-        parentId = parent.id;
-      }
-    }
+    // Find all tasks that have this task in their dependencies
+    const childTasks = tasksWithDates.filter(t => 
+      t.dependencies.includes(task.id)
+    );
 
     const transformedTask = {
       id: task.id,
@@ -44,9 +38,9 @@ const WxGanttChart = ({ tasks }: WxGanttChartProps) => {
       duration: task.duration,
       progress: task.status === 'completed' ? 100 : 0,
       type: task.type === 'lineitem' ? 'project' : 'task',
-      parent: parentId,
+      parent: null as string | null, // Will be set in the next step
+      children: childTasks.map(child => child.id),
       open: true,
-      children: [], // Initialize empty children array
       resource: task.resource
     };
 
@@ -54,22 +48,33 @@ const WxGanttChart = ({ tasks }: WxGanttChartProps) => {
     return transformedTask;
   };
 
-  // Transform all tasks and ensure they have required properties
-  const wxTasks = tasksWithDates.map(transformTask);
-  console.log('All transformed tasks:', wxTasks);
+  // First pass: transform all tasks
+  const transformedTasks = tasksWithDates.map(transformTask);
+
+  // Second pass: set parent relationships
+  transformedTasks.forEach(task => {
+    const originalTask = taskMap.get(task.id);
+    if (originalTask && originalTask.dependencies.length > 0) {
+      // Find the first dependency that exists in our transformed tasks
+      const parentId = originalTask.dependencies.find(depId => 
+        transformedTasks.some(t => t.id === depId)
+      );
+      if (parentId) {
+        task.parent = parentId;
+      }
+    }
+  });
+
+  console.log('Final transformed tasks:', transformedTasks);
 
   // Create links between tasks
   const links = tasksWithDates.flatMap(task => 
-    task.dependencies.map((depId, index) => {
-      const link = {
-        id: `${depId}_${task.id}_${index}`,
-        source: depId,
-        target: task.id,
-        type: "finish_to_start"
-      };
-      console.log(`Created link:`, link);
-      return link;
-    })
+    task.dependencies.map((depId, index) => ({
+      id: `${depId}_${task.id}_${index}`,
+      source: depId,
+      target: task.id,
+      type: "finish_to_start"
+    }))
   );
 
   console.log('Generated links:', links);
@@ -104,7 +109,7 @@ const WxGanttChart = ({ tasks }: WxGanttChartProps) => {
 
   const scales = [
     { unit: "day", step: 1, format: "d" },
-    { unit: "month", step: 1, format: "MMMM yyyy" } // Changed from "YYYY" to "yyyy"
+    { unit: "month", step: 1, format: "MMMM yyyy" }
   ];
 
   // Add error boundary to catch and log any errors
@@ -112,7 +117,7 @@ const WxGanttChart = ({ tasks }: WxGanttChartProps) => {
     return (
       <div className="h-[600px] w-full">
         <Gantt 
-          tasks={wxTasks} 
+          tasks={transformedTasks} 
           links={links} 
           scales={scales}
           columns={columns}
