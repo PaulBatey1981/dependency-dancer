@@ -16,7 +16,6 @@ const TASK_HEIGHT = 32;
 const INDENT_WIDTH = 20; // pixels to indent child tasks
 const MIN_HOURS_DISPLAY = 12; // Minimum hours to display
 
-// Hardcoded tasks for initial testing with hierarchy
 const sampleTasks: SimpleTask[] = [
   {
     id: 'lineitem1',
@@ -81,11 +80,12 @@ const SimpleGanttChart = () => {
   // Generate hour markers
   const hourMarkers = Array.from({ length: totalHours + 1 }).map((_, index) => {
     const markerTime = new Date(earliestStart.getTime() + index * 60 * 60 * 1000);
+    const position = (index / totalHours) * 100;
     return (
       <div
         key={index}
         className="absolute top-0 bottom-0 border-l border-gray-200 text-xs text-gray-500"
-        style={{ left: index * HOUR_WIDTH }}
+        style={{ left: `${position}%` }}
       >
         {markerTime.getHours().toString().padStart(2, '0')}:00
       </div>
@@ -96,13 +96,7 @@ const SimpleGanttChart = () => {
     <div className="h-[400px] border rounded-lg w-full">
       {/* Timeline Header */}
       <div className="h-8 border-b bg-gray-50 relative">
-        <div 
-          className="absolute top-0 bottom-0"
-          style={{ 
-            width: `max(${timelineWidth}px, 100%)`,
-            minWidth: '100%'
-          }}
-        >
+        <div className="absolute inset-0">
           {hourMarkers}
         </div>
       </div>
