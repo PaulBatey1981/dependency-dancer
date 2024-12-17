@@ -1,4 +1,4 @@
-import { useRef, useState } from 'react';
+import { useState, useRef } from 'react';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import GanttHeader from './GanttHeader';
 import TaskHierarchy from './TaskHierarchy';
@@ -6,18 +6,15 @@ import Timeline from './Timeline';
 import GanttControls from './GanttControls';
 import { SimpleTask } from './types';
 import { 
-  HOUR_WIDTH, 
-  ROW_HEIGHT, 
-  MIN_HOURS_DISPLAY,
-  MIN_ZOOM,
-  MAX_ZOOM 
+  HOUR_WIDTH,
+  ROW_HEIGHT,
 } from './constants';
 import {
   calculateTimelineWidth,
-  calculateTaskPosition,
-  calculateTaskWidth,
-  getTimeRange
-} from './utils/timelineUtils';
+  getHourMarkers,
+  MIN_HOURS_DISPLAY,
+  MAX_HOURS_DISPLAY,
+} from './utils/timeScaleUtils';
 
 const sampleTasks: SimpleTask[] = [
   {
@@ -226,11 +223,19 @@ const SimpleGanttChart = () => {
 
   const { earliestStart, latestEnd } = getTimeRange(tasks);
   const totalTaskHours = Math.ceil((latestEnd.getTime() - earliestStart.getTime()) / (1000 * 60 * 60));
-  const totalHours = Math.max(totalTaskHours, MIN_HOURS_DISPLAY);
-  const timelineWidth = calculateTimelineWidth(totalHours, HOUR_WIDTH, zoom);
+  
+  console.log('Timeline calculations:', {
+    totalTaskHours,
+    zoom,
+    earliestStart: earliestStart.toISOString(),
+    latestEnd: latestEnd.toISOString()
+  });
+
+  const timelineWidth = calculateTimelineWidth(totalTaskHours, HOUR_WIDTH, zoom);
+  const hourMarkers = getHourMarkers(earliestStart, totalTaskHours, zoom);
 
   const handleZoomChange = (newZoom: number) => {
-    console.log('Zoom changed to:', newZoom);
+    console.log('Zoom changed:', { oldZoom: zoom, newZoom });
     setZoom(newZoom);
   };
 
@@ -239,7 +244,7 @@ const SimpleGanttChart = () => {
       const now = new Date();
       const hoursFromStart = (now.getTime() - earliestStart.getTime()) / (1000 * 60 * 60);
       const scrollPosition = (hoursFromStart * HOUR_WIDTH * zoom);
-      console.log('Scrolling to position:', scrollPosition);
+      console.log('Snapping to now:', { hoursFromStart, scrollPosition });
       scrollContainerRef.current.scrollTo({
         left: scrollPosition - scrollContainerRef.current.clientWidth / 2,
         behavior: 'smooth'
@@ -260,12 +265,6 @@ const SimpleGanttChart = () => {
 
   const getRootTasks = () => tasks.filter(task => !task.parentId);
   const getChildTasks = (parentId: string) => tasks.filter(task => task.parentId === parentId);
-
-  const hourMarkers = Array.from({ length: Math.ceil(totalHours * zoom) + 1 }).map((_, index) => {
-    const markerTime = new Date(earliestStart.getTime() + (index / zoom) * 60 * 60 * 1000);
-    const position = (index / (totalHours * zoom)) * 100;
-    return { position, time: markerTime };
-  });
 
   return (
     <div className="space-y-4 h-full">
@@ -315,8 +314,11 @@ const SimpleGanttChart = () => {
               <Timeline 
                 hourMarkers={hourMarkers}
                 tasks={tasks}
-                calculateTaskPosition={(task) => calculateTaskPosition(task, earliestStart, totalHours)}
-                calculateTaskWidth={(duration) => calculateTaskWidth(duration, totalHours)}
+                calculateTaskPosition={(task) => {
+                  const hoursFromStart = (task.startTime.getTime() - earliestStart.getTime()) / (1000 * 60 * 60);
+                  return (hoursFromStart / totalTaskHours) * 100;
+                }}
+                calculateTaskWidth={(duration) => (duration / totalTaskHours) * 100}
               />
             </div>
           </div>
