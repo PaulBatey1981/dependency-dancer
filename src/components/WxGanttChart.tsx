@@ -26,13 +26,13 @@ const WxGanttChart = ({ tasks }: WxGanttChartProps) => {
 
   // Transform tasks to wx-react-gantt format
   const transformTask = (task: Task) => {
-    // For non-lineitem tasks, find their direct parent lineitem
+    // Find the parent task by looking through dependencies
     let parentId = null;
     if (task.type !== 'lineitem') {
-      // Find the first line item in the task's dependencies
-      const parentLineItem = lineItems.find(li => task.dependencies.includes(li.id));
-      if (parentLineItem) {
-        parentId = parentLineItem.id;
+      // For non-line items, find their parent by checking which tasks have this task in their dependencies
+      const parent = tasksWithDates.find(t => t.dependencies.includes(task.id));
+      if (parent) {
+        parentId = parent.id;
       }
     }
 
@@ -60,18 +60,16 @@ const WxGanttChart = ({ tasks }: WxGanttChartProps) => {
 
   // Create links between tasks
   const links = tasksWithDates.flatMap(task => 
-    task.dependencies
-      .filter(depId => tasksWithDates.some(t => t.id === depId))
-      .map((depId, index) => {
-        const link = {
-          id: `${depId}_${task.id}_${index}`,
-          source: depId,
-          target: task.id,
-          type: "finish_to_start"
-        };
-        console.log(`Created link:`, link);
-        return link;
-      })
+    task.dependencies.map((depId, index) => {
+      const link = {
+        id: `${depId}_${task.id}_${index}`,
+        source: depId,
+        target: task.id,
+        type: "finish_to_start"
+      };
+      console.log(`Created link:`, link);
+      return link;
+    })
   );
 
   console.log('Generated links:', links);
@@ -81,7 +79,7 @@ const WxGanttChart = ({ tasks }: WxGanttChartProps) => {
     { 
       id: "text", 
       header: "Task name", 
-      width: 200,
+      width: 300,
       resize: true
     },
     {
@@ -126,7 +124,8 @@ const WxGanttChart = ({ tasks }: WxGanttChartProps) => {
           moving={false}
           autoScheduling={false}
           cellWidth={40}
-          columnWidth={200}
+          columnWidth={300}
+          treeExpanded={true}
         />
       </div>
     );
