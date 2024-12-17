@@ -16,10 +16,13 @@ const WxGanttChart = ({ tasks }: WxGanttChartProps) => {
   };
 
   // Transform tasks to wx-react-gantt format with proper hierarchy
-  const transformTask = (task: Task, parentId?: string) => {
+  const transformTask = (task: Task) => {
     const now = new Date();
     const startTime = task.startTime || now;
     const endTime = task.endTime || new Date(startTime.getTime() + task.duration * 3600000);
+
+    // Find the parent task (the task that this task depends on)
+    const parentTask = tasks.find(t => task.dependencies.includes(t.id));
 
     return {
       id: task.id,
@@ -29,42 +32,22 @@ const WxGanttChart = ({ tasks }: WxGanttChartProps) => {
       duration: task.duration,
       progress: 0,
       type: task.type === 'lineitem' ? 'project' : 'task',
-      parent: parentId,
+      parent: parentTask?.id, // Set parent based on dependencies
       open: true,
     };
   };
 
-  // Build the task hierarchy
-  const buildTaskHierarchy = () => {
-    const wxTasks: any[] = [];
+  // Transform all tasks, not just the hierarchy
+  const wxTasks = tasks.map(task => transformTask(task));
+  console.log('Transformed tasks:', wxTasks);
 
-    // Process each line item and its subtasks
-    lineItems.forEach(lineItem => {
-      // Add the line item itself
-      wxTasks.push(transformTask(lineItem));
-      console.log(`Processing line item: ${lineItem.id}`);
-
-      // Process immediate children
-      const children = getChildTasks(lineItem.id);
-      children.forEach(child => {
-        wxTasks.push(transformTask(child, lineItem.id));
-        console.log(`Added child ${child.id} to line item ${lineItem.id}`);
-      });
-    });
-
-    return wxTasks;
-  };
-
-  const wxTasks = buildTaskHierarchy();
-  console.log('Final transformed tasks:', wxTasks);
-
-  // Create links from dependencies
+  // Create links from dependencies (reversed to match parent-child relationships)
   const links = tasks.flatMap(task => 
     task.dependencies.map((depId, index) => ({
-      id: `${task.id}_${depId}_${index}`,
-      source: depId,
-      target: task.id,
-      type: "e2e"
+      id: `${depId}_${task.id}_${index}`, // Reversed order in ID
+      source: depId, // Parent task
+      target: task.id, // Child task
+      type: "finish_to_start" // Using proper link type
     }))
   );
 
