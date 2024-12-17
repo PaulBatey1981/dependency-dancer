@@ -1,27 +1,20 @@
 import { useRef, useState } from 'react';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Button } from '@/components/ui/button';
-import { Lock } from 'lucide-react';
+import { toast } from '@/components/ui/use-toast';
+import GanttTimelineHeader from './GanttTimelineHeader';
+import GanttTask from './GanttTask';
+import GanttDependencyLine from './GanttDependencyLine';
+import { SimpleTask } from './types';
 
-interface SimpleTask {
-  id: string;
-  name: string;
-  startTime: Date;
-  duration: number; // in hours
-  type: 'lineitem' | 'task';
-  parentId?: string;
-  dependencies?: string[];
-  isFixed?: boolean;
-}
-
-const HOUR_WIDTH = 50; // pixels per hour
+const HOUR_WIDTH = 50;
 const ROW_HEIGHT = 40;
 const TASK_HEIGHT = 32;
-const INDENT_WIDTH = 20; // pixels to indent child tasks
-const MIN_HOURS_DISPLAY = 12; // Minimum hours to display
+const INDENT_WIDTH = 20;
+const MIN_HOURS_DISPLAY = 12;
 
 const sampleTasks: SimpleTask[] = [
-  // MWB Production Line Item
+  // MWB Production Line Item (intentionally misaligned for testing)
   {
     id: 'lineitem1',
     name: 'MWB Production',
@@ -36,16 +29,16 @@ const sampleTasks: SimpleTask[] = [
     duration: 2,
     type: 'task',
     parentId: 'lineitem1',
-    isFixed: true // This task is fixed
+    isFixed: true
   },
   {
     id: 'task2',
     name: 'Cut Boards',
-    startTime: new Date('2024-03-20T11:00:00'),
+    startTime: new Date('2024-03-20T08:00:00'), // Intentionally starts before Print Materials
     duration: 3,
     type: 'task',
     parentId: 'lineitem1',
-    dependencies: ['task1'] // This task depends on task1
+    dependencies: ['task1']
   },
   {
     id: 'task3',
@@ -54,7 +47,7 @@ const sampleTasks: SimpleTask[] = [
     duration: 4,
     type: 'task',
     parentId: 'lineitem1',
-    dependencies: ['task2'] // This task depends on task2
+    dependencies: ['task2']
   },
   // HWB Production Line Item
   {
@@ -79,7 +72,7 @@ const sampleTasks: SimpleTask[] = [
     duration: 4,
     type: 'task',
     parentId: 'lineitem2',
-    dependencies: ['task4'] // This task depends on task4
+    dependencies: ['task4']
   }
 ];
 
@@ -87,19 +80,13 @@ const SimpleGanttChart = () => {
   const timelineRef = useRef<HTMLDivElement>(null);
   const [tasks, setTasks] = useState<SimpleTask[]>(sampleTasks);
 
-  // Find the earliest start time among all tasks
   const earliestStart = new Date(Math.min(...tasks.map(t => t.startTime.getTime())));
-  
-  // Find the latest end time
   const latestEnd = new Date(Math.max(
     ...tasks.map(t => t.startTime.getTime() + t.duration * 3600000)
   ));
 
-  // Calculate total hours for timeline width, ensuring minimum display hours
   const totalTaskHours = Math.ceil((latestEnd.getTime() - earliestStart.getTime()) / (1000 * 60 * 60));
   const totalHours = Math.max(totalTaskHours, MIN_HOURS_DISPLAY);
-  
-  // Calculate timeline width in pixels
   const timelineWidth = totalHours * HOUR_WIDTH;
 
   const calculateTaskPosition = (task: SimpleTask) => {
@@ -112,19 +99,23 @@ const SimpleGanttChart = () => {
   };
 
   const handleReschedule = () => {
+    console.log('Reschedule button clicked');
     const newTasks = [...tasks];
-    
-    // Sort tasks by dependencies
     const processedTasks = new Set<string>();
     
     const rescheduleTask = (taskId: string) => {
+      console.log(`Processing task ${taskId} for rescheduling`);
       if (processedTasks.has(taskId)) return;
       
       const task = newTasks.find(t => t.id === taskId);
-      if (!task || task.isFixed) return;
+      if (!task || task.isFixed) {
+        console.log(`Task ${taskId} is either fixed or not found - skipping`);
+        return;
+      }
       
       // Process dependencies first
       task.dependencies?.forEach(depId => {
+        console.log(`Processing dependency ${depId} for task ${taskId}`);
         rescheduleTask(depId);
       });
       
@@ -133,11 +124,14 @@ const SimpleGanttChart = () => {
         const dep = newTasks.find(t => t.id === depId);
         if (!dep) return latest;
         const endTime = new Date(dep.startTime.getTime() + dep.duration * 3600000);
+        console.log(`Dependency ${depId} ends at ${endTime}`);
         return endTime.getTime() > latest.getTime() ? endTime : latest;
       }, new Date(0));
       
       if (latestDependencyEnd && latestDependencyEnd.getTime() > 0) {
+        const oldStartTime = task.startTime;
         task.startTime = new Date(latestDependencyEnd);
+        console.log(`Moved task ${taskId} from ${oldStartTime} to ${task.startTime}`);
       }
       
       processedTasks.add(taskId);
@@ -151,54 +145,18 @@ const SimpleGanttChart = () => {
     });
     
     setTasks(newTasks);
+    toast({
+      title: "Tasks Rescheduled",
+      description: "All tasks have been rescheduled according to their dependencies.",
+    });
   };
 
   // Generate hour markers
   const hourMarkers = Array.from({ length: totalHours + 1 }).map((_, index) => {
     const markerTime = new Date(earliestStart.getTime() + index * 60 * 60 * 1000);
     const position = (index / totalHours) * 100;
-    return (
-      <div
-        key={index}
-        className="absolute top-0 bottom-0 border-l border-gray-200 text-xs text-gray-500"
-        style={{ left: `${position}%` }}
-      >
-        {markerTime.getHours().toString().padStart(2, '0')}:00
-      </div>
-    );
+    return { position, time: markerTime };
   });
-
-  const renderDependencyLines = (task: SimpleTask) => {
-    if (!task.dependencies?.length) return null;
-
-    return task.dependencies.map(depId => {
-      const dependencyTask = tasks.find(t => t.id === depId);
-      if (!dependencyTask) return null;
-
-      const startX = calculateTaskPosition(dependencyTask) + calculateTaskWidth(dependencyTask.duration);
-      const endX = calculateTaskPosition(task);
-      const startY = tasks.indexOf(dependencyTask) * ROW_HEIGHT + TASK_HEIGHT / 2;
-      const endY = tasks.indexOf(task) * ROW_HEIGHT + TASK_HEIGHT / 2;
-
-      return (
-        <svg
-          key={`${depId}-${task.id}`}
-          className="absolute top-0 left-0 pointer-events-none"
-          style={{ width: '100%', height: '100%' }}
-        >
-          <line
-            x1={startX + INDENT_WIDTH}
-            y1={startY}
-            x2={endX + INDENT_WIDTH}
-            y2={endY}
-            stroke="#9CA3AF"
-            strokeWidth="1"
-            strokeDasharray="4"
-          />
-        </svg>
-      );
-    });
-  };
 
   return (
     <div className="space-y-4">
@@ -207,14 +165,8 @@ const SimpleGanttChart = () => {
       </Button>
 
       <div className="h-[400px] border rounded-lg w-full">
-        {/* Timeline Header */}
-        <div className="h-8 border-b bg-gray-50 relative">
-          <div className="absolute inset-0">
-            {hourMarkers}
-          </div>
-        </div>
+        <GanttTimelineHeader hourMarkers={hourMarkers} />
 
-        {/* Timeline Content */}
         <ScrollArea className="h-[calc(100%-2rem)]">
           <div
             ref={timelineRef}
@@ -226,37 +178,39 @@ const SimpleGanttChart = () => {
             }}
           >
             {/* Dependency Lines */}
-            {tasks.map(task => task.type === 'task' && renderDependencyLines(task))}
+            {tasks.map(task => 
+              task.type === 'task' && task.dependencies?.map(depId => {
+                const dependencyTask = tasks.find(t => t.id === depId);
+                if (!dependencyTask) return null;
+                
+                return (
+                  <GanttDependencyLine
+                    key={`${depId}-${task.id}`}
+                    dependencyTask={dependencyTask}
+                    currentTask={task}
+                    calculateTaskPosition={calculateTaskPosition}
+                    calculateTaskWidth={calculateTaskWidth}
+                    tasks={tasks}
+                    TASK_HEIGHT={TASK_HEIGHT}
+                    ROW_HEIGHT={ROW_HEIGHT}
+                    INDENT_WIDTH={INDENT_WIDTH}
+                  />
+                );
+              })
+            )}
 
             {/* Task Bars */}
             {tasks.map((task, index) => (
-              <div
+              <GanttTask
                 key={task.id}
-                className={`absolute ${
-                  task.type === 'lineitem' 
-                    ? 'bg-blue-50 border border-blue-200 font-semibold' 
-                    : 'bg-blue-500'
-                } rounded-sm text-sm ${
-                  task.type === 'lineitem' ? 'text-blue-800' : 'text-white'
-                } flex items-center`}
-                style={{
-                  left: task.type === 'task' ? calculateTaskPosition(task) + INDENT_WIDTH : 0,
-                  top: index * ROW_HEIGHT + (ROW_HEIGHT - TASK_HEIGHT) / 2,
-                  width: task.type === 'task' 
-                    ? calculateTaskWidth(task.duration)
-                    : '100%',
-                  height: TASK_HEIGHT,
-                  paddingLeft: task.type === 'lineitem' ? '0.5rem' : '0.25rem',
-                  paddingRight: task.type === 'lineitem' ? INDENT_WIDTH : 0,
-                }}
-              >
-                <div className="px-2 py-1 truncate flex-1">
-                  {task.name}
-                </div>
-                {task.isFixed && (
-                  <Lock className="w-4 h-4 mr-2 text-yellow-500" />
-                )}
-              </div>
+                task={task}
+                index={index}
+                calculateTaskPosition={calculateTaskPosition}
+                calculateTaskWidth={calculateTaskWidth}
+                ROW_HEIGHT={ROW_HEIGHT}
+                TASK_HEIGHT={TASK_HEIGHT}
+                INDENT_WIDTH={INDENT_WIDTH}
+              />
             ))}
 
             {/* Row Dividers */}
