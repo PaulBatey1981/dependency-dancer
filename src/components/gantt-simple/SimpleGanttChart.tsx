@@ -12,6 +12,7 @@ import {
 import {
   calculateTimelineWidth,
   getHourMarkers,
+  getTimeRange,
   MIN_HOURS_DISPLAY,
   MAX_HOURS_DISPLAY,
 } from './utils/timeScaleUtils';
