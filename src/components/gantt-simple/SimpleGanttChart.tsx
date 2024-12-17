@@ -217,8 +217,8 @@ const SimpleGanttChart = () => {
   });
 
   return (
-    <div className="space-y-4">
-      <div className="h-[400px] border rounded-lg w-full">
+    <div className="space-y-4 h-full">
+      <div className="h-full border rounded-lg w-full">
         <GanttHeader hourMarkers={hourMarkers} />
         <div className="grid grid-cols-[300px,1fr] h-[calc(100%-2rem)]">
           <ScrollArea className="h-full border-r">
