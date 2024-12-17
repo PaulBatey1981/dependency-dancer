@@ -22,17 +22,20 @@ const WxGanttChart = ({ tasks }: WxGanttChartProps) => {
       id: "text", 
       header: "Task name", 
       width: 300,
-      resize: true
+      resize: true,
+      template: (task: any) => task.text // Use the text property for task names
     },
     {
       id: "resource",
       header: "Resource",
       width: 120,
-      align: "center"
+      align: "center",
+      template: (task: any) => task.resource
     }
   ];
 
   const scales = [
+    { unit: "hour", step: 6, format: "HH:mm" },
     { unit: "day", step: 1, format: "d" },
     { unit: "month", step: 1, format: "MMMM yyyy" }
   ];
@@ -81,6 +84,12 @@ const WxGanttChart = ({ tasks }: WxGanttChartProps) => {
           treeExpanded={true}
           onTaskClick={(task) => console.log('Task clicked:', task)}
           onDoubleClick={(task) => console.log('Task double clicked:', task)}
+          gridWidth={420} // Sum of column widths
+          listWidth={420} // Same as gridWidth
+          rowPadding={4}
+          dateFormat="MMM d, yyyy"
+          timeFormat="HH:mm"
+          locale="en-US"
         />
       </div>
     </div>

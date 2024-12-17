@@ -44,7 +44,7 @@ export const transformTasksToGantt = (tasks: Task[]) => {
       end: endTime,
       progress: task.status === 'completed' ? 100 : 0,
       resource: task.resource || '',
-      children: children,
+      children: children || [], // Ensure children is always an array
       open: true // Always expand nodes by default
     };
 
@@ -63,7 +63,7 @@ export const transformTasksToGantt = (tasks: Task[]) => {
     start: new Date(),
     end: new Date(new Date().getTime() + 30 * 24 * 3600000), // 30 days span
     progress: 0,
-    children: transformedTasks,
+    children: transformedTasks || [], // Ensure children is always an array
     open: true
   };
 
