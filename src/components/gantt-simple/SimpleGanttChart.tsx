@@ -226,6 +226,15 @@ const SimpleGanttChart = () => {
   const totalHours = Math.max(totalTaskHours, MIN_HOURS_DISPLAY);
   const timelineWidth = totalHours * HOUR_WIDTH * zoom;
 
+  const calculateTaskPosition = (task: SimpleTask) => {
+    const hoursFromStart = (task.startTime.getTime() - earliestStart.getTime()) / (1000 * 60 * 60);
+    return (hoursFromStart / totalHours) * 100;
+  };
+
+  const calculateTaskWidth = (duration: number) => {
+    return (duration / totalHours) * 100;
+  };
+
   const handleZoomChange = (newZoom: number) => {
     console.log('Zoom changed to:', newZoom);
     setZoom(newZoom);
