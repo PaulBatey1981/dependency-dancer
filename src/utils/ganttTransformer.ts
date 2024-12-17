@@ -3,6 +3,11 @@ import { Task } from "@/types/scheduling";
 export const transformTasksToGantt = (tasks: Task[]) => {
   console.log('Starting task transformation with tasks:', tasks);
 
+  if (!tasks || tasks.length === 0) {
+    console.warn('No tasks provided to transform');
+    return [];
+  }
+
   // Get line items (top-level tasks)
   const lineItems = tasks.filter(task => task.type === 'lineitem');
   console.log('Found line items:', lineItems);
@@ -19,13 +24,14 @@ export const transformTasksToGantt = (tasks: Task[]) => {
     
     console.log(`Found ${childTasks.length} children for task ${task.id}:`, childTasks.map(t => t.id));
 
-    // Transform children first
+    // Transform children recursively
     const children = childTasks.map(child => transformTask(child));
 
     // Ensure we have valid dates
     const now = new Date();
     const startTime = task.startTime || now;
-    const endTime = task.endTime || new Date(startTime.getTime() + (task.duration || 1) * 3600000);
+    const duration = task.duration || 1; // Default to 1 hour if no duration
+    const endTime = task.endTime || new Date(startTime.getTime() + (duration * 3600000));
 
     // Create a valid task object that matches wx-react-gantt's requirements
     return {
@@ -52,7 +58,7 @@ export const transformTasksToGantt = (tasks: Task[]) => {
     start: new Date(),
     end: new Date(new Date().getTime() + 30 * 24 * 3600000), // 30 days span
     progress: 0,
-    children: transformedTasks,
+    children: transformedTasks || [], // Ensure children is always an array
     open: true
   };
 
