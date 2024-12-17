@@ -1,7 +1,6 @@
 import { useRef, useState } from 'react';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Button } from '@/components/ui/button';
-import { toast } from '@/components/ui/use-toast';
 import TaskBar from './TaskBar';
 import Timeline from './Timeline';
 import { SimpleTask } from './types';
@@ -13,7 +12,9 @@ const sampleTasks: SimpleTask[] = [
     name: 'MWB Production',
     startTime: new Date('2024-03-20T09:00:00'),
     duration: 9,
-    type: 'lineitem'
+    type: 'lineitem',
+    children: ['task1', 'task2', 'task3'],
+    isExpanded: true
   },
   {
     id: 'task1',
@@ -47,7 +48,9 @@ const sampleTasks: SimpleTask[] = [
     name: 'HWB Production',
     startTime: new Date('2024-03-20T10:00:00'),
     duration: 7,
-    type: 'lineitem'
+    type: 'lineitem',
+    children: ['task4', 'task5'],
+    isExpanded: true
   },
   {
     id: 'task4',
@@ -90,9 +93,59 @@ const SimpleGanttChart = () => {
     return (duration / totalHours) * 100;
   };
 
-  const handleReschedule = () => {
-    console.log('Reschedule button clicked');
-    // ... keep existing code (rescheduling logic)
+  const toggleExpand = (taskId: string) => {
+    console.log('Toggling expansion for task:', taskId);
+    setTasks(prevTasks => 
+      prevTasks.map(task => 
+        task.id === taskId 
+          ? { ...task, isExpanded: !task.isExpanded }
+          : task
+      )
+    );
+  };
+
+  // Get root-level tasks (those without parents)
+  const getRootTasks = () => {
+    return tasks.filter(task => !task.parentId);
+  };
+
+  // Get child tasks for a given parent
+  const getChildTasks = (parentId: string) => {
+    return tasks.filter(task => task.parentId === parentId);
+  };
+
+  // Recursively render tasks and their children
+  const renderTaskHierarchy = (task: SimpleTask, level: number = 0, index: number): JSX.Element[] => {
+    console.log(`Rendering task ${task.id} at level ${level}`);
+    const elements: JSX.Element[] = [];
+    const verticalPosition = index * ROW_HEIGHT;
+
+    // Add the current task
+    elements.push(
+      <TaskBar
+        key={task.id}
+        task={task}
+        position={calculateTaskPosition(task)}
+        width={calculateTaskWidth(task.duration)}
+        verticalPosition={verticalPosition}
+        level={level}
+        onToggleExpand={toggleExpand}
+      />
+    );
+
+    // If task has children and is expanded, render them
+    if (task.children && task.isExpanded) {
+      const childTasks = getChildTasks(task.id);
+      let childIndex = index + 1;
+      
+      childTasks.forEach(childTask => {
+        const childElements = renderTaskHierarchy(childTask, level + 1, childIndex);
+        elements.push(...childElements);
+        childIndex += childElements.length;
+      });
+    }
+
+    return elements;
   };
 
   // Generate hour markers
@@ -102,12 +155,21 @@ const SimpleGanttChart = () => {
     return { position, time: markerTime };
   });
 
+  // Calculate total height based on visible tasks
+  const calculateTotalHeight = () => {
+    let totalHeight = 0;
+    const rootTasks = getRootTasks();
+    
+    rootTasks.forEach((task, index) => {
+      const elements = renderTaskHierarchy(task, 0, totalHeight / ROW_HEIGHT);
+      totalHeight += elements.length * ROW_HEIGHT;
+    });
+
+    return Math.max(totalHeight, ROW_HEIGHT); // Ensure minimum height
+  };
+
   return (
     <div className="space-y-4">
-      <Button onClick={handleReschedule} className="ml-4">
-        Reschedule Tasks
-      </Button>
-
       <div className="h-[400px] border rounded-lg w-full">
         <div className="h-8 border-b bg-gray-50 relative">
           {hourMarkers.map((marker, index) => (
@@ -127,20 +189,13 @@ const SimpleGanttChart = () => {
             style={{ 
               width: `max(${timelineWidth}px, 100%)`,
               minWidth: '100%',
-              height: tasks.length * ROW_HEIGHT
+              height: calculateTotalHeight()
             }}
           >
             <Timeline hourMarkers={hourMarkers}>
-              {tasks.map((task, index) => (
-                <TaskBar
-                  key={task.id}
-                  task={task}
-                  position={calculateTaskPosition(task)}
-                  width={calculateTaskWidth(task.duration)}
-                  verticalPosition={index * ROW_HEIGHT}
-                  level={task.type === 'task' ? 1 : 0}
-                />
-              ))}
+              {getRootTasks().map((task, index) => 
+                renderTaskHierarchy(task, 0, index)
+              )}
             </Timeline>
           </div>
         </ScrollArea>

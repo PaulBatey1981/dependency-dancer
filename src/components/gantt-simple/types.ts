@@ -5,6 +5,8 @@ export interface SimpleTask {
   duration: number;
   type: 'lineitem' | 'task';
   parentId?: string;
+  children?: string[];
   dependencies?: string[];
   isFixed?: boolean;
+  isExpanded?: boolean;
 }

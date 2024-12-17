@@ -1,5 +1,5 @@
 import React from 'react';
-import { Lock } from 'lucide-react';
+import { Lock, ChevronRight, ChevronDown } from 'lucide-react';
 import { SimpleTask } from './types';
 import { COLORS, TASK_HEIGHT, ROW_HEIGHT, INDENT_WIDTH } from './constants';
 import {
@@ -7,6 +7,7 @@ import {
   HoverCardContent,
   HoverCardTrigger,
 } from '@/components/ui/hover-card';
+import { Button } from '@/components/ui/button';
 
 interface TaskBarProps {
   task: SimpleTask;
@@ -14,6 +15,7 @@ interface TaskBarProps {
   width: number;
   verticalPosition: number;
   level: number;
+  onToggleExpand: (taskId: string) => void;
 }
 
 const TaskBar = ({
@@ -22,14 +24,17 @@ const TaskBar = ({
   width,
   verticalPosition,
   level,
+  onToggleExpand,
 }: TaskBarProps) => {
   console.log(`Rendering task ${task.id} at position ${position}`);
 
+  const hasChildren = task.children && task.children.length > 0;
+
   const getTaskStyles = () => {
     const baseStyles = {
-      left: task.type === 'task' ? position + level * INDENT_WIDTH : 0,
+      left: task.type === 'task' ? `${position}%` + (level * INDENT_WIDTH) + 'px' : 0,
       top: verticalPosition + (ROW_HEIGHT - TASK_HEIGHT) / 2,
-      width: task.type === 'task' ? width : '100%',
+      width: task.type === 'task' ? `${width}%` : '100%',
       height: TASK_HEIGHT,
     };
 
@@ -60,7 +65,26 @@ const TaskBar = ({
           style={getTaskStyles()}
         >
           <div className="px-2 py-1 truncate flex items-center justify-between h-full">
-            <span>{task.name}</span>
+            <div className="flex items-center gap-2">
+              {hasChildren && (
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="h-4 w-4 p-0"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onToggleExpand(task.id);
+                  }}
+                >
+                  {task.isExpanded ? (
+                    <ChevronDown className="h-3 w-3" />
+                  ) : (
+                    <ChevronRight className="h-3 w-3" />
+                  )}
+                </Button>
+              )}
+              <span>{task.name}</span>
+            </div>
             {task.isFixed && (
               <Lock className="w-4 h-4 text-blue-500 flex-shrink-0" />
             )}
