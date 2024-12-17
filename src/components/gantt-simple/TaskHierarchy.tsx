@@ -1,4 +1,3 @@
-import React from 'react';
 import { SimpleTask } from './types';
 import { ChevronRight, ChevronDown } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -23,7 +22,7 @@ const TaskHierarchy: React.FC<TaskHierarchyProps> = ({
   const getTaskDot = (level: number) => {
     const baseClasses = "w-2 h-2 rounded-full inline-block mr-2";
     const colorKey = `level${Math.min(level, 3)}` as keyof typeof COLORS.taskDots;
-    return `${baseClasses} bg-[${COLORS.taskDots[colorKey]}]`;
+    return `${baseClasses} ${COLORS.taskDots[colorKey]}`;
   };
 
   return (

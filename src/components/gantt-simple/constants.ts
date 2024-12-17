@@ -5,18 +5,18 @@ export const INDENT_WIDTH = 20;
 export const MIN_HOURS_DISPLAY = 12;
 
 export const COLORS = {
-  taskBg: '#3B82F6',
-  taskText: '#FFFFFF',
-  lineItemBg: '#E0F2FE',
-  lineItemText: '#0369A1',
-  fixedTaskBg: '#DBEAFE',
-  fixedTaskBorder: '#93C5FD',
+  taskBg: '#e2e8f0',
+  lineItemBg: '#f8fafc',
+  fixedTaskBg: '#e0f2fe',
+  fixedTaskBorder: '#0ea5e9',
+  taskText: '#1e293b',
+  lineItemText: '#0f172a',
   gridLine: '#f1f5f9',
   todayLine: '#fef3c7',
   taskDots: {
-    level0: '#8B5CF6', // Vivid Purple for line items
-    level1: '#D946EF', // Magenta Pink for components
-    level2: '#F97316', // Bright Orange for elements
-    level3: '#0EA5E9', // Ocean Blue for sub-elements
+    level0: 'bg-purple-500', // Vivid Purple for line items
+    level1: 'bg-pink-500',   // Magenta Pink for components
+    level2: 'bg-orange-500', // Bright Orange for elements
+    level3: 'bg-sky-500',    // Ocean Blue for sub-elements
   }
 };
