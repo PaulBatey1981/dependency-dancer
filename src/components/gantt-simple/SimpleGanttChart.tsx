@@ -97,8 +97,11 @@ const SimpleGanttChart = () => {
       {/* Timeline Header */}
       <div className="h-8 border-b bg-gray-50 relative">
         <div 
-          className="absolute top-0 bottom-0 min-w-full"
-          style={{ width: `${timelineWidth}px` }}
+          className="absolute top-0 bottom-0"
+          style={{ 
+            width: `max(${timelineWidth}px, 100%)`,
+            minWidth: '100%'
+          }}
         >
           {hourMarkers}
         </div>
@@ -108,9 +111,10 @@ const SimpleGanttChart = () => {
       <ScrollArea className="h-[calc(100%-2rem)]">
         <div
           ref={timelineRef}
-          className="relative min-w-full"
+          className="relative"
           style={{ 
-            width: `${timelineWidth}px`,
+            width: `max(${timelineWidth}px, 100%)`,
+            minWidth: '100%',
             height: sampleTasks.length * ROW_HEIGHT
           }}
         >
@@ -130,7 +134,7 @@ const SimpleGanttChart = () => {
                 top: index * ROW_HEIGHT + (ROW_HEIGHT - TASK_HEIGHT) / 2,
                 width: task.type === 'task' 
                   ? calculateTaskWidth(task.duration)
-                  : `${timelineWidth}px`,
+                  : '100%',
                 height: TASK_HEIGHT,
                 paddingLeft: task.type === 'lineitem' ? '0.5rem' : '0.25rem',
                 paddingRight: task.type === 'lineitem' ? INDENT_WIDTH : 0,
