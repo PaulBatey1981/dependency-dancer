@@ -103,8 +103,8 @@ const WxGanttChart = ({ tasks }: WxGanttChartProps) => {
   ];
 
   const scales = [
-    { unit: "day", step: 1, format: "d" }, // Changed from "D" to "d"
-    { unit: "month", step: 1, format: "MMMM YYYY" }
+    { unit: "day", step: 1, format: "d" },
+    { unit: "month", step: 1, format: "MMMM yyyy" } // Changed from "YYYY" to "yyyy"
   ];
 
   // Add error boundary to catch and log any errors
