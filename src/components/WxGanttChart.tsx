@@ -6,51 +6,54 @@ interface WxGanttChartProps {
 }
 
 const WxGanttChart = ({ tasks }: WxGanttChartProps) => {
-  // First, get all line items as they will be our root tasks
-  const lineItems = tasks.filter(task => task.type === 'lineitem');
+  // First, ensure all tasks have valid dates
+  const tasksWithDates = tasks.map(task => {
+    const now = new Date();
+    return {
+      ...task,
+      startTime: task.startTime || now,
+      endTime: task.endTime || new Date((task.startTime || now).getTime() + task.duration * 3600000)
+    };
+  });
+
+  // Get all line items as they will be our root tasks
+  const lineItems = tasksWithDates.filter(task => task.type === 'lineitem');
   console.log('Line items:', lineItems.map(item => item.id));
 
-  // Transform tasks to wx-react-gantt format with proper hierarchy
+  // Transform tasks to wx-react-gantt format
   const transformTask = (task: Task) => {
-    const now = new Date();
-    const startTime = task.startTime || now;
-    const endTime = task.endTime || new Date(startTime.getTime() + task.duration * 3600000);
-
-    // For non-lineitem tasks, find their parent lineitem
+    // For non-lineitem tasks, find their direct parent lineitem
     let parentId = null;
     if (task.type !== 'lineitem') {
       const parentLineItem = lineItems.find(li => 
-        task.dependencies.includes(li.id) || 
-        tasks.some(t => 
-          t.dependencies.includes(li.id) && 
-          task.dependencies.includes(t.id)
-        )
+        task.dependencies.some(depId => depId === li.id)
       );
-      parentId = parentLineItem?.id;
+      parentId = parentLineItem?.id || null;
     }
 
     return {
       id: task.id,
       text: task.name,
-      start: startTime,
-      end: endTime,
+      start: task.startTime!,
+      end: task.endTime!,
       duration: task.duration,
-      progress: 0,
+      progress: task.status === 'completed' ? 100 : 0,
       type: task.type === 'lineitem' ? 'project' : 'task',
       parent: parentId,
       open: true,
     };
   };
 
-  // Transform all tasks
-  const wxTasks = tasks.map(task => transformTask(task));
+  // Transform all tasks and ensure they have required properties
+  const wxTasks = tasksWithDates.map(transformTask);
   console.log('Transformed tasks:', wxTasks);
 
-  // Create links only between tasks at the same level
-  const links = tasks.flatMap(task => 
+  // Create links only between tasks at the same level and with valid dependencies
+  const links = tasksWithDates.flatMap(task => 
     task.dependencies
       .filter(depId => {
-        const depTask = tasks.find(t => t.id === depId);
+        const depTask = tasksWithDates.find(t => t.id === depId);
+        // Only create links between tasks of the same type
         return depTask && depTask.type === task.type;
       })
       .map((depId, index) => ({
@@ -61,9 +64,15 @@ const WxGanttChart = ({ tasks }: WxGanttChartProps) => {
       }))
   );
 
+  console.log('Generated links:', links);
+
   // Define columns for the grid area
   const columns = [
-    { id: "text", header: "Task name", flexGrow: 2 },
+    { 
+      id: "text", 
+      header: "Task name", 
+      flexGrow: 2 
+    },
     {
       id: "start",
       header: "Start date",
@@ -82,7 +91,7 @@ const WxGanttChart = ({ tasks }: WxGanttChartProps) => {
       align: "center",
       flexGrow: 1,
       template: (task: any) => {
-        const originalTask = tasks.find(t => t.id === task.id);
+        const originalTask = tasksWithDates.find(t => t.id === task.id);
         return originalTask?.resource || '';
       }
     }
@@ -93,20 +102,22 @@ const WxGanttChart = ({ tasks }: WxGanttChartProps) => {
     { unit: "day", step: 1, format: "d" },
   ];
 
-  console.log('WxGantt tasks:', wxTasks);
-  console.log('WxGantt links:', links);
-  console.log('WxGantt columns:', columns);
-
-  return (
-    <div className="h-[600px] w-full">
-      <Gantt 
-        tasks={wxTasks} 
-        links={links} 
-        scales={scales}
-        columns={columns}
-      />
-    </div>
-  );
+  // Add error boundary to catch and log any errors
+  try {
+    return (
+      <div className="h-[600px] w-full">
+        <Gantt 
+          tasks={wxTasks} 
+          links={links} 
+          scales={scales}
+          columns={columns}
+        />
+      </div>
+    );
+  } catch (error) {
+    console.error('Error rendering Gantt chart:', error);
+    return <div>Error loading Gantt chart</div>;
+  }
 };
 
 export default WxGanttChart;
