@@ -93,8 +93,11 @@ const SimpleGanttChart = () => {
   return (
     <div className="h-[400px] border rounded-lg">
       {/* Timeline Header */}
-      <div className="h-8 border-b bg-gray-50 relative overflow-hidden">
-        <div style={{ width: timelineWidth }} className="relative">
+      <div className="h-8 border-b bg-gray-50 relative">
+        <div 
+          className="absolute top-0 bottom-0 left-0"
+          style={{ width: timelineWidth }}
+        >
           {hourMarkers}
         </div>
       </div>
@@ -104,7 +107,11 @@ const SimpleGanttChart = () => {
         <div
           ref={timelineRef}
           className="relative"
-          style={{ width: timelineWidth, height: sampleTasks.length * ROW_HEIGHT }}
+          style={{ 
+            width: timelineWidth,
+            height: sampleTasks.length * ROW_HEIGHT,
+            minWidth: '100%'
+          }}
         >
           {/* Task Bars */}
           {sampleTasks.map((task, index) => (
