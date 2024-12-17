@@ -153,7 +153,26 @@ const sampleTasks: SimpleTask[] = [
     startTime: new Date('2024-03-20T13:00:00'),
     duration: 2,
     type: 'task',
-    parentId: 'task5'
+    parentId: 'task5',
+    children: ['subelement1', 'subelement2'],
+    isExpanded: true
+  },
+  {
+    id: 'subelement1',
+    name: 'Setup Production Line',
+    startTime: new Date('2024-03-20T13:00:00'),
+    duration: 1,
+    type: 'task',
+    parentId: 'element9'
+  },
+  {
+    id: 'subelement2',
+    name: 'Run Production',
+    startTime: new Date('2024-03-20T14:00:00'),
+    duration: 1,
+    type: 'task',
+    parentId: 'element9',
+    dependencies: ['subelement1']
   },
   {
     id: 'element10',
@@ -162,7 +181,26 @@ const sampleTasks: SimpleTask[] = [
     duration: 2,
     type: 'task',
     parentId: 'task5',
-    dependencies: ['element9']
+    dependencies: ['element9'],
+    children: ['subelement3', 'subelement4'],
+    isExpanded: true
+  },
+  {
+    id: 'subelement3',
+    name: 'Visual Inspection',
+    startTime: new Date('2024-03-20T15:00:00'),
+    duration: 1,
+    type: 'task',
+    parentId: 'element10'
+  },
+  {
+    id: 'subelement4',
+    name: 'Quality Testing',
+    startTime: new Date('2024-03-20T16:00:00'),
+    duration: 1,
+    type: 'task',
+    parentId: 'element10',
+    dependencies: ['subelement3']
   }
 ];
 

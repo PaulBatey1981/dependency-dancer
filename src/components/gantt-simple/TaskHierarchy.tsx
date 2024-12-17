@@ -2,6 +2,7 @@ import React from 'react';
 import { SimpleTask } from './types';
 import { ChevronRight, ChevronDown } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { COLORS } from './constants';
 
 interface TaskHierarchyProps {
   task: SimpleTask;
@@ -19,16 +20,10 @@ const TaskHierarchy: React.FC<TaskHierarchyProps> = ({
   const childTasks = getChildTasks(task.id);
   const hasChildren = childTasks.length > 0;
 
-  const getTaskDot = (type: SimpleTask['type']) => {
+  const getTaskDot = (level: number) => {
     const baseClasses = "w-2 h-2 rounded-full inline-block mr-2";
-    switch (type) {
-      case 'lineitem':
-        return `${baseClasses} bg-blue-500`;
-      case 'task':
-        return `${baseClasses} bg-teal-500`;
-      default:
-        return `${baseClasses} bg-gray-500`;
-    }
+    const colorKey = `level${Math.min(level, 3)}` as keyof typeof COLORS.taskDots;
+    return `${baseClasses} bg-[${COLORS.taskDots[colorKey]}]`;
   };
 
   return (
@@ -53,7 +48,7 @@ const TaskHierarchy: React.FC<TaskHierarchyProps> = ({
         ) : (
           <div className="w-6" />
         )}
-        <span className={getTaskDot(task.type)} />
+        <span className={getTaskDot(level)} />
         <span className="text-sm">{task.name}</span>
       </div>
       

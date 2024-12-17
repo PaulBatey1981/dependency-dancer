@@ -1,6 +1,6 @@
 export const HOUR_WIDTH = 50;
-export const ROW_HEIGHT = 38; // Increased from 36 for optimal spacing
-export const TASK_HEIGHT = 30; // Increased from 28 for better visibility
+export const ROW_HEIGHT = 38;
+export const TASK_HEIGHT = 30;
 export const INDENT_WIDTH = 20;
 export const MIN_HOURS_DISPLAY = 12;
 
@@ -14,8 +14,9 @@ export const COLORS = {
   gridLine: '#f1f5f9',
   todayLine: '#fef3c7',
   taskDots: {
-    lineitem: '#3b82f6',
-    component: '#0d9488',
-    element: '#4f46e5',
+    level0: '#8B5CF6', // Vivid Purple for line items
+    level1: '#D946EF', // Magenta Pink for components
+    level2: '#F97316', // Bright Orange for elements
+    level3: '#0EA5E9', // Ocean Blue for sub-elements
   }
 };
