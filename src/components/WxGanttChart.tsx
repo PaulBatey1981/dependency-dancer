@@ -12,7 +12,9 @@ interface WxGanttChartProps {
 const WxGanttChart = ({ tasks }: WxGanttChartProps) => {
   const [useTestData, setUseTestData] = useState(true);
   
+  console.log('Using test data:', useTestData);
   const finalTasks = useTestData ? ganttTestData : transformTasksToGantt(tasks);
+  console.log('Final tasks structure:', JSON.stringify(finalTasks, null, 2));
   
   // Define columns for the grid area
   const columns = [
