@@ -13,7 +13,7 @@ export const transformTasksToGantt = (tasks: Task[]) => {
   console.log('Found line items:', lineItems);
 
   // Transform a single task into the format expected by wx-react-gantt
-  const transformTask = (task: Task): any => {
+  const transformTask = (task: Task) => {
     console.log(`Processing task: ${task.id}`);
 
     // Find child tasks (tasks that have this task as their dependency)
@@ -29,12 +29,14 @@ export const transformTasksToGantt = (tasks: Task[]) => {
 
     // Ensure we have valid dates
     const now = new Date();
-    const startTime = task.startTime || now;
+    const startTime = task.startTime ? new Date(task.startTime) : now;
     const duration = task.duration || 1; // Default to 1 hour if no duration
-    const endTime = task.endTime || new Date(startTime.getTime() + (duration * 3600000));
+    const endTime = task.endTime ? 
+      new Date(task.endTime) : 
+      new Date(startTime.getTime() + (duration * 3600000));
 
     // Create a valid task object that matches wx-react-gantt's requirements
-    return {
+    const transformedTask = {
       id: task.id,
       text: task.name,
       type: task.type === 'lineitem' ? 'project' : 'task',
@@ -42,9 +44,12 @@ export const transformTasksToGantt = (tasks: Task[]) => {
       end: endTime,
       progress: task.status === 'completed' ? 100 : 0,
       resource: task.resource || '',
-      children: children || [], // Ensure children is always an array
+      children: children,
       open: true // Always expand nodes by default
     };
+
+    console.log(`Transformed task ${task.id}:`, transformedTask);
+    return transformedTask;
   };
 
   // Transform all line items
@@ -58,10 +63,10 @@ export const transformTasksToGantt = (tasks: Task[]) => {
     start: new Date(),
     end: new Date(new Date().getTime() + 30 * 24 * 3600000), // 30 days span
     progress: 0,
-    children: transformedTasks || [], // Ensure children is always an array
+    children: transformedTasks,
     open: true
   };
 
-  console.log('Final transformed tasks:', [rootNode]);
+  console.log('Final transformed tasks:', rootNode);
   return [rootNode];
 };
