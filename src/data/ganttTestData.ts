@@ -1,94 +1,77 @@
+const baseDate = new Date();
+const startDate = new Date(baseDate.getFullYear(), baseDate.getMonth(), 1); // Start of current month
+
 export const ganttTestData = [
   {
     id: 'root',
     text: 'All Projects',
     type: 'project',
-    start: new Date('2024-01-01T09:00:00'),
-    end: new Date('2024-01-31T17:00:00'),
+    start: startDate,
+    end: new Date(startDate.getFullYear(), startDate.getMonth() + 1, 0), // End of current month
     progress: 0,
     children: [
       {
-        id: 'project1',
+        id: 'mwb1',
         text: 'MWB Project 1',
         type: 'project',
-        start: new Date('2024-01-01T09:00:00'),
-        end: new Date('2024-01-10T17:00:00'),
+        start: startDate,
+        end: new Date(startDate.getTime() + 5 * 24 * 60 * 60 * 1000), // 5 days duration
         progress: 60,
         children: [
           {
-            id: 'phase1',
-            text: 'Phase 1 - Case Production',
+            id: 'mwb1_case',
+            text: 'Case Production',
             type: 'project',
-            start: new Date('2024-01-01T09:00:00'),
-            end: new Date('2024-01-05T17:00:00'),
+            start: startDate,
+            end: new Date(startDate.getTime() + 2 * 24 * 60 * 60 * 1000),
             progress: 100,
             children: [
               {
-                id: 'task1',
+                id: 'mwb1_case_print',
                 text: 'Print Case Wrap',
                 type: 'task',
-                start: new Date('2024-01-01T09:00:00'),
-                end: new Date('2024-01-01T12:00:00'),
+                start: startDate,
+                end: new Date(startDate.getTime() + 3 * 60 * 60 * 1000), // 3 hours
                 progress: 100,
                 resource: 'konica',
                 children: []
               },
               {
-                id: 'task2',
+                id: 'mwb1_case_laminate',
                 text: 'Laminate Case Wrap',
                 type: 'task',
-                start: new Date('2024-01-01T13:00:00'),
-                end: new Date('2024-01-01T16:00:00'),
+                start: new Date(startDate.getTime() + 4 * 60 * 60 * 1000),
+                end: new Date(startDate.getTime() + 7 * 60 * 60 * 1000),
                 progress: 100,
                 resource: 'dk_europa',
-                children: []
-              },
-              {
-                id: 'task3',
-                text: 'Cut Case Wrap',
-                type: 'task',
-                start: new Date('2024-01-02T09:00:00'),
-                end: new Date('2024-01-02T12:00:00'),
-                progress: 100,
-                resource: 'zund_m800',
                 children: []
               }
             ]
           },
           {
-            id: 'phase2',
-            text: 'Phase 2 - Base Tray Production',
+            id: 'mwb1_tray',
+            text: 'Base Tray Production',
             type: 'project',
-            start: new Date('2024-01-06T09:00:00'),
-            end: new Date('2024-01-10T17:00:00'),
+            start: new Date(startDate.getTime() + 2 * 24 * 60 * 60 * 1000),
+            end: new Date(startDate.getTime() + 5 * 24 * 60 * 60 * 1000),
             progress: 20,
             children: [
               {
-                id: 'task4',
+                id: 'mwb1_tray_cut',
                 text: 'Cut Base Board',
                 type: 'task',
-                start: new Date('2024-01-06T09:00:00'),
-                end: new Date('2024-01-06T14:00:00'),
+                start: new Date(startDate.getTime() + 2 * 24 * 60 * 60 * 1000),
+                end: new Date(startDate.getTime() + (2 * 24 + 5) * 60 * 60 * 1000),
                 progress: 100,
                 resource: 'zund_m800',
                 children: []
               },
               {
-                id: 'task5',
+                id: 'mwb1_tray_magnets',
                 text: 'Install Magnets',
                 type: 'task',
-                start: new Date('2024-01-07T09:00:00'),
-                end: new Date('2024-01-07T17:00:00'),
-                progress: 0,
-                resource: 'bench',
-                children: []
-              },
-              {
-                id: 'task6',
-                text: 'Final Assembly',
-                type: 'task',
-                start: new Date('2024-01-08T09:00:00'),
-                end: new Date('2024-01-10T17:00:00'),
+                start: new Date(startDate.getTime() + (3 * 24) * 60 * 60 * 1000),
+                end: new Date(startDate.getTime() + (4 * 24) * 60 * 60 * 1000),
                 progress: 0,
                 resource: 'bench',
                 children: []

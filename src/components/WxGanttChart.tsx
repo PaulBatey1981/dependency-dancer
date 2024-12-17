@@ -46,12 +46,12 @@ const WxGanttChart = ({ tasks }: WxGanttChartProps) => {
         {useTestData ? "Show Real Data" : "Show Test Data"}
       </Button>
       
-      <div className="h-[600px] w-full">
+      <div className="h-[600px] w-full border rounded-lg">
         <Gantt 
           tasks={finalTasks}
           scales={scales}
           columns={columns}
-          taskHeight={40}
+          taskHeight={32}
           rowHeight={40}
           barFill={80}
           viewMode="month"
@@ -61,6 +61,8 @@ const WxGanttChart = ({ tasks }: WxGanttChartProps) => {
           cellWidth={40}
           columnWidth={300}
           treeExpanded={true}
+          onTaskClick={(task) => console.log('Task clicked:', task)}
+          onDoubleClick={(task) => console.log('Task double clicked:', task)}
         />
       </div>
     </div>

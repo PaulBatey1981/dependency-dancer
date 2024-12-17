@@ -50,7 +50,7 @@ export const transformTasksToGantt = (tasks: Task[]) => {
     text: 'All Projects',
     type: 'project',
     start: new Date(),
-    end: new Date(new Date().getTime() + 24 * 3600000),
+    end: new Date(new Date().getTime() + 30 * 24 * 3600000), // 30 days span
     progress: 0,
     children: transformedTasks,
     open: true
