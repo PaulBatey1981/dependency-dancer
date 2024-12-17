@@ -21,6 +21,9 @@ const WxGanttChart = ({ tasks }: WxGanttChartProps) => {
     };
   });
 
+  // Create a task map for quick lookups
+  const taskMap = new Map(tasksWithDates.map(task => [task.id, task]));
+
   // Get all line items
   const lineItems = tasksWithDates.filter(task => task.type === 'lineitem');
   console.log('Line items:', lineItems.map(item => item.id));
@@ -32,7 +35,7 @@ const WxGanttChart = ({ tasks }: WxGanttChartProps) => {
     );
   };
 
-  // Transform tasks to wx-react-gantt format
+  // Transform task to wx-react-gantt format
   const transformTask = (task: Task) => {
     if (!task) return null;
 
@@ -43,6 +46,12 @@ const WxGanttChart = ({ tasks }: WxGanttChartProps) => {
     // For line items, no parent. For others, use first dependency as parent
     const parentId = task.type === 'lineitem' ? undefined : task.dependencies?.[0];
     
+    // Ensure we have a valid parent task if parentId is specified
+    if (parentId && !taskMap.get(parentId)) {
+      console.warn(`Parent task ${parentId} not found for task ${task.id}`);
+      return null;
+    }
+
     const transformedTask = {
       id: task.id,
       text: task.name,
@@ -61,11 +70,14 @@ const WxGanttChart = ({ tasks }: WxGanttChartProps) => {
     return transformedTask;
   };
 
-  // Transform all tasks
-  const transformedTasks = tasksWithDates
+  // First transform line items, then their dependent tasks
+  const lineItemTasks = lineItems.map(transformTask).filter((t): t is NonNullable<typeof t> => t !== null);
+  const otherTasks = tasksWithDates
+    .filter(task => task.type !== 'lineitem')
     .map(transformTask)
-    .filter((task): task is NonNullable<typeof task> => task !== null);
+    .filter((t): t is NonNullable<typeof t> => t !== null);
 
+  const transformedTasks = [...lineItemTasks, ...otherTasks];
   console.log('Final transformed tasks:', transformedTasks);
 
   // Create links between tasks based on dependencies
