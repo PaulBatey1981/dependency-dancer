@@ -16,8 +16,21 @@ const Timeline: React.FC<TimelineProps> = ({
   calculateTaskPosition,
   calculateTaskWidth
 }) => {
+  // Helper function to check if a task should be visible based on parent's expanded state
+  const isTaskVisible = (task: SimpleTask): boolean => {
+    if (!task.parentId) return true;
+    
+    const parent = tasks.find(t => t.id === task.parentId);
+    if (!parent) return true;
+    
+    return parent.isExpanded ? isTaskVisible(parent) : false;
+  };
+
+  // Get visible tasks based on hierarchy
+  const visibleTasks = tasks.filter(isTaskVisible);
+
   const getTaskIndex = (task: SimpleTask): number => {
-    return tasks.findIndex(t => t.id === task.id);
+    return visibleTasks.findIndex(t => t.id === task.id);
   };
 
   return (
@@ -42,7 +55,7 @@ const Timeline: React.FC<TimelineProps> = ({
         }}
       />
 
-      {tasks.map((task, index) => (
+      {visibleTasks.map((task, index) => (
         <GanttTask
           key={task.id}
           task={task}
