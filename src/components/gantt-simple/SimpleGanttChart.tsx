@@ -6,32 +6,48 @@ interface SimpleTask {
   name: string;
   startTime: Date;
   duration: number; // in hours
+  type: 'lineitem' | 'task';
+  parentId?: string;
 }
 
 const HOUR_WIDTH = 50; // pixels per hour
 const ROW_HEIGHT = 40;
 const TASK_HEIGHT = 32;
+const INDENT_WIDTH = 20; // pixels to indent child tasks
 
-// Hardcoded tasks for initial testing
+// Hardcoded tasks for initial testing with hierarchy
 const sampleTasks: SimpleTask[] = [
   {
-    id: '1',
+    id: 'lineitem1',
+    name: 'MWB Production',
+    startTime: new Date('2024-03-20T09:00:00'),
+    duration: 9, // spans the entire duration of child tasks
+    type: 'lineitem'
+  },
+  {
+    id: 'task1',
     name: 'Print Materials',
     startTime: new Date('2024-03-20T09:00:00'),
-    duration: 2, // 2 hours
+    duration: 2,
+    type: 'task',
+    parentId: 'lineitem1'
   },
   {
-    id: '2',
+    id: 'task2',
     name: 'Cut Boards',
     startTime: new Date('2024-03-20T11:00:00'),
-    duration: 3, // 3 hours
+    duration: 3,
+    type: 'task',
+    parentId: 'lineitem1'
   },
   {
-    id: '3',
+    id: 'task3',
     name: 'Assembly',
     startTime: new Date('2024-03-20T14:00:00'),
-    duration: 4, // 4 hours
-  },
+    duration: 4,
+    type: 'task',
+    parentId: 'lineitem1'
+  }
 ];
 
 const SimpleGanttChart = () => {
@@ -94,11 +110,19 @@ const SimpleGanttChart = () => {
           {sampleTasks.map((task, index) => (
             <div
               key={task.id}
-              className="absolute bg-blue-500 rounded-sm text-white text-sm"
+              className={`absolute ${
+                task.type === 'lineitem' 
+                  ? 'bg-blue-100 border border-blue-300 font-semibold' 
+                  : 'bg-blue-500'
+              } rounded-sm text-sm ${
+                task.type === 'lineitem' ? 'text-blue-800' : 'text-white'
+              }`}
               style={{
-                left: calculateTaskPosition(task),
+                left: task.type === 'task' ? calculateTaskPosition(task) + INDENT_WIDTH : 0,
                 top: index * ROW_HEIGHT + (ROW_HEIGHT - TASK_HEIGHT) / 2,
-                width: calculateTaskWidth(task.duration),
+                width: task.type === 'task' 
+                  ? calculateTaskWidth(task.duration)
+                  : timelineWidth,
                 height: TASK_HEIGHT,
               }}
             >
