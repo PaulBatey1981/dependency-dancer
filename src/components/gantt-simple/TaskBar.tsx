@@ -54,7 +54,7 @@ const TaskBar = ({
     <HoverCard>
       <HoverCardTrigger>
         <div className="transition-opacity hover:opacity-90" style={taskStyles}>
-          <div className="flex items-center justify-between h-full px-2">
+          <div className="flex items-center justify-between h-full px-2 py-0">
             {/* Expand/Collapse Button */}
             {hasChildren && (
               <Button
