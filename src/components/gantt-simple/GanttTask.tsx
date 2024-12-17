@@ -26,6 +26,9 @@ const GanttTask: React.FC<GanttTaskProps> = ({
   const position = calculateTaskPosition(task);
   const width = calculateTaskWidth(task.duration);
   
+  // Calculate indentation as a percentage of the total width
+  const indentPercentage = (INDENT_WIDTH / width) * 100;
+  
   return (
     <div
       className={`absolute ${
@@ -36,10 +39,10 @@ const GanttTask: React.FC<GanttTaskProps> = ({
         task.type === 'lineitem' ? 'text-blue-800' : 'text-white'
       } flex items-center`}
       style={{
-        left: `${task.type === 'task' ? position : 0}%`,
+        left: `${task.type === 'task' ? position + (task.type === 'task' ? indentPercentage : 0) : 0}%`,
         top: index * ROW_HEIGHT + ((ROW_HEIGHT - TASK_HEIGHT) / 2),
         width: task.type === 'task' 
-          ? `${width}%`
+          ? `${width - (task.type === 'task' ? indentPercentage : 0)}%`
           : '100%',
         height: TASK_HEIGHT,
         paddingLeft: task.type === 'lineitem' ? '0.5rem' : '0.25rem',
