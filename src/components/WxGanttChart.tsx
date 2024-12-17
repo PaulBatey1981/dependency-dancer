@@ -47,11 +47,12 @@ const WxGanttChart = ({ tasks }: WxGanttChartProps) => {
 
       console.log(`Processing task: ${task.id}`);
 
-      // Ensure dependencies is an array
-      const dependencies = task.dependencies || [];
-
-      // Find child tasks (tasks that depend on this task)
-      const childTasks = tasks.filter(t => dependencies.includes(t.id));
+      // Find child tasks (tasks that have this task as their dependency)
+      const childTasks = tasks.filter(t => {
+        const deps = t.dependencies || [];
+        return deps.includes(task.id);
+      });
+      
       console.log(`Found ${childTasks.length} children for task ${task.id}:`, childTasks.map(t => t.id));
 
       // Transform children first
