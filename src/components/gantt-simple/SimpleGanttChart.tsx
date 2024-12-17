@@ -122,8 +122,9 @@ const SimpleGanttChart = () => {
                 top: index * ROW_HEIGHT + (ROW_HEIGHT - TASK_HEIGHT) / 2,
                 width: task.type === 'task' 
                   ? calculateTaskWidth(task.duration)
-                  : '100%',
+                  : timelineWidth,
                 height: TASK_HEIGHT,
+                paddingLeft: task.type === 'lineitem' ? '0.5rem' : '0.25rem',
                 paddingRight: task.type === 'lineitem' ? INDENT_WIDTH : 0,
               }}
             >
