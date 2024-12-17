@@ -17,11 +17,12 @@ const INDENT_WIDTH = 20; // pixels to indent child tasks
 const MIN_HOURS_DISPLAY = 12; // Minimum hours to display
 
 const sampleTasks: SimpleTask[] = [
+  // MWB Production Line Item
   {
     id: 'lineitem1',
     name: 'MWB Production',
     startTime: new Date('2024-03-20T09:00:00'),
-    duration: 9, // spans the entire duration of child tasks
+    duration: 9,
     type: 'lineitem'
   },
   {
@@ -47,6 +48,30 @@ const sampleTasks: SimpleTask[] = [
     duration: 4,
     type: 'task',
     parentId: 'lineitem1'
+  },
+  // HWB Production Line Item
+  {
+    id: 'lineitem2',
+    name: 'HWB Production',
+    startTime: new Date('2024-03-20T10:00:00'),
+    duration: 7,
+    type: 'lineitem'
+  },
+  {
+    id: 'task4',
+    name: 'Material Preparation',
+    startTime: new Date('2024-03-20T10:00:00'),
+    duration: 3,
+    type: 'task',
+    parentId: 'lineitem2'
+  },
+  {
+    id: 'task5',
+    name: 'Production Process',
+    startTime: new Date('2024-03-20T13:00:00'),
+    duration: 4,
+    type: 'task',
+    parentId: 'lineitem2'
   }
 ];
 
