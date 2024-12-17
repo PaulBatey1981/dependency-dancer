@@ -1,19 +1,36 @@
 import { Button } from '@/components/ui/button';
-import { ArrowRight } from 'lucide-react';
-import ZoomControls from './ZoomControls';
+import { ViewMode } from './utils/viewModeUtils';
 
 interface GanttControlsProps {
-  zoom: number;
-  onZoomChange: (value: number) => void;
+  viewMode: ViewMode;
+  onViewModeChange: (mode: ViewMode) => void;
   onSnapToNow: () => void;
 }
 
-const GanttControls = ({ zoom, onZoomChange, onSnapToNow }: GanttControlsProps) => {
+const GanttControls = ({ viewMode, onViewModeChange, onSnapToNow }: GanttControlsProps) => {
   return (
     <div className="flex justify-between items-center mb-4">
-      <ZoomControls zoom={zoom} onZoomChange={onZoomChange} />
-      <Button onClick={onSnapToNow} className="flex items-center gap-2">
-        <ArrowRight size={16} />
+      <div className="space-x-2">
+        <Button
+          variant={viewMode === 'day' ? 'default' : 'outline'}
+          onClick={() => onViewModeChange('day')}
+        >
+          Daily View
+        </Button>
+        <Button
+          variant={viewMode === 'week' ? 'default' : 'outline'}
+          onClick={() => onViewModeChange('week')}
+        >
+          Weekly View
+        </Button>
+        <Button
+          variant={viewMode === 'month' ? 'default' : 'outline'}
+          onClick={() => onViewModeChange('month')}
+        >
+          Monthly View
+        </Button>
+      </div>
+      <Button onClick={onSnapToNow}>
         Snap to Now
       </Button>
     </div>
