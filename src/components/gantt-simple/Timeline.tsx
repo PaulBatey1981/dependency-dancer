@@ -52,9 +52,6 @@ const Timeline: React.FC<TimelineProps> = ({
 
   return (
     <div className="flex">
-      {/* Spacer container matching task list width */}
-      <div className="min-w-[300px] border-r" />
-      
       {/* Timeline content */}
       <div 
         className="relative bg-white w-full"
