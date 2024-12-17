@@ -58,8 +58,17 @@ const Timeline: React.FC<TimelineProps> = ({
     return visibleTasks.findIndex(t => t.id === task.id);
   };
 
+  // Calculate the total height needed based on visible tasks
+  const totalHeight = visibleTasks.length * ROW_HEIGHT;
+
   return (
-    <div className="relative bg-white min-h-full w-full">
+    <div 
+      className="relative bg-white w-full"
+      style={{ 
+        minHeight: '100%',
+        height: `${Math.max(totalHeight, 400)}px` // Ensure minimum height of 400px or total task height
+      }}
+    >
       {/* Grid lines */}
       {hourMarkers.map((marker, index) => (
         <div
