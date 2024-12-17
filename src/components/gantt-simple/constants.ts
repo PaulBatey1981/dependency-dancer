@@ -1,16 +1,16 @@
 export const HOUR_WIDTH = 50;
-export const ROW_HEIGHT = 40;
-export const TASK_HEIGHT = 32; // Ensuring it's smaller than ROW_HEIGHT
-export const INDENT_WIDTH = 20;
+export const ROW_HEIGHT = 36; // Total row height
+export const TASK_HEIGHT = 28; // Task bar height
+export const INDENT_WIDTH = 20; // Pixels to indent child tasks
 export const MIN_HOURS_DISPLAY = 12;
 
 export const COLORS = {
-  fixedTaskBg: '#e0f2ff',
-  fixedTaskBorder: '#2196f3',
-  lineItemBg: '#f8fafc',
-  lineItemText: '#1e293b',
-  taskBg: '#3b82f6',
-  taskText: '#ffffff',
+  taskBg: '#3B82F6', // Blue for tasks
+  taskText: '#FFFFFF', // White text for tasks
+  lineItemBg: '#E0F2FE', // Light blue for line items
+  lineItemText: '#0369A1', // Dark blue for line items
+  fixedTaskBg: '#DBEAFE', // Slightly faded blue for fixed tasks
+  fixedTaskBorder: '#93C5FD', // Border color for fixed tasks
   gridLine: '#f1f5f9',
   todayLine: '#fef3c7',
   taskDots: {
@@ -18,4 +18,4 @@ export const COLORS = {
     component: '#0d9488',
     element: '#4f46e5',
   }
-} as const;
+};

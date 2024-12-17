@@ -11,10 +11,10 @@ import { Button } from '@/components/ui/button';
 
 interface TaskBarProps {
   task: SimpleTask;
-  position: number;
-  width: number;
-  verticalPosition: number;
-  level: number;
+  position: number; // Horizontal position in %
+  width: number; // Task bar width in %
+  rowIndex: number; // Index of the row
+  level: number; // Indentation level
   onToggleExpand: (taskId: string) => void;
 }
 
@@ -22,74 +22,70 @@ const TaskBar = ({
   task,
   position,
   width,
-  verticalPosition,
+  rowIndex,
   level,
   onToggleExpand,
 }: TaskBarProps) => {
-  console.log(`Rendering task ${task.id} at position ${position}`);
-
   const hasChildren = task.children && task.children.length > 0;
 
-  const getTaskStyles = () => {
-    const baseStyles = {
-      left: task.type === 'task' ? `${position}%` + (level * INDENT_WIDTH) + 'px' : 0,
-      top: verticalPosition + (ROW_HEIGHT - TASK_HEIGHT) / 2, // Center the task vertically within ROW_HEIGHT
-      width: task.type === 'task' ? `${width}%` : '100%',
-      height: `${TASK_HEIGHT}px`, // Explicitly set height in pixels
-    };
-
-    if (task.type === 'lineitem') {
-      return {
-        ...baseStyles,
-        backgroundColor: COLORS.lineItemBg,
-        color: COLORS.lineItemText,
-        fontWeight: 600,
-        paddingLeft: '0.5rem',
-      };
-    }
-
-    return {
-      ...baseStyles,
-      backgroundColor: task.isFixed ? COLORS.fixedTaskBg : COLORS.taskBg,
-      border: task.isFixed ? `1px solid ${COLORS.fixedTaskBorder}` : 'none',
-      color: task.isFixed ? COLORS.lineItemText : COLORS.taskText,
-    };
+  // Calculated task styles
+  const taskStyles: React.CSSProperties = {
+    position: 'absolute',
+    left: `${position + level * INDENT_WIDTH}px`,
+    top: `${rowIndex * ROW_HEIGHT}px`,
+    width: `${width}%`,
+    height: `${TASK_HEIGHT}px`,
+    lineHeight: `${TASK_HEIGHT}px`,
+    backgroundColor: task.type === 'lineitem' 
+      ? COLORS.lineItemBg 
+      : task.isFixed 
+        ? COLORS.fixedTaskBg 
+        : COLORS.taskBg,
+    color: task.type === 'lineitem' ? COLORS.lineItemText : COLORS.taskText,
+    border: task.isFixed ? `1px solid ${COLORS.fixedTaskBorder}` : 'none',
+    fontWeight: task.type === 'lineitem' ? 600 : 'normal',
+    borderRadius: '4px',
+    overflow: 'hidden',
+    whiteSpace: 'nowrap',
+    textOverflow: 'ellipsis',
   };
 
   return (
     <HoverCard>
       <HoverCardTrigger>
-        <div
-          className="absolute rounded-sm transition-colors hover:opacity-90 border border-red-200"
-          style={getTaskStyles()}
-        >
-          <div className="flex items-center justify-between h-full">
-            <div className="flex items-center gap-2 px-2">
-              {hasChildren && (
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  className="h-4 w-4 p-0"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    onToggleExpand(task.id);
-                  }}
-                >
-                  {task.isExpanded ? (
-                    <ChevronDown className="h-3 w-3" />
-                  ) : (
-                    <ChevronRight className="h-3 w-3" />
-                  )}
-                </Button>
-              )}
-              <span className="truncate">{task.name}</span>
-            </div>
+        <div className="transition-opacity hover:opacity-90" style={taskStyles}>
+          <div className="flex items-center justify-between h-full px-2">
+            {/* Expand/Collapse Button */}
+            {hasChildren && (
+              <Button
+                variant="ghost"
+                size="icon"
+                className="h-4 w-4 p-0"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onToggleExpand(task.id);
+                }}
+              >
+                {task.isExpanded ? (
+                  <ChevronDown className="h-3 w-3" />
+                ) : (
+                  <ChevronRight className="h-3 w-3" />
+                )}
+              </Button>
+            )}
+
+            {/* Task Name */}
+            <span className="truncate">{task.name}</span>
+
+            {/* Lock Icon for Fixed Tasks */}
             {task.isFixed && (
-              <Lock className="w-4 h-4 text-blue-500 flex-shrink-0 mr-2" />
+              <Lock className="w-4 h-4 text-blue-500 flex-shrink-0" />
             )}
           </div>
         </div>
       </HoverCardTrigger>
+
+      {/* Hover Card Content */}
       <HoverCardContent className="w-64">
         <div className="space-y-2">
           <h4 className="font-semibold">{task.name}</h4>
