@@ -2,7 +2,7 @@ import React from 'react';
 import { format } from 'date-fns';
 import { SimpleTask } from './types';
 import TaskBar from './TaskBar';
-import { ViewMode, calculateTaskPosition } from './utils/viewModeUtils';
+import { ViewMode, calculateTaskPosition, calculateTaskWidth } from './utils/viewModeUtils';
 
 interface GanttTimelineProps {
   tasks: SimpleTask[];
@@ -34,7 +34,11 @@ const GanttTimeline: React.FC<GanttTimelineProps> = ({
 
       {/* Task bars */}
       {tasks.map((task, index) => {
-        const { left, width } = calculateTaskPosition(task, viewStart, viewMode);
+        const left = calculateTaskPosition(task, viewStart, viewMode);
+        const width = calculateTaskWidth(task.duration, viewMode);
+        
+        console.log(`Rendering task ${task.id} at position ${left}px with width ${width}px`);
+        
         return (
           <TaskBar
             key={task.id}
