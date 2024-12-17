@@ -75,7 +75,7 @@ const Index = () => {
   };
 
   return (
-    <div className="container mx-auto py-8">
+    <div className="container mx-auto py-8 min-h-screen flex flex-col">
       <div className="flex justify-between items-center mb-8">
         <h1 className="text-3xl font-bold">Magnetic Wrap Box Production Schedule</h1>
         <div className="flex gap-4">
@@ -122,33 +122,35 @@ const Index = () => {
         </Button>
       </div>
 
-      {view === 'list' && (
-        <div>
-          <h2 className="text-xl font-semibold mb-4">Tasks</h2>
-          <TaskList tasks={tasks} onToggleFixed={toggleFixTask} />
-        </div>
-      )}
+      <div className="flex-1">
+        {view === 'list' && (
+          <div>
+            <h2 className="text-xl font-semibold mb-4">Tasks</h2>
+            <TaskList tasks={tasks} onToggleFixed={toggleFixTask} />
+          </div>
+        )}
 
-      {view === 'resource' && (
-        <div>
-          <h2 className="text-xl font-semibold mb-4">Resource Timeline</h2>
-          <ResourceTimeline tasks={tasks} resources={resources} />
-        </div>
-      )}
+        {view === 'resource' && (
+          <div>
+            <h2 className="text-xl font-semibold mb-4">Resource Timeline</h2>
+            <ResourceTimeline tasks={tasks} resources={resources} />
+          </div>
+        )}
 
-      {view === 'gantt' && (
-        <div>
-          <h2 className="text-xl font-semibold mb-4">Gantt Chart</h2>
-          <GanttChart tasks={tasks} resources={resources} />
-        </div>
-      )}
+        {view === 'gantt' && (
+          <div>
+            <h2 className="text-xl font-semibold mb-4">Gantt Chart</h2>
+            <GanttChart tasks={tasks} resources={resources} />
+          </div>
+        )}
 
-      {view === 'simple-gantt' && (
-        <div>
-          <h2 className="text-xl font-semibold mb-4">Simple Gantt Chart</h2>
-          <SimpleGanttChart />
-        </div>
-      )}
+        {view === 'simple-gantt' && (
+          <div>
+            <h2 className="text-xl font-semibold mb-4">Simple Gantt Chart</h2>
+            <SimpleGanttChart />
+          </div>
+        )}
+      </div>
     </div>
   );
 };
