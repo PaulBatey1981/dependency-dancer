@@ -14,6 +14,7 @@ const HOUR_WIDTH = 50; // pixels per hour
 const ROW_HEIGHT = 40;
 const TASK_HEIGHT = 32;
 const INDENT_WIDTH = 20; // pixels to indent child tasks
+const MIN_HOURS_DISPLAY = 12; // Minimum hours to display
 
 // Hardcoded tasks for initial testing with hierarchy
 const sampleTasks: SimpleTask[] = [
@@ -61,10 +62,11 @@ const SimpleGanttChart = () => {
     ...sampleTasks.map(t => t.startTime.getTime() + t.duration * 3600000)
   ));
 
-  // Calculate total hours for timeline width
-  const totalHours = Math.ceil((latestEnd.getTime() - earliestStart.getTime()) / (1000 * 60 * 60));
+  // Calculate total hours for timeline width, ensuring minimum display hours
+  const totalTaskHours = Math.ceil((latestEnd.getTime() - earliestStart.getTime()) / (1000 * 60 * 60));
+  const totalHours = Math.max(totalTaskHours, MIN_HOURS_DISPLAY);
   
-  // Calculate timeline width
+  // Calculate timeline width in pixels
   const timelineWidth = totalHours * HOUR_WIDTH;
 
   const calculateTaskPosition = (task: SimpleTask) => {
@@ -93,10 +95,10 @@ const SimpleGanttChart = () => {
   return (
     <div className="h-[400px] border rounded-lg w-full">
       {/* Timeline Header */}
-      <div className="h-8 border-b bg-gray-50 relative overflow-x-auto">
+      <div className="h-8 border-b bg-gray-50 relative">
         <div 
-          className="absolute top-0 bottom-0"
-          style={{ width: `${timelineWidth}px`, minWidth: '100%' }}
+          className="absolute top-0 bottom-0 min-w-full"
+          style={{ width: `${timelineWidth}px` }}
         >
           {hourMarkers}
         </div>
@@ -106,11 +108,10 @@ const SimpleGanttChart = () => {
       <ScrollArea className="h-[calc(100%-2rem)]">
         <div
           ref={timelineRef}
-          className="relative"
+          className="relative min-w-full"
           style={{ 
             width: `${timelineWidth}px`,
-            height: sampleTasks.length * ROW_HEIGHT,
-            minWidth: '100%'
+            height: sampleTasks.length * ROW_HEIGHT
           }}
         >
           {/* Task Bars */}
