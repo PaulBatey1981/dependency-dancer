@@ -21,7 +21,10 @@ const GanttTask: React.FC<GanttTaskProps> = ({
   TASK_HEIGHT,
   INDENT_WIDTH,
 }) => {
-  console.log(`Rendering task ${task.id} at position ${calculateTaskPosition(task)}`);
+  console.log(`Rendering task ${task.id} at position ${calculateTaskPosition(task)}%`);
+  
+  const position = calculateTaskPosition(task);
+  const width = calculateTaskWidth(task.duration);
   
   return (
     <div
@@ -33,10 +36,10 @@ const GanttTask: React.FC<GanttTaskProps> = ({
         task.type === 'lineitem' ? 'text-blue-800' : 'text-white'
       } flex items-center`}
       style={{
-        left: task.type === 'task' ? calculateTaskPosition(task) + INDENT_WIDTH : 0,
+        left: `${task.type === 'task' ? position : 0}%`,
         top: index * ROW_HEIGHT + ((ROW_HEIGHT - TASK_HEIGHT) / 2),
         width: task.type === 'task' 
-          ? calculateTaskWidth(task.duration)
+          ? `${width}%`
           : '100%',
         height: TASK_HEIGHT,
         paddingLeft: task.type === 'lineitem' ? '0.5rem' : '0.25rem',
