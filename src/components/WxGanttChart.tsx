@@ -9,7 +9,7 @@ interface WxGanttChartProps {
 const WxGanttChart = ({ tasks }: WxGanttChartProps) => {
   const [useMinimalExample, setUseMinimalExample] = useState(true);
   
-  // Minimal working example based on library requirements
+  // Minimal working example that follows the exact structure required by wx-react-gantt
   const minimalExample = [{
     id: 'root',
     text: 'MWB Project',
@@ -24,7 +24,8 @@ const WxGanttChart = ({ tasks }: WxGanttChartProps) => {
       start: new Date(),
       end: new Date(new Date().getTime() + 3 * 3600000),
       progress: 0,
-      resource: 'bench'
+      resource: 'bench',
+      children: [] // Always provide an empty array for leaf nodes
     }],
     open: true
   }];
@@ -33,70 +34,58 @@ const WxGanttChart = ({ tasks }: WxGanttChartProps) => {
   const transformTasks = () => {
     console.log('Starting task transformation with tasks:', tasks);
 
-    // First, ensure all tasks have valid dates
-    const tasksWithDates = tasks.map(task => {
-      const now = new Date();
-      const startTime = task.startTime || now;
-      const endTime = task.endTime || new Date(startTime.getTime() + task.duration * 3600000);
-      return {
-        ...task,
-        startTime,
-        endTime,
-        dependencies: task.dependencies || []
-      };
-    });
-
-    // Create a task map for quick lookups
-    const taskMap = new Map(tasksWithDates.map(task => [task.id, task]));
-
     // Get line items (top-level tasks)
-    const lineItems = tasksWithDates.filter(task => task.type === 'lineitem');
+    const lineItems = tasks.filter(task => task.type === 'lineitem');
     console.log('Found line items:', lineItems.map(t => t.id));
 
-    // Transform a single task and its dependencies
-    const transformTask = (task: Task, processedTasks = new Set<string>()): any => {
-      if (!task || processedTasks.has(task.id)) {
-        console.log(`Skipping task ${task?.id} - already processed or null`);
+    // Create a task map for quick lookups
+    const taskMap = new Map(tasks.map(task => [task.id, task]));
+
+    // Transform a single task into the format expected by wx-react-gantt
+    const transformTask = (task: Task): any => {
+      if (!task) {
+        console.log('Received null task in transformTask');
         return null;
       }
 
       console.log(`Processing task: ${task.id}`);
-      processedTasks.add(task.id);
 
-      // Get dependent tasks that haven't been processed yet
-      const dependentTasks = tasksWithDates
-        .filter(t => t.dependencies?.includes(task.id) && !processedTasks.has(t.id));
-      
-      console.log(`Found ${dependentTasks.length} unprocessed dependents for ${task.id}`);
+      // Find child tasks (tasks that depend on this task)
+      const childTasks = tasks.filter(t => 
+        t.dependencies?.includes(task.id)
+      );
 
       // Transform children first
-      const children = dependentTasks
-        .map(child => transformTask(child, processedTasks))
+      const children = childTasks
+        .map(child => transformTask(child))
         .filter(Boolean); // Remove any null results
+
+      const now = new Date();
+      const startTime = task.startTime || now;
+      const endTime = task.endTime || new Date(startTime.getTime() + task.duration * 3600000);
 
       const transformedTask = {
         id: task.id,
         text: task.name,
-        start: task.startTime!,
-        end: task.endTime!,
-        progress: task.status === 'completed' ? 100 : 0,
         type: task.type === 'lineitem' ? 'project' : 'task',
-        children: children.length > 0 ? children : undefined,
-        open: true,
-        resource: task.resource
+        start: startTime,
+        end: endTime,
+        progress: task.status === 'completed' ? 100 : 0,
+        resource: task.resource,
+        children: children.length > 0 ? children : [], // Always provide an array
+        open: true
       };
 
       console.log(`Transformed task ${task.id}:`, transformedTask);
       return transformedTask;
     };
 
-    // Process all line items first
-    const processedTasks = new Set<string>();
+    // Transform all line items first
     const transformedTasks = lineItems
-      .map(task => transformTask(task, processedTasks))
+      .map(lineItem => transformTask(lineItem))
       .filter(Boolean);
 
-    console.log('Final transformed tasks:', JSON.stringify(transformedTasks, null, 2));
+    console.log('Final transformed tasks:', transformedTasks);
     return transformedTasks;
   };
 
