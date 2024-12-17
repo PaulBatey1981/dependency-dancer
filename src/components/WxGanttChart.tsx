@@ -10,19 +10,24 @@ const WxGanttChart = ({ tasks }: WxGanttChartProps) => {
   const lineItems = tasks.filter(task => task.type === 'lineitem');
   console.log('Line items:', lineItems.map(item => item.id));
 
-  // Helper function to get all child tasks for a given task
-  const getChildTasks = (parentId: string): Task[] => {
-    return tasks.filter(task => task.dependencies.includes(parentId));
-  };
-
   // Transform tasks to wx-react-gantt format with proper hierarchy
   const transformTask = (task: Task) => {
     const now = new Date();
     const startTime = task.startTime || now;
     const endTime = task.endTime || new Date(startTime.getTime() + task.duration * 3600000);
 
-    // Find the parent task (the task that this task depends on)
-    const parentTask = tasks.find(t => task.dependencies.includes(t.id));
+    // For non-lineitem tasks, find their parent lineitem
+    let parentId = null;
+    if (task.type !== 'lineitem') {
+      const parentLineItem = lineItems.find(li => 
+        task.dependencies.includes(li.id) || 
+        tasks.some(t => 
+          t.dependencies.includes(li.id) && 
+          task.dependencies.includes(t.id)
+        )
+      );
+      parentId = parentLineItem?.id;
+    }
 
     return {
       id: task.id,
@@ -32,23 +37,28 @@ const WxGanttChart = ({ tasks }: WxGanttChartProps) => {
       duration: task.duration,
       progress: 0,
       type: task.type === 'lineitem' ? 'project' : 'task',
-      parent: parentTask?.id, // Set parent based on dependencies
+      parent: parentId,
       open: true,
     };
   };
 
-  // Transform all tasks, not just the hierarchy
+  // Transform all tasks
   const wxTasks = tasks.map(task => transformTask(task));
   console.log('Transformed tasks:', wxTasks);
 
-  // Create links from dependencies (reversed to match parent-child relationships)
+  // Create links only between tasks at the same level
   const links = tasks.flatMap(task => 
-    task.dependencies.map((depId, index) => ({
-      id: `${depId}_${task.id}_${index}`, // Reversed order in ID
-      source: depId, // Parent task
-      target: task.id, // Child task
-      type: "finish_to_start" // Using proper link type
-    }))
+    task.dependencies
+      .filter(depId => {
+        const depTask = tasks.find(t => t.id === depId);
+        return depTask && depTask.type === task.type;
+      })
+      .map((depId, index) => ({
+        id: `${depId}_${task.id}_${index}`,
+        source: depId,
+        target: task.id,
+        type: "finish_to_start"
+      }))
   );
 
   // Define columns for the grid area
