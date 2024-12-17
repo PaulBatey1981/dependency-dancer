@@ -3,7 +3,7 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import GanttHeader from './GanttHeader';
 import TaskHierarchy from './TaskHierarchy';
 import Timeline from './Timeline';
-import ZoomControls from './ZoomControls';
+import GanttControls from './GanttControls';
 import { SimpleTask } from './types';
 import { 
   HOUR_WIDTH, 
@@ -226,18 +226,18 @@ const SimpleGanttChart = () => {
   const totalHours = Math.max(totalTaskHours, MIN_HOURS_DISPLAY);
   const timelineWidth = totalHours * HOUR_WIDTH * zoom;
 
-  const calculateTaskPosition = (task: SimpleTask) => {
-    const hoursFromStart = (task.startTime.getTime() - earliestStart.getTime()) / (1000 * 60 * 60);
-    return (hoursFromStart / totalHours) * 100;
-  };
-
-  const calculateTaskWidth = (duration: number) => {
-    return (duration / totalHours) * 100;
-  };
-
   const handleZoomChange = (newZoom: number) => {
     console.log('Zoom changed to:', newZoom);
     setZoom(newZoom);
+  };
+
+  const snapToNow = () => {
+    if (timelineRef.current) {
+      const now = new Date();
+      const hoursFromStart = (now.getTime() - earliestStart.getTime()) / (1000 * 60 * 60);
+      const scrollPosition = hoursFromStart * HOUR_WIDTH * zoom;
+      timelineRef.current.scrollLeft = scrollPosition - timelineRef.current.clientWidth / 2;
+    }
   };
 
   const toggleExpand = (taskId: string) => {
@@ -251,13 +251,8 @@ const SimpleGanttChart = () => {
     );
   };
 
-  const getRootTasks = () => {
-    return tasks.filter(task => !task.parentId);
-  };
-
-  const getChildTasks = (parentId: string) => {
-    return tasks.filter(task => task.parentId === parentId);
-  };
+  const getRootTasks = () => tasks.filter(task => !task.parentId);
+  const getChildTasks = (parentId: string) => tasks.filter(task => task.parentId === parentId);
 
   const hourMarkers = Array.from({ length: Math.ceil(totalHours * zoom) + 1 }).map((_, index) => {
     const markerTime = new Date(earliestStart.getTime() + (index / zoom) * 60 * 60 * 1000);
@@ -267,9 +262,11 @@ const SimpleGanttChart = () => {
 
   return (
     <div className="space-y-4 h-full">
-      <div className="flex justify-between items-center mb-4">
-        <ZoomControls zoom={zoom} onZoomChange={handleZoomChange} />
-      </div>
+      <GanttControls 
+        zoom={zoom} 
+        onZoomChange={handleZoomChange}
+        onSnapToNow={snapToNow}
+      />
       
       <div className="h-full border rounded-lg w-full">
         <GanttHeader hourMarkers={hourMarkers} />
@@ -295,7 +292,12 @@ const SimpleGanttChart = () => {
           <ScrollArea 
             className="h-full"
             onWheel={(e) => {
-              if (taskListRef.current) {
+              if (e.shiftKey || e.deltaX !== 0) {
+                e.preventDefault();
+                if (timelineRef.current) {
+                  timelineRef.current.scrollLeft += e.deltaX || e.deltaY;
+                }
+              } else if (taskListRef.current) {
                 taskListRef.current.scrollTop = e.currentTarget.scrollTop;
               }
             }}
