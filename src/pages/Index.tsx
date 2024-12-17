@@ -5,7 +5,6 @@ import { createProductTasks } from '@/utils/taskFactory';
 import TaskList from '@/components/TaskList';
 import ResourceTimeline from '@/components/ResourceTimeline';
 import GanttChart from '@/components/GanttChart';
-import WxGanttChart from '@/components/WxGanttChart';
 import { Button } from '@/components/ui/button';
 import { toast } from '@/components/ui/use-toast';
 import { useNavigate } from 'react-router-dom';
@@ -13,7 +12,7 @@ import { Settings, LayoutGrid, GanttChart as GanttIcon } from 'lucide-react';
 
 const Index = () => {
   const navigate = useNavigate();
-  const [view, setView] = useState<'list' | 'resource' | 'gantt' | 'wxgantt'>('list');
+  const [view, setView] = useState<'list' | 'resource' | 'gantt'>('list');
   const baseDate = new Date('2024-12-20T10:00:00');
   const deadline = new Date(baseDate);
 
@@ -101,13 +100,6 @@ const Index = () => {
               <GanttIcon className="w-4 h-4 mr-2" />
               Gantt
             </Button>
-            <Button
-              variant={view === 'wxgantt' ? 'default' : 'outline'}
-              onClick={() => setView('wxgantt')}
-            >
-              <GanttIcon className="w-4 h-4 mr-2" />
-              WX Gantt
-            </Button>
           </div>
           <Button onClick={() => navigate('/settings')} variant="outline">
             <Settings className="mr-2" />
@@ -140,13 +132,6 @@ const Index = () => {
         <div>
           <h2 className="text-xl font-semibold mb-4">Gantt Chart</h2>
           <GanttChart tasks={tasks} resources={resources} />
-        </div>
-      )}
-
-      {view === 'wxgantt' && (
-        <div>
-          <h2 className="text-xl font-semibold mb-4">WX Gantt Chart</h2>
-          <WxGanttChart tasks={tasks} />
         </div>
       )}
     </div>
