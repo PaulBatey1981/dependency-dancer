@@ -1,6 +1,6 @@
 export const HOUR_WIDTH = 50;
-export const ROW_HEIGHT = 28; // Reduced from 36
-export const TASK_HEIGHT = 24; // Reduced from 28
+export const ROW_HEIGHT = 32; // Increased from 28 for better spacing
+export const TASK_HEIGHT = 26; // Increased from 24 for better visibility
 export const INDENT_WIDTH = 20;
 export const MIN_HOURS_DISPLAY = 12;
 
