@@ -23,13 +23,21 @@ const WxGanttChart = ({ tasks }: WxGanttChartProps) => {
   // Create a map for quick task lookup
   const taskMap = new Map(tasksWithDates.map(task => [task.id, task]));
 
-  // Transform tasks to wx-react-gantt format with proper hierarchy
-  const transformTask = (task: Task) => {
-    // Find all tasks that have this task in their dependencies
-    const childTasks = tasksWithDates.filter(t => 
-      t.dependencies.includes(task.id)
-    );
+  // Get all line items as root tasks
+  const lineItems = tasksWithDates.filter(task => task.type === 'lineitem');
+  console.log('Line items:', lineItems.map(item => item.id));
 
+  // Helper function to get child tasks
+  const getChildTasks = (parentTask: Task) => {
+    return tasksWithDates.filter(task => 
+      task.dependencies.includes(parentTask.id)
+    );
+  };
+
+  // Transform tasks to wx-react-gantt format with proper hierarchy
+  const transformTask = (task: Task, parentId: string | null = null) => {
+    const childTasks = getChildTasks(task);
+    
     const transformedTask = {
       id: task.id,
       text: task.name,
@@ -38,7 +46,7 @@ const WxGanttChart = ({ tasks }: WxGanttChartProps) => {
       duration: task.duration,
       progress: task.status === 'completed' ? 100 : 0,
       type: task.type === 'lineitem' ? 'project' : 'task',
-      parent: null as string | null, // Will be set in the next step
+      parent: parentId,
       children: childTasks.map(child => child.id),
       open: true,
       resource: task.resource
@@ -48,22 +56,24 @@ const WxGanttChart = ({ tasks }: WxGanttChartProps) => {
     return transformedTask;
   };
 
-  // First pass: transform all tasks
-  const transformedTasks = tasksWithDates.map(transformTask);
+  // Build task hierarchy starting from line items
+  const transformedTasks = [];
+  
+  // First add line items (root level)
+  for (const lineItem of lineItems) {
+    transformedTasks.push(transformTask(lineItem, null));
+  }
 
-  // Second pass: set parent relationships
-  transformedTasks.forEach(task => {
-    const originalTask = taskMap.get(task.id);
-    if (originalTask && originalTask.dependencies.length > 0) {
-      // Find the first dependency that exists in our transformed tasks
-      const parentId = originalTask.dependencies.find(depId => 
-        transformedTasks.some(t => t.id === depId)
+  // Then add all other tasks with their proper parent relationships
+  for (const task of tasksWithDates) {
+    if (task.type !== 'lineitem') {
+      // Find the first task that has this task in its dependencies
+      const parentTask = tasksWithDates.find(t => 
+        t.dependencies.includes(task.id)
       );
-      if (parentId) {
-        task.parent = parentId;
-      }
+      transformedTasks.push(transformTask(task, parentTask?.id || null));
     }
-  });
+  }
 
   console.log('Final transformed tasks:', transformedTasks);
 
@@ -112,32 +122,26 @@ const WxGanttChart = ({ tasks }: WxGanttChartProps) => {
     { unit: "month", step: 1, format: "MMMM yyyy" }
   ];
 
-  // Add error boundary to catch and log any errors
-  try {
-    return (
-      <div className="h-[600px] w-full">
-        <Gantt 
-          tasks={transformedTasks} 
-          links={links} 
-          scales={scales}
-          columns={columns}
-          taskHeight={40}
-          rowHeight={40}
-          barFill={80}
-          viewMode="month"
-          resizing={false}
-          moving={false}
-          autoScheduling={false}
-          cellWidth={40}
-          columnWidth={300}
-          treeExpanded={true}
-        />
-      </div>
-    );
-  } catch (error) {
-    console.error('Error rendering Gantt chart:', error);
-    return <div>Error loading Gantt chart</div>;
-  }
+  return (
+    <div className="h-[600px] w-full">
+      <Gantt 
+        tasks={transformedTasks} 
+        links={links} 
+        scales={scales}
+        columns={columns}
+        taskHeight={40}
+        rowHeight={40}
+        barFill={80}
+        viewMode="month"
+        resizing={false}
+        moving={false}
+        autoScheduling={false}
+        cellWidth={40}
+        columnWidth={300}
+        treeExpanded={true}
+      />
+    </div>
+  );
 };
 
 export default WxGanttChart;
