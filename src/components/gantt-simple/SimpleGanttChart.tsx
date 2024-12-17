@@ -168,6 +168,7 @@ const sampleTasks: SimpleTask[] = [
 
 const SimpleGanttChart = () => {
   const timelineRef = useRef<HTMLDivElement>(null);
+  const taskListRef = useRef<HTMLDivElement>(null);
   const [tasks, setTasks] = useState<SimpleTask[]>(sampleTasks);
 
   const earliestStart = new Date(Math.min(...tasks.map(t => t.startTime.getTime())));
@@ -221,8 +222,12 @@ const SimpleGanttChart = () => {
       <div className="h-full border rounded-lg w-full">
         <GanttHeader hourMarkers={hourMarkers} />
         <div className="grid grid-cols-[300px,1fr] h-[calc(100%-2rem)]">
-          <ScrollArea className="h-full border-r">
-            <div className="min-w-[300px]">
+          <div className="min-w-[300px] h-full overflow-hidden border-r">
+            <div 
+              ref={taskListRef}
+              className="h-full"
+              style={{ overflowY: 'hidden' }}
+            >
               {getRootTasks().map(task => (
                 <TaskHierarchy
                   key={task.id}
@@ -233,9 +238,16 @@ const SimpleGanttChart = () => {
                 />
               ))}
             </div>
-          </ScrollArea>
+          </div>
 
-          <ScrollArea className="h-full">
+          <ScrollArea 
+            className="h-full"
+            onWheel={(e) => {
+              if (taskListRef.current) {
+                taskListRef.current.scrollTop = e.currentTarget.scrollTop;
+              }
+            }}
+          >
             <div
               ref={timelineRef}
               style={{ 
