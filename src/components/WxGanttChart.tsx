@@ -37,6 +37,24 @@ const WxGanttChart = ({ tasks }: WxGanttChartProps) => {
     { unit: "month", step: 1, format: "MMMM yyyy" }
   ];
 
+  // Ensure we have valid tasks data
+  if (!finalTasks || !Array.isArray(finalTasks) || finalTasks.length === 0) {
+    console.warn('No valid tasks data available');
+    return (
+      <div className="space-y-4">
+        <Button
+          onClick={() => setUseTestData(!useTestData)}
+          variant="outline"
+        >
+          {useTestData ? "Show Real Data" : "Show Test Data"}
+        </Button>
+        <div className="h-[600px] w-full border rounded-lg flex items-center justify-center">
+          No tasks data available
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-4">
       <Button

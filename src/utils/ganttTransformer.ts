@@ -37,11 +37,11 @@ export const transformTasksToGantt = (tasks: Task[]) => {
       progress: task.status === 'completed' ? 100 : 0,
       resource: task.resource || '',
       children: children || [], // Ensure children is always an array
-      open: true
+      open: true // Always expand nodes by default
     };
   };
 
-  // Transform all line items and create root node
+  // Transform all line items
   const transformedTasks = lineItems.map(lineItem => transformTask(lineItem));
   
   // Create a root node to contain all line items
