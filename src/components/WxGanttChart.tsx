@@ -6,13 +6,17 @@ interface WxGanttChartProps {
 }
 
 const WxGanttChart = ({ tasks }: WxGanttChartProps) => {
+  console.log('Initial tasks:', tasks);
+
   // First, ensure all tasks have valid dates
   const tasksWithDates = tasks.map(task => {
     const now = new Date();
+    const startTime = task.startTime || now;
+    const endTime = task.endTime || new Date(startTime.getTime() + task.duration * 3600000);
     return {
       ...task,
-      startTime: task.startTime || now,
-      endTime: task.endTime || new Date((task.startTime || now).getTime() + task.duration * 3600000)
+      startTime,
+      endTime
     };
   });
 
@@ -32,7 +36,7 @@ const WxGanttChart = ({ tasks }: WxGanttChartProps) => {
       }
     }
 
-    return {
+    const transformedTask = {
       id: task.id,
       text: task.name,
       start: task.startTime!,
@@ -42,27 +46,32 @@ const WxGanttChart = ({ tasks }: WxGanttChartProps) => {
       type: task.type === 'lineitem' ? 'project' : 'task',
       parent: parentId,
       open: true,
-      children: [] // Initialize empty children array
+      children: [], // Initialize empty children array
+      resource: task.resource
     };
+
+    console.log(`Transformed task ${task.id}:`, transformedTask);
+    return transformedTask;
   };
 
   // Transform all tasks and ensure they have required properties
   const wxTasks = tasksWithDates.map(transformTask);
-  console.log('Transformed tasks:', wxTasks);
+  console.log('All transformed tasks:', wxTasks);
 
   // Create links between tasks
   const links = tasksWithDates.flatMap(task => 
     task.dependencies
-      .filter(depId => {
-        const depTask = tasksWithDates.find(t => t.id === depId);
-        return depTask !== undefined;
+      .filter(depId => tasksWithDates.some(t => t.id === depId))
+      .map((depId, index) => {
+        const link = {
+          id: `${depId}_${task.id}_${index}`,
+          source: depId,
+          target: task.id,
+          type: "finish_to_start"
+        };
+        console.log(`Created link:`, link);
+        return link;
       })
-      .map((depId, index) => ({
-        id: `${depId}_${task.id}_${index}`,
-        source: depId,
-        target: task.id,
-        type: "finish_to_start"
-      }))
   );
 
   console.log('Generated links:', links);
@@ -72,35 +81,32 @@ const WxGanttChart = ({ tasks }: WxGanttChartProps) => {
     { 
       id: "text", 
       header: "Task name", 
-      flexGrow: 2 
+      width: 200,
+      resize: true
     },
     {
       id: "start",
       header: "Start date",
-      flexGrow: 1,
+      width: 150,
       align: "center",
     },
     {
       id: "duration",
       header: "Duration (hours)",
+      width: 120,
       align: "center",
-      flexGrow: 1,
     },
     {
       id: "resource",
       header: "Resource",
-      align: "center",
-      flexGrow: 1,
-      template: (task: any) => {
-        const originalTask = tasksWithDates.find(t => t.id === task.id);
-        return originalTask?.resource || '';
-      }
+      width: 120,
+      align: "center"
     }
   ];
 
   const scales = [
-    { unit: "month", step: 1, format: "MMMM yyy" },
-    { unit: "day", step: 1, format: "d" },
+    { unit: "day", step: 1, format: "D" },
+    { unit: "month", step: 1, format: "MMMM YYYY" }
   ];
 
   // Add error boundary to catch and log any errors
@@ -118,6 +124,9 @@ const WxGanttChart = ({ tasks }: WxGanttChartProps) => {
           viewMode="month"
           resizing={false}
           moving={false}
+          autoScheduling={false}
+          cellWidth={40}
+          columnWidth={200}
         />
       </div>
     );
