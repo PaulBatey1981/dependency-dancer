@@ -13,8 +13,8 @@ export const transformTasksToGantt = (tasks: Task[]) => {
   console.log('Found line items:', lineItems);
 
   // Transform a single task into the format expected by wx-react-gantt
-  const transformTask = (task: Task) => {
-    console.log(`Processing task: ${task.id}`);
+  const transformTask = (task: Task, level: number = 0) => {
+    console.log(`Processing task: ${task.id} at level ${level}`);
 
     // Find child tasks (tasks that have this task as their dependency)
     const childTasks = tasks.filter(t => {
@@ -25,7 +25,7 @@ export const transformTasksToGantt = (tasks: Task[]) => {
     console.log(`Found ${childTasks.length} children for task ${task.id}:`, childTasks.map(t => t.id));
 
     // Transform children recursively
-    const children = childTasks.map(child => transformTask(child));
+    const children = childTasks.map(child => transformTask(child, level + 1));
 
     // Ensure we have valid dates
     const now = new Date();
@@ -45,6 +45,7 @@ export const transformTasksToGantt = (tasks: Task[]) => {
       progress: task.status === 'completed' ? 100 : 0,
       resource: task.resource || '',
       children: children || [], // Ensure children is always an array
+      level, // Add level information for indentation
       open: true // Always expand nodes by default
     };
 
@@ -63,6 +64,7 @@ export const transformTasksToGantt = (tasks: Task[]) => {
     start: new Date(),
     end: new Date(new Date().getTime() + 30 * 24 * 3600000), // 30 days span
     progress: 0,
+    level: 0,
     children: transformedTasks || [], // Ensure children is always an array
     open: true
   };
