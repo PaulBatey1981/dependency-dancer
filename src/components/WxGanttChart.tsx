@@ -36,7 +36,7 @@ const WxGanttChart = ({ tasks }: WxGanttChartProps) => {
 
     // Get line items (top-level tasks)
     const lineItems = tasks.filter(task => task.type === 'lineitem');
-    console.log('Found line items:', lineItems.map(t => t.id));
+    console.log('Found line items:', lineItems);
 
     // Transform a single task into the format expected by wx-react-gantt
     const transformTask = (task: Task): any => {
@@ -47,10 +47,11 @@ const WxGanttChart = ({ tasks }: WxGanttChartProps) => {
 
       console.log(`Processing task: ${task.id}`);
 
+      // Ensure dependencies is an array
+      const dependencies = task.dependencies || [];
+
       // Find child tasks (tasks that depend on this task)
-      const childTasks = tasks.filter(t => 
-        t.dependencies?.includes(task.id)
-      );
+      const childTasks = tasks.filter(t => dependencies.includes(t.id));
       console.log(`Found ${childTasks.length} children for task ${task.id}:`, childTasks.map(t => t.id));
 
       // Transform children first
@@ -71,7 +72,7 @@ const WxGanttChart = ({ tasks }: WxGanttChartProps) => {
         end: endTime,
         progress: task.status === 'completed' ? 100 : 0,
         resource: task.resource,
-        children: children, // wx-react-gantt expects this to always be an array
+        children: children || [], // Always ensure children is an array
         open: true
       };
 
