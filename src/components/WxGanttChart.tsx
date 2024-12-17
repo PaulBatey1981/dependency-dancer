@@ -25,7 +25,7 @@ const WxGanttChart = ({ tasks }: WxGanttChartProps) => {
       end: new Date(new Date().getTime() + 3 * 3600000),
       progress: 0,
       resource: 'bench',
-      children: [] // Always provide an empty array for leaf nodes
+      children: []
     }],
     open: true
   }];
@@ -40,11 +40,6 @@ const WxGanttChart = ({ tasks }: WxGanttChartProps) => {
 
     // Transform a single task into the format expected by wx-react-gantt
     const transformTask = (task: Task): any => {
-      if (!task) {
-        console.log('Received null task in transformTask');
-        return null;
-      }
-
       console.log(`Processing task: ${task.id}`);
 
       // Find child tasks (tasks that have this task as their dependency)
@@ -56,38 +51,44 @@ const WxGanttChart = ({ tasks }: WxGanttChartProps) => {
       console.log(`Found ${childTasks.length} children for task ${task.id}:`, childTasks.map(t => t.id));
 
       // Transform children first
-      const children = childTasks
-        .map(child => transformTask(child))
-        .filter(Boolean); // Remove any null results
+      const children = childTasks.map(child => transformTask(child));
 
+      // Ensure we have valid dates
       const now = new Date();
       const startTime = task.startTime || now;
-      const endTime = task.endTime || new Date(startTime.getTime() + task.duration * 3600000);
+      const endTime = task.endTime || new Date(startTime.getTime() + (task.duration || 1) * 3600000);
 
-      // Ensure we have a valid task object that matches wx-react-gantt's requirements
-      const transformedTask = {
+      // Create a valid task object that matches wx-react-gantt's requirements
+      return {
         id: task.id,
         text: task.name,
         type: task.type === 'lineitem' ? 'project' : 'task',
         start: startTime,
         end: endTime,
         progress: task.status === 'completed' ? 100 : 0,
-        resource: task.resource,
-        children: children || [], // Always ensure children is an array
+        resource: task.resource || '',
+        children: children || [], // Ensure children is always an array
         open: true
       };
-
-      console.log(`Transformed task ${task.id}:`, transformedTask);
-      return transformedTask;
     };
 
-    // Transform all line items first
-    const transformedTasks = lineItems
-      .map(lineItem => transformTask(lineItem))
-      .filter(Boolean);
+    // Transform all line items and create root node
+    const transformedTasks = lineItems.map(lineItem => transformTask(lineItem));
+    
+    // Create a root node to contain all line items
+    const rootNode = {
+      id: 'root',
+      text: 'All Projects',
+      type: 'project',
+      start: new Date(),
+      end: new Date(new Date().getTime() + 24 * 3600000),
+      progress: 0,
+      children: transformedTasks,
+      open: true
+    };
 
-    console.log('Final transformed tasks:', transformedTasks);
-    return transformedTasks;
+    console.log('Final transformed tasks:', [rootNode]);
+    return [rootNode];
   };
 
   const finalTasks = useMinimalExample ? minimalExample : transformTasks();
