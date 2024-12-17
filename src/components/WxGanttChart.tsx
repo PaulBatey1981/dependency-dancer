@@ -23,26 +23,28 @@ const WxGanttChart = ({ tasks }: WxGanttChartProps) => {
   // Create a map for quick task lookup
   const taskMap = new Map(tasksWithDates.map(task => [task.id, task]));
 
-  // Get all line items as root tasks
+  // Get all line items
   const lineItems = tasksWithDates.filter(task => task.type === 'lineitem');
   console.log('Line items:', lineItems.map(item => item.id));
 
-  // Helper function to get child tasks (tasks that depend on this task)
-  const getChildTasks = (parentId: string): Task[] => {
+  // Helper function to get dependent tasks (tasks that have this task as a dependency)
+  const getDependentTasks = (taskId: string): Task[] => {
     return tasksWithDates.filter(task => 
-      task.dependencies.includes(parentId)
+      task.dependencies && task.dependencies.includes(taskId)
     );
   };
 
   // Transform tasks to wx-react-gantt format
   const transformTask = (task: Task) => {
-    const childTasks = getChildTasks(task.id);
-    
-    // Find parent task (task that this task depends on)
-    const parentTask = task.dependencies.length > 0 
-      ? tasksWithDates.find(t => task.dependencies.includes(t.id))
-      : null;
+    if (!task) return null;
 
+    // Get tasks that depend on this task
+    const dependentTasks = getDependentTasks(task.id);
+    console.log(`Dependent tasks for ${task.id}:`, dependentTasks.map(t => t.id));
+    
+    // Get the task this task depends on (parent)
+    const parentId = task.dependencies && task.dependencies.length > 0 ? task.dependencies[0] : null;
+    
     const transformedTask = {
       id: task.id,
       text: task.name,
@@ -51,8 +53,8 @@ const WxGanttChart = ({ tasks }: WxGanttChartProps) => {
       duration: task.duration,
       progress: task.status === 'completed' ? 100 : 0,
       type: task.type === 'lineitem' ? 'project' : 'task',
-      parent: parentTask?.id || null,
-      children: childTasks.map(child => child.id),
+      parent: parentId,
+      children: dependentTasks.map(t => t.id),
       open: true,
       resource: task.resource
     };
@@ -61,13 +63,16 @@ const WxGanttChart = ({ tasks }: WxGanttChartProps) => {
     return transformedTask;
   };
 
-  // Transform all tasks
-  const transformedTasks = tasksWithDates.map(transformTask);
+  // Transform all tasks, starting with line items
+  const transformedTasks = tasksWithDates
+    .map(transformTask)
+    .filter((task): task is NonNullable<typeof task> => task !== null);
+
   console.log('Final transformed tasks:', transformedTasks);
 
   // Create links between tasks based on dependencies
   const links = tasksWithDates.flatMap(task => 
-    task.dependencies.map((depId, index) => ({
+    (task.dependencies || []).map((depId, index) => ({
       id: `${depId}_${task.id}_${index}`,
       source: depId,
       target: task.id,
