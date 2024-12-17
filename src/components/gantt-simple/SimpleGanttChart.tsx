@@ -3,8 +3,15 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import GanttHeader from './GanttHeader';
 import TaskHierarchy from './TaskHierarchy';
 import Timeline from './Timeline';
+import ZoomControls from './ZoomControls';
 import { SimpleTask } from './types';
-import { HOUR_WIDTH, ROW_HEIGHT, MIN_HOURS_DISPLAY } from './constants';
+import { 
+  HOUR_WIDTH, 
+  ROW_HEIGHT, 
+  MIN_HOURS_DISPLAY,
+  MIN_ZOOM,
+  MAX_ZOOM 
+} from './constants';
 
 const sampleTasks: SimpleTask[] = [
   {
@@ -208,6 +215,7 @@ const SimpleGanttChart = () => {
   const timelineRef = useRef<HTMLDivElement>(null);
   const taskListRef = useRef<HTMLDivElement>(null);
   const [tasks, setTasks] = useState<SimpleTask[]>(sampleTasks);
+  const [zoom, setZoom] = useState(1);
 
   const earliestStart = new Date(Math.min(...tasks.map(t => t.startTime.getTime())));
   const latestEnd = new Date(Math.max(
@@ -216,7 +224,7 @@ const SimpleGanttChart = () => {
 
   const totalTaskHours = Math.ceil((latestEnd.getTime() - earliestStart.getTime()) / (1000 * 60 * 60));
   const totalHours = Math.max(totalTaskHours, MIN_HOURS_DISPLAY);
-  const timelineWidth = totalHours * HOUR_WIDTH;
+  const timelineWidth = totalHours * HOUR_WIDTH * zoom;
 
   const calculateTaskPosition = (task: SimpleTask) => {
     const hoursFromStart = (task.startTime.getTime() - earliestStart.getTime()) / (1000 * 60 * 60);
@@ -225,6 +233,11 @@ const SimpleGanttChart = () => {
 
   const calculateTaskWidth = (duration: number) => {
     return (duration / totalHours) * 100;
+  };
+
+  const handleZoomChange = (newZoom: number) => {
+    console.log('Zoom changed to:', newZoom);
+    setZoom(newZoom);
   };
 
   const toggleExpand = (taskId: string) => {
@@ -238,25 +251,26 @@ const SimpleGanttChart = () => {
     );
   };
 
-  // Get root-level tasks (those without parents)
   const getRootTasks = () => {
     return tasks.filter(task => !task.parentId);
   };
 
-  // Get child tasks for a given parent
   const getChildTasks = (parentId: string) => {
     return tasks.filter(task => task.parentId === parentId);
   };
 
-  // Generate hour markers
-  const hourMarkers = Array.from({ length: totalHours + 1 }).map((_, index) => {
-    const markerTime = new Date(earliestStart.getTime() + index * 60 * 60 * 1000);
-    const position = (index / totalHours) * 100;
+  const hourMarkers = Array.from({ length: Math.ceil(totalHours * zoom) + 1 }).map((_, index) => {
+    const markerTime = new Date(earliestStart.getTime() + (index / zoom) * 60 * 60 * 1000);
+    const position = (index / (totalHours * zoom)) * 100;
     return { position, time: markerTime };
   });
 
   return (
     <div className="space-y-4 h-full">
+      <div className="flex justify-between items-center mb-4">
+        <ZoomControls zoom={zoom} onZoomChange={handleZoomChange} />
+      </div>
+      
       <div className="h-full border rounded-lg w-full">
         <GanttHeader hourMarkers={hourMarkers} />
         <div className="grid grid-cols-[300px,1fr] h-[calc(100%-2rem)]">
