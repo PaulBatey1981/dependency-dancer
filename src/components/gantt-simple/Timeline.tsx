@@ -26,8 +26,33 @@ const Timeline: React.FC<TimelineProps> = ({
     return parent.isExpanded ? isTaskVisible(parent) : false;
   };
 
-  // Get visible tasks based on hierarchy
-  const visibleTasks = tasks.filter(isTaskVisible);
+  // Get visible tasks and maintain hierarchy order
+  const getVisibleTasksInOrder = () => {
+    const visibleTasks: SimpleTask[] = [];
+    
+    // Helper function to add tasks recursively
+    const addTaskAndChildren = (taskId: string, tasks: SimpleTask[]) => {
+      const task = tasks.find(t => t.id === taskId);
+      if (!task || !isTaskVisible(task)) return;
+      
+      visibleTasks.push(task);
+      
+      // If task has children and is expanded, add them
+      if (task.children && task.isExpanded) {
+        task.children.forEach(childId => {
+          addTaskAndChildren(childId, tasks);
+        });
+      }
+    };
+    
+    // Start with root level tasks (those without parents)
+    const rootTasks = tasks.filter(t => !t.parentId);
+    rootTasks.forEach(task => addTaskAndChildren(task.id, tasks));
+    
+    return visibleTasks;
+  };
+
+  const visibleTasks = getVisibleTasksInOrder();
 
   const getTaskIndex = (task: SimpleTask): number => {
     return visibleTasks.findIndex(t => t.id === task.id);
@@ -59,7 +84,7 @@ const Timeline: React.FC<TimelineProps> = ({
         <GanttTask
           key={task.id}
           task={task}
-          index={getTaskIndex(task)}
+          index={index}
           calculateTaskPosition={calculateTaskPosition}
           calculateTaskWidth={calculateTaskWidth}
           ROW_HEIGHT={ROW_HEIGHT}
