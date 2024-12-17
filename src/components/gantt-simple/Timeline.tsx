@@ -1,14 +1,27 @@
 import React from 'react';
-import { COLORS } from './constants';
+import { SimpleTask } from './types';
+import GanttTask from './GanttTask';
+import { COLORS, ROW_HEIGHT, TASK_HEIGHT } from './constants';
 
 interface TimelineProps {
   hourMarkers: { position: number; time: Date }[];
-  children: React.ReactNode;
+  tasks: SimpleTask[];
+  calculateTaskPosition: (task: SimpleTask) => number;
+  calculateTaskWidth: (duration: number) => number;
 }
 
-const Timeline: React.FC<TimelineProps> = ({ hourMarkers, children }) => {
+const Timeline: React.FC<TimelineProps> = ({
+  hourMarkers,
+  tasks,
+  calculateTaskPosition,
+  calculateTaskWidth
+}) => {
+  const getTaskIndex = (task: SimpleTask): number => {
+    return tasks.findIndex(t => t.id === task.id);
+  };
+
   return (
-    <div className="relative bg-white min-h-full w-full pt-8">
+    <div className="relative bg-white min-h-full w-full">
       {/* Grid lines */}
       {hourMarkers.map((marker, index) => (
         <div
@@ -23,14 +36,24 @@ const Timeline: React.FC<TimelineProps> = ({ hourMarkers, children }) => {
 
       {/* Today line */}
       <div
-        className="absolute top-0 bottom-0 w-px"
+        className="absolute top-0 bottom-0 w-px bg-gantt-today"
         style={{ 
           left: `${(new Date().getHours() / 24) * 100}%`,
-          backgroundColor: COLORS.todayLine
         }}
       />
 
-      {children}
+      {tasks.map((task, index) => (
+        <GanttTask
+          key={task.id}
+          task={task}
+          index={getTaskIndex(task)}
+          calculateTaskPosition={calculateTaskPosition}
+          calculateTaskWidth={calculateTaskWidth}
+          ROW_HEIGHT={ROW_HEIGHT}
+          TASK_HEIGHT={TASK_HEIGHT}
+          INDENT_WIDTH={20}
+        />
+      ))}
     </div>
   );
 };

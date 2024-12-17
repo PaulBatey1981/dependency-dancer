@@ -1,7 +1,7 @@
 import { useRef, useState } from 'react';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { Button } from '@/components/ui/button';
-import TaskBar from './TaskBar';
+import GanttHeader from './GanttHeader';
+import TaskHierarchy from './TaskHierarchy';
 import Timeline from './Timeline';
 import { SimpleTask } from './types';
 import { HOUR_WIDTH, ROW_HEIGHT, MIN_HOURS_DISPLAY } from './constants';
@@ -114,40 +114,6 @@ const SimpleGanttChart = () => {
     return tasks.filter(task => task.parentId === parentId);
   };
 
-  // Recursively render tasks and their children
-  const renderTaskHierarchy = (task: SimpleTask, level: number = 0, index: number): JSX.Element[] => {
-    console.log(`Rendering task ${task.id} at level ${level}`);
-    const elements: JSX.Element[] = [];
-    const verticalPosition = index * ROW_HEIGHT;
-
-    // Add the current task
-    elements.push(
-      <TaskBar
-        key={task.id}
-        task={task}
-        position={calculateTaskPosition(task)}
-        width={calculateTaskWidth(task.duration)}
-        verticalPosition={verticalPosition}
-        level={level}
-        onToggleExpand={toggleExpand}
-      />
-    );
-
-    // If task has children and is expanded, render them
-    if (task.children && task.isExpanded) {
-      const childTasks = getChildTasks(task.id);
-      let childIndex = index + 1;
-      
-      childTasks.forEach(childTask => {
-        const childElements = renderTaskHierarchy(childTask, level + 1, childIndex);
-        elements.push(...childElements);
-        childIndex += childElements.length;
-      });
-    }
-
-    return elements;
-  };
-
   // Generate hour markers
   const hourMarkers = Array.from({ length: totalHours + 1 }).map((_, index) => {
     const markerTime = new Date(earliestStart.getTime() + index * 60 * 60 * 1000);
@@ -155,50 +121,43 @@ const SimpleGanttChart = () => {
     return { position, time: markerTime };
   });
 
-  // Calculate total height based on visible tasks
-  const calculateTotalHeight = () => {
-    let totalHeight = 0;
-    const rootTasks = getRootTasks();
-    
-    rootTasks.forEach((task, index) => {
-      const elements = renderTaskHierarchy(task, 0, totalHeight / ROW_HEIGHT);
-      totalHeight += elements.length * ROW_HEIGHT;
-    });
-
-    return Math.max(totalHeight, ROW_HEIGHT); // Ensure minimum height
-  };
-
   return (
     <div className="space-y-4">
       <div className="h-[400px] border rounded-lg w-full">
-        <div className="h-8 border-b bg-gray-50 relative">
-          {hourMarkers.map((marker, index) => (
-            <div
-              key={index}
-              className="absolute top-0 bottom-0 border-l border-gray-200 text-xs text-gray-500"
-              style={{ left: `${marker.position}%` }}
-            >
-              {marker.time.getHours().toString().padStart(2, '0')}:00
+        <GanttHeader hourMarkers={hourMarkers} />
+        <div className="grid grid-cols-[300px,1fr]">
+          <ScrollArea className="h-[calc(100%-2rem)] border-r">
+            <div className="min-w-[300px]">
+              {getRootTasks().map(task => (
+                <TaskHierarchy
+                  key={task.id}
+                  task={task}
+                  level={0}
+                  onToggleExpand={toggleExpand}
+                  getChildTasks={getChildTasks}
+                />
+              ))}
             </div>
-          ))}
-        </div>
+          </ScrollArea>
 
-        <ScrollArea className="h-[calc(100%-2rem)]">
-          <div
-            ref={timelineRef}
-            style={{ 
-              width: `max(${timelineWidth}px, 100%)`,
-              minWidth: '100%',
-              height: calculateTotalHeight()
-            }}
-          >
-            <Timeline hourMarkers={hourMarkers}>
-              {getRootTasks().map((task, index) => 
-                renderTaskHierarchy(task, 0, index)
-              )}
-            </Timeline>
-          </div>
-        </ScrollArea>
+          <ScrollArea className="h-[calc(100%-2rem)]">
+            <div
+              ref={timelineRef}
+              style={{ 
+                width: `max(${timelineWidth}px, 100%)`,
+                minWidth: '100%',
+                height: tasks.length * ROW_HEIGHT
+              }}
+            >
+              <Timeline 
+                hourMarkers={hourMarkers}
+                tasks={tasks}
+                calculateTaskPosition={calculateTaskPosition}
+                calculateTaskWidth={calculateTaskWidth}
+              />
+            </div>
+          </ScrollArea>
+        </div>
       </div>
     </div>
   );

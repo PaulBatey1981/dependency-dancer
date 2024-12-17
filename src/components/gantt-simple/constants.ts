@@ -13,4 +13,9 @@ export const COLORS = {
   taskText: '#ffffff',
   gridLine: '#f1f5f9',
   todayLine: '#fef3c7',
+  taskDots: {
+    lineitem: '#3b82f6',
+    component: '#0d9488',
+    element: '#4f46e5',
+  }
 } as const;
