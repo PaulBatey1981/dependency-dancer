@@ -1,6 +1,6 @@
 export const HOUR_WIDTH = 50;
 export const ROW_HEIGHT = 40;
-export const TASK_HEIGHT = 32;
+export const TASK_HEIGHT = 32; // Ensuring it's smaller than ROW_HEIGHT
 export const INDENT_WIDTH = 20;
 export const MIN_HOURS_DISPLAY = 12;
 

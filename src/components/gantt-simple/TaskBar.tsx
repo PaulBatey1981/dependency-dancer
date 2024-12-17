@@ -33,9 +33,9 @@ const TaskBar = ({
   const getTaskStyles = () => {
     const baseStyles = {
       left: task.type === 'task' ? `${position}%` + (level * INDENT_WIDTH) + 'px' : 0,
-      top: verticalPosition,
+      top: verticalPosition + (ROW_HEIGHT - TASK_HEIGHT) / 2, // Center the task vertically within ROW_HEIGHT
       width: task.type === 'task' ? `${width}%` : '100%',
-      height: TASK_HEIGHT,
+      height: `${TASK_HEIGHT}px`, // Explicitly set height in pixels
     };
 
     if (task.type === 'lineitem') {
@@ -45,7 +45,6 @@ const TaskBar = ({
         color: COLORS.lineItemText,
         fontWeight: 600,
         paddingLeft: '0.5rem',
-        paddingRight: INDENT_WIDTH,
       };
     }
 
@@ -61,7 +60,7 @@ const TaskBar = ({
     <HoverCard>
       <HoverCardTrigger>
         <div
-          className="absolute rounded-sm transition-colors hover:opacity-90"
+          className="absolute rounded-sm transition-colors hover:opacity-90 border border-red-200"
           style={getTaskStyles()}
         >
           <div className="flex items-center justify-between h-full">
