@@ -19,7 +19,7 @@ const GanttHeader: React.FC<GanttHeaderProps> = ({ hourMarkers }) => {
             className="absolute top-0 bottom-0 border-l border-gray-200 text-xs text-gray-500"
             style={{ left: `${marker.position}%` }}
           >
-            {marker.time.getHours().toString().padStart(2, '0')}:00
+            {format(marker.time, 'HH:mm')}
           </div>
         ))}
       </div>

@@ -5,6 +5,138 @@ import TaskHierarchy from './TaskHierarchy';
 import Timeline from './Timeline';
 import { SimpleTask } from './types';
 import { HOUR_WIDTH, ROW_HEIGHT, MIN_HOURS_DISPLAY } from './constants';
+import GanttViewControls from './GanttViewControls';
+
+const SimpleGanttChart = () => {
+  const timelineRef = useRef<HTMLDivElement>(null);
+  const taskListRef = useRef<HTMLDivElement>(null);
+  const [tasks, setTasks] = useState<SimpleTask[]>(sampleTasks);
+  const [viewMode, setViewMode] = useState<'day' | 'week' | 'month'>('day');
+
+  const earliestStart = new Date(Math.min(...tasks.map(t => t.startTime.getTime())));
+  const latestEnd = new Date(Math.max(
+    ...tasks.map(t => t.startTime.getTime() + t.duration * 3600000)
+  ));
+
+  const getHoursForViewMode = () => {
+    const totalTaskHours = Math.ceil((latestEnd.getTime() - earliestStart.getTime()) / (1000 * 60 * 60));
+    
+    switch (viewMode) {
+      case 'week':
+        return Math.max(totalTaskHours, 24 * 7); // Show at least a week
+      case 'month':
+        return Math.max(totalTaskHours, 24 * 30); // Show at least a month
+      case 'day':
+      default:
+        return Math.max(totalTaskHours, MIN_HOURS_DISPLAY);
+    }
+  };
+
+  const totalHours = getHoursForViewMode();
+  const timelineWidth = totalHours * HOUR_WIDTH;
+
+  const calculateTaskPosition = (task: SimpleTask) => {
+    const hoursFromStart = (task.startTime.getTime() - earliestStart.getTime()) / (1000 * 60 * 60);
+    return (hoursFromStart / totalHours) * 100;
+  };
+
+  const calculateTaskWidth = (duration: number) => {
+    return (duration / totalHours) * 100;
+  };
+
+  const toggleExpand = (taskId: string) => {
+    console.log('Toggling expansion for task:', taskId);
+    setTasks(prevTasks => 
+      prevTasks.map(task => 
+        task.id === taskId 
+          ? { ...task, isExpanded: !task.isExpanded }
+          : task
+      )
+    );
+  };
+
+  // Get root-level tasks (those without parents)
+  const getRootTasks = () => {
+    return tasks.filter(task => !task.parentId);
+  };
+
+  // Get child tasks for a given parent
+  const getChildTasks = (parentId: string) => {
+    return tasks.filter(task => task.parentId === parentId);
+  };
+
+  // Generate hour markers based on view mode
+  const generateHourMarkers = () => {
+    const markers = [];
+    const intervalHours = viewMode === 'month' ? 24 : viewMode === 'week' ? 12 : 1;
+    
+    for (let i = 0; i <= totalHours; i += intervalHours) {
+      const markerTime = new Date(earliestStart.getTime() + i * 60 * 60 * 1000);
+      const position = (i / totalHours) * 100;
+      markers.push({ position, time: markerTime });
+    }
+    
+    return markers;
+  };
+
+  const hourMarkers = generateHourMarkers();
+
+  return (
+    <div className="space-y-4 h-full">
+      <div className="mb-4">
+        <GanttViewControls viewMode={viewMode} onViewModeChange={setViewMode} />
+      </div>
+      
+      <div className="h-full border rounded-lg w-full">
+        <GanttHeader hourMarkers={hourMarkers} />
+        <div className="grid grid-cols-[300px,1fr] h-[calc(100%-2rem)]">
+          <div className="min-w-[300px] h-full overflow-hidden border-r">
+            <div 
+              ref={taskListRef}
+              className="h-full"
+              style={{ overflowY: 'hidden' }}
+            >
+              {getRootTasks().map(task => (
+                <TaskHierarchy
+                  key={task.id}
+                  task={task}
+                  level={0}
+                  onToggleExpand={toggleExpand}
+                  getChildTasks={getChildTasks}
+                />
+              ))}
+            </div>
+          </div>
+
+          <ScrollArea 
+            className="h-full"
+            onWheel={(e) => {
+              if (taskListRef.current) {
+                taskListRef.current.scrollTop = e.currentTarget.scrollTop;
+              }
+            }}
+          >
+            <div
+              ref={timelineRef}
+              style={{ 
+                width: `max(${timelineWidth}px, 100%)`,
+                minWidth: '100%',
+                height: tasks.length * ROW_HEIGHT
+              }}
+            >
+              <Timeline 
+                hourMarkers={hourMarkers}
+                tasks={tasks}
+                calculateTaskPosition={calculateTaskPosition}
+                calculateTaskWidth={calculateTaskWidth}
+              />
+            </div>
+          </ScrollArea>
+        </div>
+      </div>
+    </div>
+  );
+};
 
 const sampleTasks: SimpleTask[] = [
   {
@@ -203,109 +335,5 @@ const sampleTasks: SimpleTask[] = [
     dependencies: ['subelement3']
   }
 ];
-
-const SimpleGanttChart = () => {
-  const timelineRef = useRef<HTMLDivElement>(null);
-  const taskListRef = useRef<HTMLDivElement>(null);
-  const [tasks, setTasks] = useState<SimpleTask[]>(sampleTasks);
-
-  const earliestStart = new Date(Math.min(...tasks.map(t => t.startTime.getTime())));
-  const latestEnd = new Date(Math.max(
-    ...tasks.map(t => t.startTime.getTime() + t.duration * 3600000)
-  ));
-
-  const totalTaskHours = Math.ceil((latestEnd.getTime() - earliestStart.getTime()) / (1000 * 60 * 60));
-  const totalHours = Math.max(totalTaskHours, MIN_HOURS_DISPLAY);
-  const timelineWidth = totalHours * HOUR_WIDTH;
-
-  const calculateTaskPosition = (task: SimpleTask) => {
-    const hoursFromStart = (task.startTime.getTime() - earliestStart.getTime()) / (1000 * 60 * 60);
-    return (hoursFromStart / totalHours) * 100;
-  };
-
-  const calculateTaskWidth = (duration: number) => {
-    return (duration / totalHours) * 100;
-  };
-
-  const toggleExpand = (taskId: string) => {
-    console.log('Toggling expansion for task:', taskId);
-    setTasks(prevTasks => 
-      prevTasks.map(task => 
-        task.id === taskId 
-          ? { ...task, isExpanded: !task.isExpanded }
-          : task
-      )
-    );
-  };
-
-  // Get root-level tasks (those without parents)
-  const getRootTasks = () => {
-    return tasks.filter(task => !task.parentId);
-  };
-
-  // Get child tasks for a given parent
-  const getChildTasks = (parentId: string) => {
-    return tasks.filter(task => task.parentId === parentId);
-  };
-
-  // Generate hour markers
-  const hourMarkers = Array.from({ length: totalHours + 1 }).map((_, index) => {
-    const markerTime = new Date(earliestStart.getTime() + index * 60 * 60 * 1000);
-    const position = (index / totalHours) * 100;
-    return { position, time: markerTime };
-  });
-
-  return (
-    <div className="space-y-4 h-full">
-      <div className="h-full border rounded-lg w-full">
-        <GanttHeader hourMarkers={hourMarkers} />
-        <div className="grid grid-cols-[300px,1fr] h-[calc(100%-2rem)]">
-          <div className="min-w-[300px] h-full overflow-hidden border-r">
-            <div 
-              ref={taskListRef}
-              className="h-full"
-              style={{ overflowY: 'hidden' }}
-            >
-              {getRootTasks().map(task => (
-                <TaskHierarchy
-                  key={task.id}
-                  task={task}
-                  level={0}
-                  onToggleExpand={toggleExpand}
-                  getChildTasks={getChildTasks}
-                />
-              ))}
-            </div>
-          </div>
-
-          <ScrollArea 
-            className="h-full"
-            onWheel={(e) => {
-              if (taskListRef.current) {
-                taskListRef.current.scrollTop = e.currentTarget.scrollTop;
-              }
-            }}
-          >
-            <div
-              ref={timelineRef}
-              style={{ 
-                width: `max(${timelineWidth}px, 100%)`,
-                minWidth: '100%',
-                height: tasks.length * ROW_HEIGHT
-              }}
-            >
-              <Timeline 
-                hourMarkers={hourMarkers}
-                tasks={tasks}
-                calculateTaskPosition={calculateTaskPosition}
-                calculateTaskWidth={calculateTaskWidth}
-              />
-            </div>
-          </ScrollArea>
-        </div>
-      </div>
-    </div>
-  );
-};
 
 export default SimpleGanttChart;
