@@ -25,10 +25,11 @@ const WxGanttChart = ({ tasks }: WxGanttChartProps) => {
     // For non-lineitem tasks, find their direct parent lineitem
     let parentId = null;
     if (task.type !== 'lineitem') {
-      const parentLineItem = lineItems.find(li => 
-        task.dependencies.some(depId => depId === li.id)
-      );
-      parentId = parentLineItem?.id || null;
+      // Find the first line item in the task's dependencies
+      const parentLineItem = lineItems.find(li => task.dependencies.includes(li.id));
+      if (parentLineItem) {
+        parentId = parentLineItem.id;
+      }
     }
 
     return {
@@ -41,6 +42,7 @@ const WxGanttChart = ({ tasks }: WxGanttChartProps) => {
       type: task.type === 'lineitem' ? 'project' : 'task',
       parent: parentId,
       open: true,
+      children: [] // Initialize empty children array
     };
   };
 
@@ -48,13 +50,12 @@ const WxGanttChart = ({ tasks }: WxGanttChartProps) => {
   const wxTasks = tasksWithDates.map(transformTask);
   console.log('Transformed tasks:', wxTasks);
 
-  // Create links only between tasks at the same level and with valid dependencies
+  // Create links between tasks
   const links = tasksWithDates.flatMap(task => 
     task.dependencies
       .filter(depId => {
         const depTask = tasksWithDates.find(t => t.id === depId);
-        // Only create links between tasks of the same type
-        return depTask && depTask.type === task.type;
+        return depTask !== undefined;
       })
       .map((depId, index) => ({
         id: `${depId}_${task.id}_${index}`,
@@ -111,6 +112,12 @@ const WxGanttChart = ({ tasks }: WxGanttChartProps) => {
           links={links} 
           scales={scales}
           columns={columns}
+          taskHeight={40}
+          rowHeight={40}
+          barFill={80}
+          viewMode="month"
+          resizing={false}
+          moving={false}
         />
       </div>
     );
