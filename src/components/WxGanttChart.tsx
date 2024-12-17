@@ -24,11 +24,11 @@ const WxGanttChart = ({ tasks }: WxGanttChartProps) => {
   // Create a task map for quick lookups
   const taskMap = new Map(tasksWithDates.map(task => [task.id, task]));
 
-  // Get all line items
+  // Get all line items (top-level tasks)
   const lineItems = tasksWithDates.filter(task => task.type === 'lineitem');
   console.log('Line items:', lineItems.map(item => item.id));
 
-  // Helper function to get tasks that depend on this task
+  // Helper function to get all tasks that depend on a given task
   const getDependentTasks = (taskId: string): Task[] => {
     return tasksWithDates.filter(task => 
       task.dependencies?.includes(taskId)
@@ -36,17 +36,30 @@ const WxGanttChart = ({ tasks }: WxGanttChartProps) => {
   };
 
   // Transform task to wx-react-gantt format
-  const transformTask = (task: Task) => {
-    if (!task) return null;
+  const transformTask = (task: Task, processedTasks = new Set<string>()): any => {
+    if (!task || processedTasks.has(task.id)) {
+      console.log(`Skipping task ${task?.id} - already processed or null`);
+      return null;
+    }
 
-    // Get tasks that depend on this task (children in Gantt chart)
-    const dependentTasks = getDependentTasks(task.id);
-    console.log(`Tasks depending on ${task.id}:`, dependentTasks.map(t => t.id));
+    console.log(`Transforming task ${task.id}`);
+    processedTasks.add(task.id);
+
+    // Get all tasks that depend on this task (will be children in Gantt)
+    const dependentTasks = getDependentTasks(task.id)
+      .filter(t => !processedTasks.has(t.id));
+    
+    console.log(`Found ${dependentTasks.length} dependent tasks for ${task.id}`);
+
+    // Transform children first
+    const children = dependentTasks
+      .map(child => transformTask(child, processedTasks))
+      .filter(child => child !== null);
 
     // For line items, no parent. For others, use first dependency as parent
     const parentId = task.type === 'lineitem' ? undefined : task.dependencies?.[0];
     
-    // Ensure we have a valid parent task if parentId is specified
+    // Skip tasks with invalid parent references
     if (parentId && !taskMap.get(parentId)) {
       console.warn(`Parent task ${parentId} not found for task ${task.id}`);
       return null;
@@ -61,7 +74,7 @@ const WxGanttChart = ({ tasks }: WxGanttChartProps) => {
       progress: task.status === 'completed' ? 100 : 0,
       type: task.type === 'lineitem' ? 'project' : 'task',
       parent: parentId,
-      children: dependentTasks.map(t => t.id),
+      children: children.length > 0 ? children : undefined,
       open: true,
       resource: task.resource
     };
@@ -70,14 +83,12 @@ const WxGanttChart = ({ tasks }: WxGanttChartProps) => {
     return transformedTask;
   };
 
-  // First transform line items, then their dependent tasks
-  const lineItemTasks = lineItems.map(transformTask).filter((t): t is NonNullable<typeof t> => t !== null);
-  const otherTasks = tasksWithDates
-    .filter(task => task.type !== 'lineitem')
-    .map(transformTask)
-    .filter((t): t is NonNullable<typeof t> => t !== null);
+  // Start transformation from line items (top-level tasks)
+  const processedTasks = new Set<string>();
+  const transformedTasks = lineItems
+    .map(task => transformTask(task, processedTasks))
+    .filter((task): task is NonNullable<typeof task> => task !== null);
 
-  const transformedTasks = [...lineItemTasks, ...otherTasks];
   console.log('Final transformed tasks:', transformedTasks);
 
   // Create links between tasks based on dependencies
