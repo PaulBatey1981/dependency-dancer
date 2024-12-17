@@ -21,13 +21,7 @@ const GanttTask: React.FC<GanttTaskProps> = ({
   TASK_HEIGHT,
   INDENT_WIDTH,
 }) => {
-  console.log(`Rendering task ${task.id} at position ${calculateTaskPosition(task)}%`);
-  
-  const position = calculateTaskPosition(task);
-  const width = calculateTaskWidth(task.duration);
-  
-  // Calculate indentation as a percentage of the total width
-  const indentPercentage = (INDENT_WIDTH / width) * 100;
+  console.log(`Rendering task ${task.id} at position ${calculateTaskPosition(task)}`);
   
   return (
     <div
@@ -39,10 +33,10 @@ const GanttTask: React.FC<GanttTaskProps> = ({
         task.type === 'lineitem' ? 'text-blue-800' : 'text-white'
       } flex items-center`}
       style={{
-        left: `${task.type === 'task' ? position + (task.type === 'task' ? indentPercentage : 0) : 0}%`,
+        left: task.type === 'task' ? calculateTaskPosition(task) + INDENT_WIDTH : 0,
         top: index * ROW_HEIGHT + ((ROW_HEIGHT - TASK_HEIGHT) / 2),
         width: task.type === 'task' 
-          ? `${width - (task.type === 'task' ? indentPercentage : 0)}%`
+          ? calculateTaskWidth(task.duration)
           : '100%',
         height: TASK_HEIGHT,
         paddingLeft: task.type === 'lineitem' ? '0.5rem' : '0.25rem',

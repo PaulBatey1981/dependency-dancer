@@ -51,46 +51,52 @@ const Timeline: React.FC<TimelineProps> = ({
   const totalHeight = visibleTasks.length * ROW_HEIGHT;
 
   return (
-    <div 
-      className="relative bg-white w-full"
-      style={{ 
-        minHeight: '100%',
-        height: `${Math.max(totalHeight, 400)}px`
-      }}
-    >
-      {/* Grid lines */}
-      {hourMarkers.map((marker, index) => (
+    <div className="flex">
+      {/* Spacer container matching task list width */}
+      <div className="min-w-[300px] border-r" />
+      
+      {/* Timeline content */}
+      <div 
+        className="relative bg-white w-full"
+        style={{ 
+          minHeight: '100%',
+          height: `${Math.max(totalHeight, 400)}px`
+        }}
+      >
+        {/* Grid lines */}
+        {hourMarkers.map((marker, index) => (
+          <div
+            key={index}
+            className="absolute top-0 bottom-0 border-l"
+            style={{ 
+              left: `${marker.position}%`,
+              borderColor: COLORS.gridLine
+            }}
+          />
+        ))}
+
+        {/* Today line */}
         <div
-          key={index}
-          className="absolute top-0 bottom-0 border-l"
+          className="absolute top-0 bottom-0 w-px bg-gantt-today"
           style={{ 
-            left: `${marker.position}%`,
-            borderColor: COLORS.gridLine
+            left: `${(new Date().getHours() / 24) * 100}%`,
           }}
         />
-      ))}
 
-      {/* Today line */}
-      <div
-        className="absolute top-0 bottom-0 w-px bg-gantt-today"
-        style={{ 
-          left: `${(new Date().getHours() / 24) * 100}%`,
-        }}
-      />
-
-      {/* Task bars */}
-      {visibleTasks.map((task, index) => (
-        <GanttTask
-          key={task.id}
-          task={task}
-          index={index}
-          calculateTaskPosition={calculateTaskPosition}
-          calculateTaskWidth={calculateTaskWidth}
-          ROW_HEIGHT={ROW_HEIGHT}
-          TASK_HEIGHT={TASK_HEIGHT}
-          INDENT_WIDTH={20}
-        />
-      ))}
+        {/* Task bars */}
+        {visibleTasks.map((task, index) => (
+          <GanttTask
+            key={task.id}
+            task={task}
+            index={index}
+            calculateTaskPosition={calculateTaskPosition}
+            calculateTaskWidth={calculateTaskWidth}
+            ROW_HEIGHT={ROW_HEIGHT}
+            TASK_HEIGHT={TASK_HEIGHT}
+            INDENT_WIDTH={20}
+          />
+        ))}
+      </div>
     </div>
   );
 };
