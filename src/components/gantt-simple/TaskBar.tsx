@@ -48,6 +48,7 @@ const TaskBar = ({
     overflow: 'hidden',
     whiteSpace: 'nowrap',
     textOverflow: 'ellipsis',
+    padding: 0,
   };
 
   return (
