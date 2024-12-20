@@ -39,7 +39,7 @@ export const useGanttTasks = () => {
           const formattedTask: SimpleTask = {
             id: task.id,
             name: task.name,
-            type: (task.type || 'task') as SimpleTask['type'],
+            type: task.type,
             startTime: task.start_time ? new Date(task.start_time) : new Date(),
             duration: Number(task.duration),
             dependencies: task.task_dependencies?.map((dep: any) => {

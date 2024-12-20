@@ -51,30 +51,25 @@ const SimpleGanttChart = () => {
     );
   };
 
-  // Get only the root tasks (tasks without parents)
+  // Get only the root tasks (tasks with type 'lineitem')
   const getRootTasks = () => {
-    const rootTasks = tasks.filter(task => {
-      const isRoot = !task.parentId;
-      if (isRoot) {
-        console.log('Found root task:', task.id, task.name);
-      }
-      return isRoot;
-    });
-    
-    // Remove duplicates based on task ID
-    const uniqueRootTasks = Array.from(new Map(rootTasks.map(task => [task.id, task])).values());
-    console.log('Unique root tasks:', uniqueRootTasks.map(t => ({ id: t.id, name: t.name })));
-    return uniqueRootTasks;
+    const rootTasks = tasks.filter(task => task.type === 'lineitem');
+    console.log('Root tasks:', rootTasks.map(t => ({ id: t.id, name: t.name })));
+    return rootTasks;
   };
 
   // Get child tasks for a given parent ID
-  const getChildTasks = (parentId: string) => {
-    const childTasks = tasks.filter(task => task.parentId === parentId);
-    console.log(`Child tasks for ${parentId}:`, childTasks.map(t => ({ id: t.id, name: t.name })));
-    return childTasks;
+  const getChildTasks = (parentId: string): SimpleTask[] => {
+    console.log(`Getting children for task ${parentId}`);
+    const children = tasks.filter(task => task.parentId === parentId);
+    console.log(`Found ${children.length} children for task ${parentId}:`, children.map(c => ({ id: c.id, name: c.name })));
+    return children;
   };
 
   const hourMarkers = generateHourMarkers(earliestStart, totalHours, viewMode);
+
+  const rootTasks = getRootTasks();
+  console.log('Number of root tasks to render:', rootTasks.length);
 
   return (
     <div className="flex flex-col h-full">
@@ -90,7 +85,7 @@ const SimpleGanttChart = () => {
           <div className="min-w-[300px] overflow-hidden border-r">
             <ScrollArea className="h-full">
               <div ref={taskListRef}>
-                {getRootTasks().map(task => (
+                {rootTasks.map(task => (
                   <TaskHierarchy
                     key={task.id}
                     task={task}
