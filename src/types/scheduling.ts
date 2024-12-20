@@ -1,4 +1,4 @@
-export type TaskType = 'lineitem' | 'task';
+export type TaskType = 'lineitem' | 'component' | 'element' | 'task';
 
 export type TaskStatus = 'unscheduled' | 'scheduled' | 'in_progress' | 'completed';
 

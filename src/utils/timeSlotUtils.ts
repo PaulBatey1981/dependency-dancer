@@ -5,11 +5,11 @@ export function findEarliestSlot(
   scheduledTasks: Task[],
   startTime: Date
 ): Date {
-  console.log(`Finding earliest slot for task ${task.id} on resource ${task.resource}`);
+  console.log(`Finding earliest slot for task ${task.id} on resource ${task.resource_id}`);
   
   // Get all tasks scheduled on the same resource
   const resourceTasks = scheduledTasks.filter(
-    t => t.resource === task.resource && t.startTime && t.endTime
+    t => t.resource_id === task.resource_id && t.startTime && t.endTime
   );
   
   // Sort tasks by start time

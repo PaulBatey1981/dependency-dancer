@@ -38,7 +38,7 @@ const ResourceTimeline = ({ tasks, resources }: ResourceTimelineProps) => {
           <h3 className="font-semibold mb-2">{resource.name}</h3>
           <div className="relative h-20 bg-gray-100 rounded">
             {tasks
-              .filter(task => task.resource === resource.id && task.startTime)
+              .filter(task => task.resource_id === resource.id && task.startTime)
               .map(task => (
                 <HoverCard key={task.id} openDelay={0} closeDelay={0}>
                   <HoverCardTrigger asChild>
@@ -46,7 +46,7 @@ const ResourceTimeline = ({ tasks, resources }: ResourceTimelineProps) => {
                       className={`absolute h-16 mt-2 rounded ${getTaskColor(
                         task.type
                       )} opacity-80 cursor-pointer ${
-                        task.isFixed ? 'border-2 border-task-fixed' : ''
+                        task.is_fixed ? 'border-2 border-task-fixed' : ''
                       }`}
                       style={{
                         left: task.startTime ? calculateTaskPosition(task.startTime) : '0%',
@@ -65,7 +65,7 @@ const ResourceTimeline = ({ tasks, resources }: ResourceTimelineProps) => {
                         <p>Type: {task.type}</p>
                         <p>Duration: {task.duration}h</p>
                         <p>Status: {task.status}</p>
-                        <p>Fixed: {task.isFixed ? 'Yes' : 'No'}</p>
+                        <p>Fixed: {task.is_fixed ? 'Yes' : 'No'}</p>
                         {task.priority !== undefined && (
                           <p>Priority: {task.priority}</p>
                         )}
