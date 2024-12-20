@@ -44,11 +44,11 @@ const GanttTask: React.FC<GanttTaskProps> = ({
           ? '100%'
           : `${taskWidth}%`,
         height: TASK_HEIGHT,
-        paddingLeft: task.type === 'lineitem' ? '0.25rem' : '0.25rem',
+        paddingLeft: task.type === 'lineitem' ? '0.5rem' : '0.25rem',
         paddingRight: task.type === 'lineitem' ? INDENT_WIDTH : 0,
       }}
     >
-      <div className="px-2 py-1 truncate flex-1">
+      <div className="px-3 py-2 truncate flex-1">
         {task.name}
       </div>
       {task.isFixed && (
