@@ -18,16 +18,13 @@ const Timeline: React.FC<TimelineProps> = ({
 }) => {
   // Get all visible tasks in the correct order
   const getVisibleTasksInOrder = () => {
-    // Create a Map to ensure unique tasks
     const taskMap = new Map<string, SimpleTask>();
     
-    // Helper function to process a task and its children
     const processTask = (task: SimpleTask) => {
       if (!taskMap.has(task.id)) {
         console.log(`Processing task for timeline: ${task.name} (${task.id})`);
         taskMap.set(task.id, task);
         
-        // If task has children and is expanded, process them
         if (task.children && task.children.length > 0 && task.isExpanded) {
           task.children.forEach(childId => {
             const childTask = tasks.find(t => t.id === childId);
@@ -39,16 +36,16 @@ const Timeline: React.FC<TimelineProps> = ({
       }
     };
     
-    // Start with root tasks (line items)
-    const rootTasks = tasks.filter(t => t.type === 'lineitem');
-    rootTasks.forEach(processTask);
+    // Start with line items only
+    const lineItems = tasks.filter(t => t.type === 'lineitem');
+    lineItems.forEach(processTask);
     
-    return Array.from(taskMap.values());
+    const visibleTasks = Array.from(taskMap.values());
+    console.log('Visible tasks in timeline:', visibleTasks.map(t => ({ id: t.id, name: t.name })));
+    return visibleTasks;
   };
 
   const visibleTasks = getVisibleTasksInOrder();
-  console.log('Visible tasks in timeline:', visibleTasks.map(t => ({ id: t.id, name: t.name })));
-  
   const totalHeight = Math.max(visibleTasks.length * ROW_HEIGHT, ROW_HEIGHT);
 
   return (
@@ -56,7 +53,6 @@ const Timeline: React.FC<TimelineProps> = ({
       className="relative w-full" 
       style={{ height: totalHeight }}
     >
-      {/* Grid lines */}
       {hourMarkers.map((marker, index) => (
         <div
           key={index}
@@ -68,7 +64,6 @@ const Timeline: React.FC<TimelineProps> = ({
         />
       ))}
 
-      {/* Today line */}
       <div
         className="absolute top-0 bottom-0 w-px bg-gantt-today h-full"
         style={{ 
@@ -76,7 +71,6 @@ const Timeline: React.FC<TimelineProps> = ({
         }}
       />
 
-      {/* Task bars */}
       {visibleTasks.map((task, index) => (
         <GanttTask
           key={task.id}
