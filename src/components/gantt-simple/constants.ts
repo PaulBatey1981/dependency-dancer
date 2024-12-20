@@ -1,22 +1,15 @@
-export const HOUR_WIDTH = 50;
-export const ROW_HEIGHT = 38;
-export const TASK_HEIGHT = 30;
+export const HOUR_WIDTH = 50; // Width in pixels for one hour
+export const ROW_HEIGHT = 32; // Reduced from 40px to 32px
+export const TASK_HEIGHT = 24; // Reduced from 32px to 24px
+export const MIN_HOURS_DISPLAY = 24;
 export const INDENT_WIDTH = 20;
-export const MIN_HOURS_DISPLAY = 12;
 
 export const COLORS = {
-  taskBg: '#e2e8f0',
-  lineItemBg: '#f8fafc',
-  fixedTaskBg: '#e0f2fe',
-  fixedTaskBorder: '#0ea5e9',
-  taskText: '#1e293b',
-  lineItemText: '#0f172a',
+  lineItemBg: '#f0f9ff',
+  lineItemText: '#1e40af',
+  taskBg: '#3b82f6',
+  taskText: '#ffffff',
+  fixedTaskBg: '#fef9c3',
+  fixedTaskBorder: '#ca8a04',
   gridLine: '#f1f5f9',
-  todayLine: '#fef3c7',
-  taskDots: {
-    level0: 'bg-purple-500', // Vivid Purple for line items
-    level1: 'bg-pink-500',   // Magenta Pink for components
-    level2: 'bg-orange-500', // Bright Orange for elements
-    level3: 'bg-sky-500',    // Ocean Blue for sub-elements
-  }
 };
