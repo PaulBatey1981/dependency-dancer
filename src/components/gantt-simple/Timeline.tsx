@@ -32,13 +32,10 @@ const Timeline: React.FC<TimelineProps> = ({
       const task = tasks.find(t => t.id === taskId);
       if (!task || !isTaskVisible(task)) return;
       
-      // Only add line items as headers
+      // Only add line items as headers and actual tasks with type 'task'
       if (task.type === 'lineitem') {
         visibleItems.push({ task, isGroupHeader: true });
-      }
-      
-      // Only add actual tasks (not components or elements) that have a duration
-      if (task.type === 'task') {
+      } else if (task.type === 'task') {
         visibleItems.push({ task, isGroupHeader: false });
       }
       
