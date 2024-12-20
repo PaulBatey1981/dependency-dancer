@@ -48,7 +48,7 @@ const TaskHierarchy: React.FC<TaskHierarchyProps> = ({
           <div className="w-6" />
         )}
         <span className={getTaskDot(level)} />
-        <span className="text-sm">{task.name}</span>
+        <span className="text-sm whitespace-nowrap overflow-hidden truncate flex-1">{task.name}</span>
       </div>
       
       {task.isExpanded && hasChildren && (
