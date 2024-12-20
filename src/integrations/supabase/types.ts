@@ -54,6 +54,30 @@ export type Database = {
         }
         Relationships: []
       }
+      resources: {
+        Row: {
+          capacity: number
+          created_at: string
+          id: string
+          name: string
+          updated_at: string
+        }
+        Insert: {
+          capacity?: number
+          created_at?: string
+          id: string
+          name: string
+          updated_at?: string
+        }
+        Update: {
+          capacity?: number
+          created_at?: string
+          id?: string
+          name?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       task_dependencies: {
         Row: {
           created_at: string

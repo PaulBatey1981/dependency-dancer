@@ -10,24 +10,48 @@ import ScheduleContent from '@/components/schedule/ScheduleContent';
 const Index = () => {
   const [view, setView] = useState<'list' | 'resource' | 'gantt' | 'simple-gantt'>('list');
   const [tasks, setTasks] = useState<Task[]>([]);
+  const [resources, setResources] = useState<Resource[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
   const baseDate = new Date('2024-12-20T10:00:00');
   const deadline = new Date(baseDate);
 
-  const resources: Resource[] = [
-    { id: 'bench', name: 'Bench Work', capacity: 1 },
-    { id: 'konica', name: 'Konica Printer', capacity: 1 },
-    { id: 'dk_europa', name: 'D&K Europa', capacity: 1 },
-    { id: 'zund_m800', name: 'Zund M800', capacity: 1 },
-    { id: 'gluing_machine', name: 'Gluing Machine', capacity: 1 },
-    { id: 'magnet_drill', name: 'Magnet Drill', capacity: 1 },
-    { id: 'corner_taper', name: 'Corner Taper', capacity: 1 }
-  ];
-
   useEffect(() => {
-    loadTasks();
+    loadInitialData();
   }, []);
+
+  const loadInitialData = async () => {
+    try {
+      await Promise.all([loadTasks(), loadResources()]);
+    } catch (error) {
+      console.error('Error loading initial data:', error);
+      toast({
+        title: "Error loading data",
+        description: "There was an error loading the schedule data. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const loadResources = async () => {
+    try {
+      console.log('Loading resources from Supabase...');
+      const { data: resourcesData, error: resourcesError } = await supabase
+        .from('resources')
+        .select('*')
+        .order('name');
+
+      if (resourcesError) throw resourcesError;
+
+      console.log('Resources loaded:', resourcesData);
+      setResources(resourcesData);
+    } catch (error) {
+      console.error('Error loading resources:', error);
+      throw error;
+    }
+  };
 
   const loadTasks = async () => {
     try {
@@ -58,13 +82,7 @@ const Index = () => {
       }
     } catch (error) {
       console.error('Error loading tasks:', error);
-      toast({
-        title: "Error loading tasks",
-        description: "There was an error loading the tasks. Please try again.",
-        variant: "destructive",
-      });
-    } finally {
-      setIsLoading(false);
+      throw error;
     }
   };
 
@@ -91,9 +109,7 @@ const Index = () => {
 
         if (taskError) throw taskError;
 
-        // Handle dependencies
         if (task.dependencies.length > 0) {
-          // Delete existing dependencies
           const { error: deleteError } = await supabase
             .from('task_dependencies')
             .delete()
@@ -101,7 +117,6 @@ const Index = () => {
 
           if (deleteError) throw deleteError;
 
-          // Insert new dependencies
           const dependencyRecords = task.dependencies.map(depId => ({
             task_id: task.id,
             depends_on_id: depId
