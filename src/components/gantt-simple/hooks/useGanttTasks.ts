@@ -35,7 +35,6 @@ export const useGanttTasks = () => {
         // Log each task as it's being processed
         const formattedTasks: SimpleTask[] = tasksData.map(task => {
           console.log('Processing task:', task);
-          console.log('Dependencies for task:', task.task_dependencies);
           
           const formattedTask: SimpleTask = {
             id: task.id,
@@ -60,33 +59,25 @@ export const useGanttTasks = () => {
 
         console.log('All formatted tasks:', formattedTasks);
 
-        // Process tasks to set up parent-child relationships
+        // Process tasks to set up hierarchical relationships based on line_item_id
         const taskMap = new Map(formattedTasks.map(task => [task.id, task]));
         formattedTasks.forEach(task => {
-          if (task.dependencies.length > 0) {
-            console.log(`Processing dependencies for task ${task.id}:`, task.dependencies);
-            task.dependencies.forEach(depId => {
-              const parent = taskMap.get(depId);
-              if (parent) {
-                if (!parent.children) parent.children = [];
-                parent.children.push(task.id);
-                console.log(`Added task ${task.id} as child of ${depId}`);
-              } else {
-                console.warn(`Dependency ${depId} not found for task ${task.id}`);
-              }
-            });
-          } else {
-            console.log(`Task ${task.id} has no dependencies - it might be a root task`);
-          }
-
+          // Only use line_item_id for parent-child relationships
           if (task.parentId) {
-            console.log(`Task ${task.id} has line item parent: ${task.parentId}`);
+            const parent = taskMap.get(task.parentId);
+            if (parent) {
+              if (!parent.children) parent.children = [];
+              parent.children.push(task.id);
+              console.log(`Added task ${task.id} as child of line item ${task.parentId}`);
+            } else {
+              console.warn(`Line item ${task.parentId} not found for task ${task.id}`);
+            }
           }
         });
 
-        // Log all tasks that could be root tasks
-        const rootTasks = formattedTasks.filter(task => !task.dependencies.length && !task.parentId);
-        console.log('Potential root tasks:', rootTasks.map(t => ({ id: t.id, name: t.name })));
+        // Root tasks are line items (tasks with type 'lineitem')
+        const rootTasks = formattedTasks.filter(task => task.type === 'lineitem');
+        console.log('Root tasks (line items):', rootTasks.map(t => ({ id: t.id, name: t.name })));
 
         console.log('Final formatted tasks with relationships:', formattedTasks);
         setTasks(formattedTasks);
