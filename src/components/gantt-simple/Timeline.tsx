@@ -37,8 +37,8 @@ const Timeline: React.FC<TimelineProps> = ({
         visibleItems.push({ task, isGroupHeader: true });
       }
       
-      // Add all non-line-item tasks that have a duration
-      if (task.type !== 'lineitem') {
+      // Only add actual tasks (not components or elements) that have a duration
+      if (task.type === 'task') {
         visibleItems.push({ task, isGroupHeader: false });
       }
       
