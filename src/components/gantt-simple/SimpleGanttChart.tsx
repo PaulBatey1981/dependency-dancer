@@ -14,13 +14,26 @@ const SimpleGanttChart = () => {
   const [tasks, setTasks] = useState<SimpleTask[]>(sampleTasks);
   const [viewMode, setViewMode] = useState<'day' | 'week' | 'month'>('day');
 
-  const earliestStart = new Date(Math.min(...tasks.map(t => t.startTime.getTime())));
-  const latestEnd = new Date(Math.max(
-    ...tasks.map(t => t.startTime.getTime() + t.duration * 3600000)
+  console.log('All tasks:', tasks);
+
+  // Find the earliest start time and latest end time across all tasks
+  const earliestStart = new Date(Math.min(
+    ...tasks
+      .filter(t => t.startTime)
+      .map(t => t.startTime.getTime())
   ));
+
+  const latestEnd = new Date(Math.max(
+    ...tasks
+      .filter(t => t.startTime)
+      .map(t => t.startTime.getTime() + t.duration * 3600000)
+  ));
+
+  console.log('Timeline range:', { earliestStart, latestEnd });
 
   const getHoursForViewMode = () => {
     const totalTaskHours = Math.ceil((latestEnd.getTime() - earliestStart.getTime()) / (1000 * 60 * 60));
+    console.log('Total task hours:', totalTaskHours);
     
     switch (viewMode) {
       case 'week':
@@ -37,12 +50,16 @@ const SimpleGanttChart = () => {
   const timelineWidth = totalHours * HOUR_WIDTH;
 
   const calculateTaskPosition = (task: SimpleTask) => {
+    if (!task.startTime) return 0;
     const hoursFromStart = (task.startTime.getTime() - earliestStart.getTime()) / (1000 * 60 * 60);
-    return (hoursFromStart / totalHours) * 100;
+    const position = (hoursFromStart / totalHours) * 100;
+    console.log(`Task ${task.id} position:`, position);
+    return position;
   };
 
   const calculateTaskWidth = (duration: number) => {
-    return (duration / totalHours) * 100;
+    const width = (duration / totalHours) * 100;
+    return width;
   };
 
   const toggleExpand = (taskId: string) => {
@@ -56,8 +73,17 @@ const SimpleGanttChart = () => {
     );
   };
 
-  const getRootTasks = () => tasks.filter(task => !task.parentId);
-  const getChildTasks = (parentId: string) => tasks.filter(task => task.parentId === parentId);
+  const getRootTasks = () => {
+    const rootTasks = tasks.filter(task => !task.parentId);
+    console.log('Root tasks:', rootTasks);
+    return rootTasks;
+  };
+
+  const getChildTasks = (parentId: string) => {
+    const childTasks = tasks.filter(task => task.parentId === parentId);
+    console.log(`Child tasks for ${parentId}:`, childTasks);
+    return childTasks;
+  };
 
   const generateHourMarkers = () => {
     const markers = [];
