@@ -13,10 +13,7 @@ export const useGanttTasks = () => {
       console.log('Loading tasks from Supabase...');
       const { data: tasksData, error: tasksError } = await supabase
         .from('tasks')
-        .select(`
-          *,
-          task_dependencies!task_dependencies_task_id_fkey(depends_on_id)
-        `)
+        .select('*')
         .order('created_at');
 
       if (tasksError) {
@@ -44,7 +41,7 @@ export const useGanttTasks = () => {
             type: task.type,
             startTime: task.start_time ? new Date(task.start_time) : new Date(),
             duration: Number(task.duration),
-            dependencies: task.task_dependencies?.map((dep: any) => dep.depends_on_id) || [],
+            dependencies: [],
             isExpanded: false,
             parentId: task.line_item_id || undefined,
             resource: task.resource_id,
@@ -53,7 +50,7 @@ export const useGanttTasks = () => {
           };
           
           taskMap.set(task.id, formattedTask);
-          console.log(`Created task: ${formattedTask.name} (${formattedTask.id})`);
+          console.log(`Created task: ${formattedTask.name} (${formattedTask.id}), type: ${formattedTask.type}, parent: ${formattedTask.parentId}`);
         }
       });
 
@@ -62,9 +59,12 @@ export const useGanttTasks = () => {
         if (task.parentId) {
           const parent = taskMap.get(task.parentId);
           if (parent) {
+            if (!parent.children) {
+              parent.children = [];
+            }
             if (!parent.children.includes(task.id)) {
               parent.children.push(task.id);
-              console.log(`Added task ${task.id} as child of ${task.parentId}`);
+              console.log(`Added task ${task.id} (${task.name}) as child of ${task.parentId} (${parent.name})`);
             }
           } else {
             console.warn(`Parent ${task.parentId} not found for task ${task.id}`);
@@ -77,12 +77,27 @@ export const useGanttTasks = () => {
       console.log('Line items:', lineItems.map(item => ({
         id: item.id,
         name: item.name,
-        childCount: item.children.length
+        childCount: item.children?.length || 0
       })));
 
       // Convert Map to array and set tasks
       const uniqueTasks = Array.from(taskMap.values());
       console.log('Final task count:', uniqueTasks.length);
+      
+      // Log the hierarchy for debugging
+      const logTaskHierarchy = (task: SimpleTask, level = 0) => {
+        const indent = '  '.repeat(level);
+        console.log(`${indent}${task.name} (${task.id}) - Type: ${task.type}`);
+        task.children?.forEach(childId => {
+          const child = taskMap.get(childId);
+          if (child) {
+            logTaskHierarchy(child, level + 1);
+          }
+        });
+      };
+
+      lineItems.forEach(item => logTaskHierarchy(item));
+      
       setTasks(uniqueTasks);
 
     } catch (error) {

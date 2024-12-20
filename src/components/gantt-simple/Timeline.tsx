@@ -28,15 +28,19 @@ const Timeline: React.FC<TimelineProps> = ({
         taskMap.set(task.id, task);
         
         // If task has children and is expanded, process them
-        const children = tasks.filter(t => t.parentId === task.id);
-        if (children.length > 0 && task.isExpanded) {
-          children.forEach(processTask);
+        if (task.children && task.children.length > 0 && task.isExpanded) {
+          task.children.forEach(childId => {
+            const childTask = tasks.find(t => t.id === childId);
+            if (childTask) {
+              processTask(childTask);
+            }
+          });
         }
       }
     };
     
-    // Start with root tasks (those without parents)
-    const rootTasks = tasks.filter(t => !t.parentId);
+    // Start with root tasks (line items)
+    const rootTasks = tasks.filter(t => t.type === 'lineitem');
     rootTasks.forEach(processTask);
     
     return Array.from(taskMap.values());

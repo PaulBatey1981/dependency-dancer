@@ -20,6 +20,7 @@ const TaskHierarchy: React.FC<TaskHierarchyProps> = ({
   const hasChildren = childTasks.length > 0;
 
   console.log(`Rendering task ${task.id} (${task.name}) at level ${level} with ${childTasks.length} children`);
+  console.log('Child tasks:', childTasks.map(t => ({ id: t.id, name: t.name })));
 
   const getTaskDot = (type: SimpleTask['type']) => {
     const baseClasses = "w-2 h-2 rounded-full inline-block mr-2";
