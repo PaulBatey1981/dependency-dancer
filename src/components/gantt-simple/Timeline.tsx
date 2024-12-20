@@ -48,53 +48,46 @@ const Timeline: React.FC<TimelineProps> = ({
   };
 
   const visibleTasks = getVisibleTasksInOrder();
-  const totalHeight = visibleTasks.length * ROW_HEIGHT + 100; // Added padding
+  const totalHeight = visibleTasks.length * ROW_HEIGHT;
 
   console.log('Visible tasks count:', visibleTasks.length);
   console.log('Total height calculated:', totalHeight);
 
   return (
-    <div className="flex h-full">
-      <div 
-        className="relative bg-white w-full h-full"
-        style={{ 
-          minHeight: `${Math.max(totalHeight, 400)}px`
-        }}
-      >
-        {/* Grid lines */}
-        {hourMarkers.map((marker, index) => (
-          <div
-            key={index}
-            className="absolute top-0 bottom-0 border-l"
-            style={{ 
-              left: `${marker.position}%`,
-              borderColor: COLORS.gridLine
-            }}
-          />
-        ))}
-
-        {/* Today line */}
+    <div className="relative w-full h-full" style={{ minHeight: totalHeight }}>
+      {/* Grid lines */}
+      {hourMarkers.map((marker, index) => (
         <div
-          className="absolute top-0 bottom-0 w-px bg-gantt-today"
+          key={index}
+          className="absolute top-0 bottom-0 border-l"
           style={{ 
-            left: `${(new Date().getHours() / 24) * 100}%`,
+            left: `${marker.position}%`,
+            borderColor: COLORS.gridLine
           }}
         />
+      ))}
 
-        {/* Task bars */}
-        {visibleTasks.map((task, index) => (
-          <GanttTask
-            key={task.id}
-            task={task}
-            index={index}
-            calculateTaskPosition={calculateTaskPosition}
-            calculateTaskWidth={calculateTaskWidth}
-            ROW_HEIGHT={ROW_HEIGHT}
-            TASK_HEIGHT={TASK_HEIGHT}
-            INDENT_WIDTH={20}
-          />
-        ))}
-      </div>
+      {/* Today line */}
+      <div
+        className="absolute top-0 bottom-0 w-px bg-gantt-today"
+        style={{ 
+          left: `${(new Date().getHours() / 24) * 100}%`,
+        }}
+      />
+
+      {/* Task bars */}
+      {visibleTasks.map((task, index) => (
+        <GanttTask
+          key={task.id}
+          task={task}
+          index={index}
+          calculateTaskPosition={calculateTaskPosition}
+          calculateTaskWidth={calculateTaskWidth}
+          ROW_HEIGHT={ROW_HEIGHT}
+          TASK_HEIGHT={TASK_HEIGHT}
+          INDENT_WIDTH={20}
+        />
+      ))}
     </div>
   );
 };

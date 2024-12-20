@@ -101,17 +101,17 @@ const SimpleGanttChart = () => {
   const hourMarkers = generateHourMarkers();
 
   return (
-    <div className="space-y-4 h-full">
-      <div className="mb-4">
+    <div className="flex flex-col h-full space-y-4">
+      <div>
         <GanttViewControls viewMode={viewMode} onViewModeChange={setViewMode} />
       </div>
       
-      <div className="h-full border rounded-lg w-full">
+      <div className="flex-1 border rounded-lg w-full flex flex-col">
         <GanttHeader hourMarkers={hourMarkers} />
-        <div className="grid grid-cols-[300px,1fr] h-[calc(100%-2rem)]">
-          <div className="min-w-[300px] h-full overflow-hidden border-r">
+        <div className="grid grid-cols-[300px,1fr] flex-1">
+          <div className="min-w-[300px] overflow-hidden border-r">
             <ScrollArea className="h-full">
-              <div ref={taskListRef} className="h-full">
+              <div ref={taskListRef}>
                 {getRootTasks().map(task => (
                   <TaskHierarchy
                     key={task.id}
@@ -127,13 +127,12 @@ const SimpleGanttChart = () => {
           </div>
 
           <div className="relative overflow-hidden">
-            <ScrollArea>
+            <ScrollArea className="h-full">
               <div
                 ref={timelineRef}
                 style={{ 
                   width: `${timelineWidth}px`,
-                  minWidth: '100%',
-                  height: tasks.length * ROW_HEIGHT
+                  minWidth: '100%'
                 }}
               >
                 <Timeline 
