@@ -16,7 +16,6 @@ const SimpleGanttChart = () => {
 
   console.log('All tasks:', tasks);
 
-  // Find the earliest start time and latest end time across all tasks
   const earliestStart = new Date(Math.min(
     ...tasks
       .filter(t => t.startTime)
@@ -101,14 +100,16 @@ const SimpleGanttChart = () => {
   const hourMarkers = generateHourMarkers();
 
   return (
-    <div className="flex flex-col h-full space-y-4">
-      <div>
+    <div className="flex flex-col h-full">
+      <div className="shrink-0 mb-4">
         <GanttViewControls viewMode={viewMode} onViewModeChange={setViewMode} />
       </div>
       
-      <div className="flex-1 border rounded-lg w-full flex flex-col">
-        <GanttHeader hourMarkers={hourMarkers} />
-        <div className="grid grid-cols-[300px,1fr] flex-1">
+      <div className="flex-1 border rounded-lg w-full flex flex-col min-h-0">
+        <div className="shrink-0">
+          <GanttHeader hourMarkers={hourMarkers} />
+        </div>
+        <div className="grid grid-cols-[300px,1fr] flex-1 min-h-0">
           <div className="min-w-[300px] overflow-hidden border-r">
             <ScrollArea className="h-full">
               <div ref={taskListRef}>
@@ -126,13 +127,13 @@ const SimpleGanttChart = () => {
             </ScrollArea>
           </div>
 
-          <div className="relative overflow-hidden">
+          <div className="relative overflow-hidden min-h-0">
             <ScrollArea className="h-full">
               <div
                 ref={timelineRef}
                 style={{ 
                   width: `${timelineWidth}px`,
-                  minWidth: '100%'
+                  minWidth: '100%',
                 }}
               >
                 <Timeline 

@@ -48,13 +48,13 @@ const Timeline: React.FC<TimelineProps> = ({
   };
 
   const visibleTasks = getVisibleTasksInOrder();
-  const totalHeight = visibleTasks.length * ROW_HEIGHT;
+  const totalHeight = Math.max(visibleTasks.length * ROW_HEIGHT, 400);
 
   console.log('Visible tasks count:', visibleTasks.length);
   console.log('Total height calculated:', totalHeight);
 
   return (
-    <div className="relative w-full h-full" style={{ minHeight: totalHeight }}>
+    <div className="relative w-full" style={{ minHeight: totalHeight }}>
       {/* Grid lines */}
       {hourMarkers.map((marker, index) => (
         <div
@@ -62,16 +62,18 @@ const Timeline: React.FC<TimelineProps> = ({
           className="absolute top-0 bottom-0 border-l"
           style={{ 
             left: `${marker.position}%`,
-            borderColor: COLORS.gridLine
+            borderColor: COLORS.gridLine,
+            height: totalHeight
           }}
         />
       ))}
 
       {/* Today line */}
       <div
-        className="absolute top-0 bottom-0 w-px bg-gantt-today"
+        className="absolute top-0 w-px bg-gantt-today"
         style={{ 
           left: `${(new Date().getHours() / 24) * 100}%`,
+          height: totalHeight
         }}
       />
 
