@@ -32,55 +32,61 @@ export const useGanttTasks = () => {
           return;
         }
 
-        // Log each task as it's being processed
-        const formattedTasks: SimpleTask[] = tasksData.map(task => {
+        // Create a Map to store unique tasks by ID
+        const taskMap = new Map<string, SimpleTask>();
+
+        // Process each task
+        tasksData.forEach(task => {
           console.log('Processing task:', task);
           
-          const formattedTask: SimpleTask = {
-            id: task.id,
-            name: task.name,
-            type: task.type,
-            startTime: task.start_time ? new Date(task.start_time) : new Date(),
-            duration: Number(task.duration),
-            dependencies: task.task_dependencies?.map((dep: any) => {
-              console.log(`Adding dependency ${dep.depends_on_id} to task ${task.id}`);
-              return dep.depends_on_id;
-            }) || [],
-            isExpanded: false,
-            parentId: task.line_item_id || undefined,
-            resource: task.resource_id,
-            isFixed: task.is_fixed,
-            children: []
-          };
-          
-          console.log('Formatted task:', formattedTask);
-          return formattedTask;
+          // Only add the task if it's not already in the map
+          if (!taskMap.has(task.id)) {
+            const formattedTask: SimpleTask = {
+              id: task.id,
+              name: task.name,
+              type: task.type,
+              startTime: task.start_time ? new Date(task.start_time) : new Date(),
+              duration: Number(task.duration),
+              dependencies: task.task_dependencies?.map((dep: any) => dep.depends_on_id) || [],
+              isExpanded: false,
+              parentId: task.line_item_id || undefined,
+              resource: task.resource_id,
+              isFixed: task.is_fixed,
+              children: []
+            };
+            
+            taskMap.set(task.id, formattedTask);
+            console.log('Added formatted task:', formattedTask);
+          }
         });
 
-        console.log('All formatted tasks:', formattedTasks);
+        // Convert Map values back to array
+        const uniqueTasks = Array.from(taskMap.values());
+        console.log('Final unique tasks:', uniqueTasks);
 
-        // Process tasks to set up hierarchical relationships based on line_item_id
-        const taskMap = new Map(formattedTasks.map(task => [task.id, task]));
-        formattedTasks.forEach(task => {
-          // Only use line_item_id for parent-child relationships
+        // Process parent-child relationships
+        uniqueTasks.forEach(task => {
           if (task.parentId) {
             const parent = taskMap.get(task.parentId);
             if (parent) {
               if (!parent.children) parent.children = [];
-              parent.children.push(task.id);
-              console.log(`Added task ${task.id} as child of line item ${task.parentId}`);
-            } else {
-              console.warn(`Line item ${task.parentId} not found for task ${task.id}`);
+              if (!parent.children.includes(task.id)) {
+                parent.children.push(task.id);
+                console.log(`Added task ${task.id} as child of ${task.parentId}`);
+              }
             }
           }
         });
 
-        // Root tasks are line items (tasks with type 'lineitem')
-        const rootTasks = formattedTasks.filter(task => task.type === 'lineitem');
-        console.log('Root tasks (line items):', rootTasks.map(t => ({ id: t.id, name: t.name })));
+        // Log the final task hierarchy
+        const lineItems = uniqueTasks.filter(t => t.type === 'lineitem');
+        console.log('Line items with their children:', lineItems.map(item => ({
+          id: item.id,
+          name: item.name,
+          children: item.children
+        })));
 
-        console.log('Final formatted tasks with relationships:', formattedTasks);
-        setTasks(formattedTasks);
+        setTasks(uniqueTasks);
       } catch (error) {
         console.error('Error loading tasks:', error);
         toast({
