@@ -16,7 +16,7 @@ const finalAssembly: SimpleTask = {
     'MWB1_line_case',
     'MWB1_assemble_base_tray_to_case'
   ],
-  dependencies: ['MWB1_assemble_base_tray_to_case'],
+  dependencies: [],
   isExpanded: true,
   isFixed: false
 };
@@ -36,9 +36,14 @@ const assembleBaseTrayToCase: SimpleTask = {
 // Log sample data for debugging
 console.log('Sample tasks being loaded:', [finalAssembly, assembleBaseTrayToCase, ...baseTrayTasks, ...caseTasks]);
 
-export const sampleTasks: SimpleTask[] = [
-  finalAssembly,
-  assembleBaseTrayToCase,
-  ...baseTrayTasks,
-  ...caseTasks
-];
+// Create a Set of unique task IDs to check for duplicates
+const taskIds = new Set();
+const tasks = [finalAssembly, assembleBaseTrayToCase, ...baseTrayTasks, ...caseTasks];
+tasks.forEach(task => {
+  if (taskIds.has(task.id)) {
+    console.warn(`Duplicate task ID found: ${task.id}`);
+  }
+  taskIds.add(task.id);
+});
+
+export const sampleTasks: SimpleTask[] = tasks;

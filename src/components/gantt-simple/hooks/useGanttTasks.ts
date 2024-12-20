@@ -27,6 +27,20 @@ export const useGanttTasks = () => {
         if (!tasksData?.length) {
           console.log('No tasks found in Supabase, using sample data');
           console.log('Sample tasks:', sampleTasks);
+          
+          // Verify task relationships before setting
+          const taskMap = new Map(sampleTasks.map(task => [task.id, task]));
+          sampleTasks.forEach(task => {
+            if (task.parentId && !taskMap.has(task.parentId)) {
+              console.warn(`Task ${task.id} references non-existent parent ${task.parentId}`);
+            }
+            task.dependencies.forEach(depId => {
+              if (!taskMap.has(depId)) {
+                console.warn(`Task ${task.id} references non-existent dependency ${depId}`);
+              }
+            });
+          });
+          
           setTasks(sampleTasks);
           return;
         }
@@ -47,12 +61,15 @@ export const useGanttTasks = () => {
         }));
 
         // Process tasks to set up parent-child relationships
+        const taskMap = new Map(formattedTasks.map(task => [task.id, task]));
         formattedTasks.forEach(task => {
-          const childTasks = formattedTasks.filter(t => 
-            task.dependencies.includes(t.id)
-          );
-          task.children = childTasks.map(t => t.id);
-          console.log(`Task ${task.id} has children:`, task.children);
+          if (task.parentId) {
+            const parent = taskMap.get(task.parentId);
+            if (parent) {
+              if (!parent.children) parent.children = [];
+              parent.children.push(task.id);
+            }
+          }
         });
 
         console.log('Formatted tasks:', formattedTasks);
