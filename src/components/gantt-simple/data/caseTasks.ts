@@ -16,7 +16,8 @@ export const caseTasks: SimpleTask[] = [
       'MWB1_case_liner'
     ],
     dependencies: ['MWB1_wrap_base_tray'],
-    isExpanded: true
+    isExpanded: true,
+    resource: 'gluing_machine'
   },
   {
     id: 'MWB1_case_wrap',
@@ -30,7 +31,8 @@ export const caseTasks: SimpleTask[] = [
       'MWB1_case_wrap_laminate',
       'MWB1_case_wrap_cut'
     ],
-    isExpanded: true
+    isExpanded: true,
+    resource: 'bench'
   },
   {
     id: 'MWB1_case_wrap_print',
@@ -38,7 +40,8 @@ export const caseTasks: SimpleTask[] = [
     startTime: new Date(baseDate.getTime() + 3 * 3600000),
     duration: 0.42,
     type: 'task',
-    parentId: 'MWB1_case_wrap'
+    parentId: 'MWB1_case_wrap',
+    resource: 'konica'
   },
   {
     id: 'MWB1_case_wrap_laminate',
@@ -47,7 +50,8 @@ export const caseTasks: SimpleTask[] = [
     duration: 0.33,
     type: 'task',
     parentId: 'MWB1_case_wrap',
-    dependencies: ['MWB1_case_wrap_print']
+    dependencies: ['MWB1_case_wrap_print'],
+    resource: 'dk_europa'
   },
   {
     id: 'MWB1_case_wrap_cut',
@@ -56,7 +60,8 @@ export const caseTasks: SimpleTask[] = [
     duration: 0.33,
     type: 'task',
     parentId: 'MWB1_case_wrap',
-    dependencies: ['MWB1_case_wrap_laminate']
+    dependencies: ['MWB1_case_wrap_laminate'],
+    resource: 'zund_m800'
   },
   {
     id: 'MWB1_case_board',
@@ -69,7 +74,8 @@ export const caseTasks: SimpleTask[] = [
       'MWB1_case_board_cut',
       'MWB1_case_board_insert'
     ],
-    isExpanded: true
+    isExpanded: true,
+    resource: 'bench'
   },
   {
     id: 'MWB1_case_board_cut',
@@ -77,7 +83,8 @@ export const caseTasks: SimpleTask[] = [
     startTime: new Date(baseDate.getTime() + 3 * 3600000),
     duration: 0.5,
     type: 'task',
-    parentId: 'MWB1_case_board'
+    parentId: 'MWB1_case_board',
+    resource: 'zund_m800'
   },
   {
     id: 'MWB1_case_board_insert',
@@ -86,7 +93,8 @@ export const caseTasks: SimpleTask[] = [
     duration: 0.5,
     type: 'task',
     parentId: 'MWB1_case_board',
-    dependencies: ['MWB1_case_board_cut']
+    dependencies: ['MWB1_case_board_cut'],
+    resource: 'bench'
   },
   {
     id: 'MWB1_case_liner',
@@ -99,7 +107,8 @@ export const caseTasks: SimpleTask[] = [
       'MWB1_case_liner_laminate',
       'MWB1_case_liner_cut'
     ],
-    isExpanded: true
+    isExpanded: true,
+    resource: 'bench'
   },
   {
     id: 'MWB1_case_liner_laminate',
@@ -107,7 +116,8 @@ export const caseTasks: SimpleTask[] = [
     startTime: new Date(baseDate.getTime() + 3 * 3600000),
     duration: 0.33,
     type: 'task',
-    parentId: 'MWB1_case_liner'
+    parentId: 'MWB1_case_liner',
+    resource: 'dk_europa'
   },
   {
     id: 'MWB1_case_liner_cut',
@@ -116,7 +126,8 @@ export const caseTasks: SimpleTask[] = [
     duration: 0.33,
     type: 'task',
     parentId: 'MWB1_case_liner',
-    dependencies: ['MWB1_case_liner_laminate']
+    dependencies: ['MWB1_case_liner_laminate'],
+    resource: 'zund_m800'
   },
   {
     id: 'MWB1_line_case',
@@ -126,6 +137,7 @@ export const caseTasks: SimpleTask[] = [
     type: 'component',
     parentId: 'MWB1_final_assembly',
     dependencies: ['MWB1_wrap_case'],
-    isExpanded: true
+    isExpanded: true,
+    resource: 'gluing_machine'
   }
 ];
