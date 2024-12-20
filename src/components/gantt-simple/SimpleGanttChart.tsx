@@ -8,6 +8,7 @@ import { HOUR_WIDTH, ROW_HEIGHT, MIN_HOURS_DISPLAY } from './constants';
 import GanttViewControls from './GanttViewControls';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/components/ui/use-toast';
+import { sampleTasks } from './sampleData'; // Import sample data as fallback
 
 const SimpleGanttChart = () => {
   const timelineRef = useRef<HTMLDivElement>(null);
@@ -27,11 +28,14 @@ const SimpleGanttChart = () => {
             task_dependencies!task_dependencies_task_id_fkey(depends_on_id)
           `);
 
-        if (tasksError) throw tasksError;
+        if (tasksError) {
+          console.error('Error fetching tasks:', tasksError);
+          throw tasksError;
+        }
 
         if (!tasksData?.length) {
-          console.log('No tasks found in database');
-          setTasks([]);
+          console.log('No tasks found in Supabase, using sample data');
+          setTasks(sampleTasks);
           return;
         }
 
@@ -46,15 +50,27 @@ const SimpleGanttChart = () => {
           isExpanded: false,
           parentId: task.line_item_id || undefined,
           resource: task.resource_id,
-          isFixed: task.is_fixed
+          isFixed: task.is_fixed,
+          children: [] // Will be populated based on dependencies
         }));
 
+        // Process tasks to set up parent-child relationships
+        formattedTasks.forEach(task => {
+          const childTasks = formattedTasks.filter(t => 
+            task.dependencies.includes(t.id)
+          );
+          task.children = childTasks.map(t => t.id);
+        });
+
+        console.log('Formatted tasks:', formattedTasks);
         setTasks(formattedTasks);
       } catch (error) {
         console.error('Error loading tasks:', error);
+        console.log('Falling back to sample data');
+        setTasks(sampleTasks);
         toast({
           title: "Error loading tasks",
-          description: "There was an error loading the tasks. Please try again.",
+          description: "Using sample data as fallback.",
           variant: "destructive",
         });
       } finally {
@@ -65,7 +81,7 @@ const SimpleGanttChart = () => {
     loadTasks();
   }, []);
 
-  if (isLoading || !tasks.length) {
+  if (isLoading) {
     return <div className="flex items-center justify-center h-full">Loading tasks...</div>;
   }
 
