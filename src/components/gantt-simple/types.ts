@@ -1,13 +1,13 @@
 export interface SimpleTask {
   id: string;
   name: string;
+  type: 'lineitem' | 'component' | 'element' | 'task';
   startTime: Date;
   duration: number;
-  type: 'lineitem' | 'component' | 'element' | 'task';
+  dependencies: string[];
+  isExpanded: boolean;
   parentId?: string;
   children?: string[];
-  dependencies?: string[];
-  isFixed?: boolean;
-  isExpanded?: boolean;
-  resource?: string;
+  resource?: string | null;
+  isFixed: boolean;
 }

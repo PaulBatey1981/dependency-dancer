@@ -1,4 +1,4 @@
-import { useRef, useState } from 'react';
+import { useRef, useState, useEffect } from 'react';
 import { ScrollArea, ScrollBar } from '@/components/ui/scroll-area';
 import GanttHeader from './GanttHeader';
 import TaskHierarchy from './TaskHierarchy';
@@ -6,13 +6,68 @@ import Timeline from './Timeline';
 import { SimpleTask } from './types';
 import { HOUR_WIDTH, ROW_HEIGHT, MIN_HOURS_DISPLAY } from './constants';
 import GanttViewControls from './GanttViewControls';
-import { sampleTasks } from './sampleData';
+import { supabase } from '@/integrations/supabase/client';
+import { toast } from '@/components/ui/use-toast';
 
 const SimpleGanttChart = () => {
   const timelineRef = useRef<HTMLDivElement>(null);
   const taskListRef = useRef<HTMLDivElement>(null);
-  const [tasks, setTasks] = useState<SimpleTask[]>(sampleTasks);
+  const [tasks, setTasks] = useState<SimpleTask[]>([]);
   const [viewMode, setViewMode] = useState<'day' | 'week' | 'month'>('day');
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    const loadTasks = async () => {
+      try {
+        console.log('Loading tasks from Supabase...');
+        const { data: tasksData, error: tasksError } = await supabase
+          .from('tasks')
+          .select(`
+            *,
+            task_dependencies!task_dependencies_task_id_fkey(depends_on_id)
+          `);
+
+        if (tasksError) throw tasksError;
+
+        if (!tasksData?.length) {
+          console.log('No tasks found in database');
+          setTasks([]);
+          return;
+        }
+
+        console.log('Tasks loaded from Supabase:', tasksData);
+        const formattedTasks: SimpleTask[] = tasksData.map(task => ({
+          id: task.id,
+          name: task.name,
+          type: task.type,
+          startTime: task.start_time ? new Date(task.start_time) : new Date(),
+          duration: Number(task.duration),
+          dependencies: task.task_dependencies?.map((dep: any) => dep.depends_on_id) || [],
+          isExpanded: false,
+          parentId: task.line_item_id || undefined,
+          resource: task.resource_id,
+          isFixed: task.is_fixed
+        }));
+
+        setTasks(formattedTasks);
+      } catch (error) {
+        console.error('Error loading tasks:', error);
+        toast({
+          title: "Error loading tasks",
+          description: "There was an error loading the tasks. Please try again.",
+          variant: "destructive",
+        });
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    loadTasks();
+  }, []);
+
+  if (isLoading || !tasks.length) {
+    return <div className="flex items-center justify-center h-full">Loading tasks...</div>;
+  }
 
   console.log('All tasks:', tasks);
 
