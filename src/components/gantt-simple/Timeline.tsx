@@ -1,7 +1,7 @@
 import React from 'react';
 import { SimpleTask } from './types';
-import GanttTask from './GanttTask';
-import { COLORS, ROW_HEIGHT, TASK_HEIGHT } from './constants';
+import TaskBar from './TaskBar';
+import { COLORS, ROW_HEIGHT } from './constants';
 
 interface TimelineProps {
   hourMarkers: { position: number; time: Date }[];
@@ -71,18 +71,31 @@ const Timeline: React.FC<TimelineProps> = ({
         }}
       />
 
-      {visibleTasks.map((task, index) => (
-        <GanttTask
-          key={task.id}
-          task={task}
-          index={index}
-          calculateTaskPosition={calculateTaskPosition}
-          calculateTaskWidth={calculateTaskWidth}
-          ROW_HEIGHT={ROW_HEIGHT}
-          TASK_HEIGHT={TASK_HEIGHT}
-          INDENT_WIDTH={20}
-        />
-      ))}
+      {visibleTasks.map((task, index) => {
+        const position = calculateTaskPosition(task);
+        const width = calculateTaskWidth(task.duration);
+        
+        console.log(`Rendering task ${task.id} at position ${position}`);
+        console.log(`Task ${task.id} position: ${position}`);
+        console.log(`Task ${task.id} width: ${width}%`);
+        
+        return (
+          <TaskBar
+            key={task.id}
+            task={task}
+            position={position}
+            width={width}
+            rowIndex={index}
+            level={0}
+            onToggleExpand={(taskId) => {
+              const taskToToggle = tasks.find(t => t.id === taskId);
+              if (taskToToggle) {
+                taskToToggle.isExpanded = !taskToToggle.isExpanded;
+              }
+            }}
+          />
+        );
+      })}
     </div>
   );
 };
