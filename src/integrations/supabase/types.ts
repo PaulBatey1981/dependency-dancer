@@ -9,6 +9,27 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
+      line_items: {
+        Row: {
+          created_at: string
+          id: string
+          name: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          name: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          name?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           avatar_url: string | null
@@ -32,6 +53,95 @@ export type Database = {
           username?: string | null
         }
         Relationships: []
+      }
+      task_dependencies: {
+        Row: {
+          created_at: string
+          depends_on_id: string
+          id: string
+          task_id: string
+        }
+        Insert: {
+          created_at?: string
+          depends_on_id: string
+          id?: string
+          task_id: string
+        }
+        Update: {
+          created_at?: string
+          depends_on_id?: string
+          id?: string
+          task_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "task_dependencies_depends_on_id_fkey"
+            columns: ["depends_on_id"]
+            isOneToOne: false
+            referencedRelation: "tasks"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "task_dependencies_task_id_fkey"
+            columns: ["task_id"]
+            isOneToOne: false
+            referencedRelation: "tasks"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      tasks: {
+        Row: {
+          created_at: string
+          duration: number
+          end_time: string | null
+          id: string
+          is_fixed: boolean
+          line_item_id: string | null
+          name: string
+          resource_id: string | null
+          start_time: string | null
+          status: Database["public"]["Enums"]["task_status"]
+          type: Database["public"]["Enums"]["task_type"]
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          duration: number
+          end_time?: string | null
+          id?: string
+          is_fixed?: boolean
+          line_item_id?: string | null
+          name: string
+          resource_id?: string | null
+          start_time?: string | null
+          status?: Database["public"]["Enums"]["task_status"]
+          type: Database["public"]["Enums"]["task_type"]
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          duration?: number
+          end_time?: string | null
+          id?: string
+          is_fixed?: boolean
+          line_item_id?: string | null
+          name?: string
+          resource_id?: string | null
+          start_time?: string | null
+          status?: Database["public"]["Enums"]["task_status"]
+          type?: Database["public"]["Enums"]["task_type"]
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "tasks_line_item_id_fkey"
+            columns: ["line_item_id"]
+            isOneToOne: false
+            referencedRelation: "line_items"
+            referencedColumns: ["id"]
+          },
+        ]
       }
     }
     Views: {
@@ -58,7 +168,8 @@ export type Database = {
       }
     }
     Enums: {
-      [_ in never]: never
+      task_status: "unscheduled" | "scheduled" | "in_progress" | "completed"
+      task_type: "lineitem" | "task"
     }
     CompositeTypes: {
       [_ in never]: never
