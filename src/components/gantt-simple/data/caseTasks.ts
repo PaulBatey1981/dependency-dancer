@@ -6,8 +6,8 @@ export const caseTasks: SimpleTask[] = [
   {
     id: 'MWB1_wrap_case',
     name: 'MWB1 - Wrap Case',
-    startTime: new Date(baseDate.getTime() + 3 * 3600000),
-    duration: 1.17,
+    startTime: new Date(baseDate.getTime() + 3 * 3600000), // Starts after base tray
+    duration: 2,
     type: 'component',
     parentId: 'MWB1_final_assembly',
     children: [
@@ -121,8 +121,8 @@ export const caseTasks: SimpleTask[] = [
   {
     id: 'MWB1_line_case',
     name: 'MWB1 - Line Case',
-    startTime: new Date(baseDate.getTime() + 4.17 * 3600000),
-    duration: 0.67,
+    startTime: new Date(baseDate.getTime() + 5 * 3600000), // Starts after wrap case
+    duration: 2,
     type: 'component',
     parentId: 'MWB1_final_assembly',
     dependencies: ['MWB1_wrap_case']
