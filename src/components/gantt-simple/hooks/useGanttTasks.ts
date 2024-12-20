@@ -11,9 +11,30 @@ export const useGanttTasks = () => {
   const buildTaskHierarchy = (tasksData: any[]) => {
     console.log('Building task hierarchy from:', tasksData);
     
+    // First, identify unique line items
+    const lineItems = tasksData
+      .filter(task => task.type === 'lineitem')
+      .reduce((unique: any[], task: any) => {
+        const exists = unique.find(t => t.line_item_id === task.line_item_id);
+        if (!exists) {
+          unique.push(task);
+        } else {
+          console.log(`Skipping duplicate line item: ${task.id} (${task.name})`);
+        }
+        return unique;
+      }, []);
+
+    console.log('Unique line items:', lineItems.map(item => ({ id: item.id, name: item.name })));
+    
     // Create a map of tasks for easy lookup
     const taskMap = new Map();
     tasksData.forEach(task => {
+      // Skip if this is a duplicate line item
+      if (task.type === 'lineitem' && !lineItems.find(li => li.id === task.id)) {
+        console.log(`Skipping duplicate line item during map creation: ${task.id}`);
+        return;
+      }
+
       const dependencies = task.task_dependencies?.map((dep: any) => dep.depends_on_id) || [];
       taskMap.set(task.id, {
         id: task.id,
@@ -34,13 +55,23 @@ export const useGanttTasks = () => {
       task.dependencies.forEach(depId => {
         const dependentTask = taskMap.get(depId);
         if (dependentTask) {
-          dependentTask.children.push(task.id);
+          if (!dependentTask.children.includes(task.id)) {
+            dependentTask.children.push(task.id);
+            console.log(`Added ${task.id} (${task.name}) as child of ${depId} (${dependentTask.name})`);
+          }
         }
       });
     });
 
-    console.log('Task hierarchy built:', Array.from(taskMap.values()));
-    return Array.from(taskMap.values());
+    const finalTasks = Array.from(taskMap.values());
+    console.log('Final task hierarchy:', finalTasks.map(t => ({
+      id: t.id,
+      name: t.name,
+      type: t.type,
+      children: t.children
+    })));
+    
+    return finalTasks;
   };
 
   const loadTasks = async () => {
