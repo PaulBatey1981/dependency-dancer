@@ -6,7 +6,7 @@ export const baseTrayTasks: SimpleTask[] = [
   {
     id: 'MWB1_wrap_base_tray',
     name: 'MWB1 - Wrap Base Tray',
-    startTime: new Date(baseDate), // Starts at beginning
+    startTime: new Date(baseDate),
     duration: 3,
     type: 'component',
     parentId: 'MWB1_final_assembly',
