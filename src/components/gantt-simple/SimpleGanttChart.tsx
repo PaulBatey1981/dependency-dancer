@@ -108,27 +108,29 @@ const SimpleGanttChart = () => {
             </div>
           </div>
 
-          <ScrollArea 
-            className="h-full overflow-x-auto"
-            scrollHideDelay={0}
-            type="always"
-          >
-            <div
-              ref={timelineRef}
-              style={{ 
-                width: `max(${timelineWidth}px, 100%)`,
-                minWidth: '100%',
-                height: tasks.length * ROW_HEIGHT
-              }}
+          <div className="relative overflow-hidden">
+            <ScrollArea 
+              className="h-full"
+              scrollHideDelay={0}
+              type="always"
             >
-              <Timeline 
-                hourMarkers={hourMarkers}
-                tasks={tasks}
-                calculateTaskPosition={calculateTaskPosition}
-                calculateTaskWidth={calculateTaskWidth}
-              />
-            </div>
-          </ScrollArea>
+              <div
+                ref={timelineRef}
+                style={{ 
+                  width: `${timelineWidth}px`,
+                  minWidth: '100%',
+                  height: tasks.length * ROW_HEIGHT
+                }}
+              >
+                <Timeline 
+                  hourMarkers={hourMarkers}
+                  tasks={tasks}
+                  calculateTaskPosition={calculateTaskPosition}
+                  calculateTaskWidth={calculateTaskWidth}
+                />
+              </div>
+            </ScrollArea>
+          </div>
         </div>
       </div>
     </div>
