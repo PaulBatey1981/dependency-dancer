@@ -10,12 +10,7 @@ const finalAssembly: SimpleTask = {
   startTime: new Date(baseDate.getTime() + 8 * 3600000),
   duration: 1,
   type: 'lineitem',
-  children: [
-    'MWB1_wrap_base_tray',
-    'MWB1_wrap_case',
-    'MWB1_line_case',
-    'MWB1_assemble_base_tray_to_case'
-  ],
+  children: [],  // We'll populate this based on dependencies
   dependencies: [],
   isExpanded: true,
   isFixed: false
@@ -39,11 +34,24 @@ console.log('Sample tasks being loaded:', [finalAssembly, assembleBaseTrayToCase
 // Create a Set of unique task IDs to check for duplicates
 const taskIds = new Set();
 const tasks = [finalAssembly, assembleBaseTrayToCase, ...baseTrayTasks, ...caseTasks];
+
+// Check for duplicates and build parent-child relationships
 tasks.forEach(task => {
   if (taskIds.has(task.id)) {
     console.warn(`Duplicate task ID found: ${task.id}`);
   }
   taskIds.add(task.id);
+  
+  // If task has a parent, add it to parent's children array
+  if (task.parentId) {
+    const parent = tasks.find(t => t.id === task.parentId);
+    if (parent) {
+      if (!parent.children) parent.children = [];
+      parent.children.push(task.id);
+    }
+  }
 });
+
+console.log('Final tasks structure:', tasks);
 
 export const sampleTasks: SimpleTask[] = tasks;
