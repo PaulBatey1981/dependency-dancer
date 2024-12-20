@@ -24,26 +24,30 @@ export const useGanttTasks = () => {
           throw tasksError;
         }
 
+        console.log('Raw tasks data from Supabase:', tasksData);
+
         if (!tasksData?.length) {
           console.log('No tasks found in Supabase, using sample data');
           setTasks(sampleTasks);
           return;
         }
 
-        console.log('Tasks loaded from Supabase:', tasksData);
-        const formattedTasks: SimpleTask[] = tasksData.map(task => ({
-          id: task.id,
-          name: task.name,
-          type: task.type,
-          startTime: task.start_time ? new Date(task.start_time) : new Date(),
-          duration: Number(task.duration),
-          dependencies: task.task_dependencies?.map((dep: any) => dep.depends_on_id) || [],
-          isExpanded: false,
-          parentId: task.line_item_id || undefined,
-          resource: task.resource_id,
-          isFixed: task.is_fixed,
-          children: []
-        }));
+        const formattedTasks: SimpleTask[] = tasksData.map(task => {
+          console.log(`Formatting task:`, task);
+          return {
+            id: task.id, // This is a UUID from Supabase
+            name: task.name,
+            type: task.type.toLowerCase(),
+            startTime: task.start_time ? new Date(task.start_time) : new Date(),
+            duration: Number(task.duration),
+            dependencies: task.task_dependencies?.map((dep: any) => dep.depends_on_id) || [],
+            isExpanded: false,
+            parentId: task.line_item_id || undefined,
+            resource: task.resource_id,
+            isFixed: task.is_fixed,
+            children: []
+          };
+        });
 
         // Process tasks to set up parent-child relationships
         const taskMap = new Map(formattedTasks.map(task => [task.id, task]));
@@ -53,11 +57,14 @@ export const useGanttTasks = () => {
             if (parent) {
               if (!parent.children) parent.children = [];
               parent.children.push(task.id);
+              console.log(`Added task ${task.id} as child of ${task.parentId}`);
+            } else {
+              console.warn(`Parent task ${task.parentId} not found for task ${task.id}`);
             }
           }
         });
 
-        console.log('Formatted tasks:', formattedTasks);
+        console.log('Final formatted tasks:', formattedTasks);
         setTasks(formattedTasks);
       } catch (error) {
         console.error('Error loading tasks:', error);
