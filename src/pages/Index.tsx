@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Task, Resource } from '@/types/scheduling';
 import { rescheduleAll } from '@/utils/scheduling';
 import { createProductTasks } from '@/utils/taskFactory';
@@ -10,6 +10,7 @@ import { Button } from '@/components/ui/button';
 import { toast } from '@/components/ui/use-toast';
 import { useNavigate } from 'react-router-dom';
 import { Settings, LayoutGrid, GanttChart as GanttIcon } from 'lucide-react';
+import { supabase } from '@/integrations/supabase/client';
 
 const Index = () => {
   const navigate = useNavigate();
@@ -17,21 +18,117 @@ const Index = () => {
   const baseDate = new Date('2024-12-20T10:00:00');
   const deadline = new Date(baseDate);
 
-  const [tasks, setTasks] = useState<Task[]>(() => {
-    const savedTasks = localStorage.getItem('schedulingTasks');
-    if (savedTasks) {
-      const parsedTasks = JSON.parse(savedTasks);
-      return parsedTasks.map((task: any) => ({
-        ...task,
-        startTime: task.startTime ? new Date(task.startTime) : undefined,
-        deadline: task.deadline ? new Date(task.deadline) : undefined,
-        endTime: task.endTime ? new Date(task.endTime) : undefined,
-        status: task.status || 'unscheduled',
-        isFixed: task.isFixed || false
-      }));
+  const [tasks, setTasks] = useState<Task[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    loadTasks();
+  }, []);
+
+  const loadTasks = async () => {
+    try {
+      const { data: lineItems, error: lineItemsError } = await supabase
+        .from('line_items')
+        .select('*');
+
+      if (lineItemsError) throw lineItemsError;
+
+      const { data: tasksData, error: tasksError } = await supabase
+        .from('tasks')
+        .select(`
+          *,
+          task_dependencies!task_dependencies_task_id_fkey(depends_on_id)
+        `);
+
+      if (tasksError) throw tasksError;
+
+      if (!tasksData?.length) {
+        console.log('No tasks found, creating initial tasks...');
+        const initialTasks = [...createProductTasks('MWB1', deadline), ...createProductTasks('MWB2', deadline)];
+        await saveTasks(initialTasks);
+        setTasks(initialTasks);
+      } else {
+        console.log('Tasks loaded from Supabase:', tasksData);
+        const formattedTasks = tasksData.map(task => ({
+          ...task,
+          startTime: task.start_time ? new Date(task.start_time) : undefined,
+          endTime: task.end_time ? new Date(task.end_time) : undefined,
+          dependencies: task.task_dependencies?.map((dep: any) => dep.depends_on_id) || []
+        }));
+        setTasks(formattedTasks);
+      }
+    } catch (error) {
+      console.error('Error loading tasks:', error);
+      toast({
+        title: "Error loading tasks",
+        description: "There was an error loading the tasks. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsLoading(false);
     }
-    return [...createProductTasks('MWB1', deadline), ...createProductTasks('MWB2', deadline)];
-  });
+  };
+
+  const saveTasks = async (tasksToSave: Task[]) => {
+    try {
+      // First, ensure all line items exist
+      const lineItems = tasksToSave.filter(task => task.type === 'lineitem');
+      for (const lineItem of lineItems) {
+        const { error } = await supabase
+          .from('line_items')
+          .upsert({ 
+            id: lineItem.id,
+            name: lineItem.name
+          });
+        if (error) throw error;
+      }
+
+      // Then save all tasks
+      for (const task of tasksToSave) {
+        const { error: taskError } = await supabase
+          .from('tasks')
+          .upsert({
+            id: task.id,
+            name: task.name,
+            type: task.type,
+            status: task.status,
+            duration: task.duration,
+            resource_id: task.resource,
+            start_time: task.startTime?.toISOString(),
+            end_time: task.endTime?.toISOString(),
+            is_fixed: task.isFixed,
+            line_item_id: task.type === 'lineitem' ? task.id : undefined
+          });
+        if (taskError) throw taskError;
+
+        // Update dependencies
+        if (task.dependencies.length > 0) {
+          // First delete existing dependencies
+          const { error: deleteError } = await supabase
+            .from('task_dependencies')
+            .delete()
+            .eq('task_id', task.id);
+          if (deleteError) throw deleteError;
+
+          // Then insert new ones
+          const dependencyRecords = task.dependencies.map(depId => ({
+            task_id: task.id,
+            depends_on_id: depId
+          }));
+
+          const { error: depsError } = await supabase
+            .from('task_dependencies')
+            .insert(dependencyRecords);
+          if (depsError) throw depsError;
+        }
+      }
+
+      console.log('Tasks saved successfully');
+    } catch (error) {
+      console.error('Error saving tasks:', error);
+      throw error;
+    }
+  };
 
   const resources: Resource[] = [
     { id: 'bench', name: 'Bench Work', capacity: 1 },
@@ -43,11 +140,11 @@ const Index = () => {
     { id: 'corner_taper', name: 'Corner Taper', capacity: 1 }
   ];
 
-  const handleReschedule = () => {
+  const handleReschedule = async () => {
     try {
       const scheduledTasks = rescheduleAll(tasks);
+      await saveTasks(scheduledTasks);
       setTasks(scheduledTasks);
-      localStorage.setItem('schedulingTasks', JSON.stringify(scheduledTasks));
       toast({
         title: "Schedule updated",
         description: "All tasks have been rescheduled successfully.",
@@ -62,17 +159,35 @@ const Index = () => {
     }
   };
 
-  const toggleFixTask = (taskId: string) => {
-    setTasks(prev => {
-      const updatedTasks = prev.map(task => 
+  const toggleFixTask = async (taskId: string) => {
+    try {
+      const updatedTasks = tasks.map(task => 
         task.id === taskId
           ? { ...task, isFixed: !task.isFixed }
           : task
       );
-      localStorage.setItem('schedulingTasks', JSON.stringify(updatedTasks));
-      return updatedTasks;
-    });
+      await saveTasks(updatedTasks);
+      setTasks(updatedTasks);
+    } catch (error) {
+      console.error('Error toggling task fix status:', error);
+      toast({
+        title: "Error",
+        description: "Failed to update task status. Please try again.",
+        variant: "destructive",
+      });
+    }
   };
+
+  if (isLoading) {
+    return (
+      <div className="container mx-auto py-8 flex items-center justify-center min-h-screen">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-gray-900 mx-auto mb-4"></div>
+          <p className="text-gray-600">Loading schedule...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="container mx-auto py-8 min-h-screen flex flex-col">
