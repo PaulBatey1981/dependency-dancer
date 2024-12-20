@@ -3,6 +3,7 @@ import { Task, Resource } from '@/types/scheduling';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/components/ui/use-toast';
 import { createProductTasks } from '@/utils/taskFactory';
+import { saveTasks } from '@/services/taskService';
 
 export const useScheduleData = () => {
   const [tasks, setTasks] = useState<Task[]>([]);
