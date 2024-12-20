@@ -26,14 +26,23 @@ const Timeline: React.FC<TimelineProps> = ({
   };
 
   const getVisibleTasksInOrder = () => {
-    const visibleTasks: SimpleTask[] = [];
+    const visibleItems: { task: SimpleTask; isGroupHeader: boolean }[] = [];
     
     const addTaskAndChildren = (taskId: string, tasks: SimpleTask[]) => {
       const task = tasks.find(t => t.id === taskId);
       if (!task || !isTaskVisible(task)) return;
       
-      visibleTasks.push(task);
+      // Add the task itself as a header if it has children
+      if (task.children && task.children.length > 0) {
+        visibleItems.push({ task, isGroupHeader: true });
+      }
       
+      // If it's a leaf task (no children), add it as a regular task
+      if (!task.children || task.children.length === 0) {
+        visibleItems.push({ task, isGroupHeader: false });
+      }
+      
+      // Process children if expanded
       if (task.children && task.isExpanded) {
         task.children.forEach(childId => {
           addTaskAndChildren(childId, tasks);
@@ -44,14 +53,13 @@ const Timeline: React.FC<TimelineProps> = ({
     const rootTasks = tasks.filter(t => !t.parentId);
     rootTasks.forEach(task => addTaskAndChildren(task.id, tasks));
     
-    return visibleTasks;
+    return visibleItems;
   };
 
-  const visibleTasks = getVisibleTasksInOrder();
-  // Calculate height based on visible tasks, with a minimum of 1 row
-  const totalHeight = Math.max(visibleTasks.length, 1) * ROW_HEIGHT;
+  const visibleItems = getVisibleTasksInOrder();
+  const totalHeight = Math.max(visibleItems.length, 1) * ROW_HEIGHT;
 
-  console.log('Visible tasks count:', visibleTasks.length);
+  console.log('Visible items count:', visibleItems.length);
   console.log('Total height calculated:', totalHeight);
 
   return (
@@ -80,18 +88,24 @@ const Timeline: React.FC<TimelineProps> = ({
       />
 
       {/* Task bars */}
-      {visibleTasks.map((task, index) => (
-        <GanttTask
-          key={task.id}
-          task={task}
-          index={index}
-          calculateTaskPosition={calculateTaskPosition}
-          calculateTaskWidth={calculateTaskWidth}
-          ROW_HEIGHT={ROW_HEIGHT}
-          TASK_HEIGHT={TASK_HEIGHT}
-          INDENT_WIDTH={20}
-        />
-      ))}
+      {visibleItems.map((item, index) => {
+        if (item.isGroupHeader) {
+          return null; // Don't render task bars for group headers
+        }
+        
+        return (
+          <GanttTask
+            key={item.task.id}
+            task={item.task}
+            index={index}
+            calculateTaskPosition={calculateTaskPosition}
+            calculateTaskWidth={calculateTaskWidth}
+            ROW_HEIGHT={ROW_HEIGHT}
+            TASK_HEIGHT={TASK_HEIGHT}
+            INDENT_WIDTH={20}
+          />
+        );
+      })}
     </div>
   );
 };
