@@ -19,7 +19,7 @@ const SimpleGanttChart = () => {
     return <div className="flex items-center justify-center h-full">Loading tasks...</div>;
   }
 
-  console.log('All tasks:', tasks);
+  console.log('All tasks loaded:', tasks);
 
   const { earliestStart, latestEnd } = getTimeRange(tasks);
   console.log('Timeline range:', { earliestStart, latestEnd });
@@ -51,15 +51,26 @@ const SimpleGanttChart = () => {
     );
   };
 
+  // Get only the root tasks (tasks without parents)
   const getRootTasks = () => {
-    const rootTasks = tasks.filter(task => !task.parentId);
-    console.log('Root tasks:', rootTasks);
-    return rootTasks;
+    const rootTasks = tasks.filter(task => {
+      const isRoot = !task.parentId;
+      if (isRoot) {
+        console.log('Found root task:', task.id, task.name);
+      }
+      return isRoot;
+    });
+    
+    // Remove duplicates based on task ID
+    const uniqueRootTasks = Array.from(new Map(rootTasks.map(task => [task.id, task])).values());
+    console.log('Unique root tasks:', uniqueRootTasks.map(t => ({ id: t.id, name: t.name })));
+    return uniqueRootTasks;
   };
 
+  // Get child tasks for a given parent ID
   const getChildTasks = (parentId: string) => {
     const childTasks = tasks.filter(task => task.parentId === parentId);
-    console.log(`Child tasks for ${parentId}:`, childTasks);
+    console.log(`Child tasks for ${parentId}:`, childTasks.map(t => ({ id: t.id, name: t.name })));
     return childTasks;
   };
 

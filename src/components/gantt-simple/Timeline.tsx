@@ -16,52 +16,35 @@ const Timeline: React.FC<TimelineProps> = ({
   calculateTaskPosition,
   calculateTaskWidth
 }) => {
-  const isTaskVisible = (task: SimpleTask): boolean => {
-    if (!task.parentId) return true;
-    
-    const parent = tasks.find(t => t.id === task.parentId);
-    if (!parent) return true;
-    
-    return parent.isExpanded ? isTaskVisible(parent) : false;
-  };
-
+  // Get all visible tasks in the correct order
   const getVisibleTasksInOrder = () => {
-    const visibleItems: SimpleTask[] = [];
+    // Create a Map to ensure unique tasks
+    const taskMap = new Map<string, SimpleTask>();
     
     // Helper function to process a task and its children
     const processTask = (task: SimpleTask) => {
-      console.log(`Processing task: ${task.name}, type: ${task.type}`);
-      
-      if (!isTaskVisible(task)) {
-        console.log(`Task ${task.name} is not visible - parent not expanded`);
-        return;
-      }
-      
-      visibleItems.push(task);
-      console.log(`Added task to visible items: ${task.name}`);
-      
-      // If task has children and is expanded, process them
-      if (task.children && task.isExpanded) {
-        console.log(`Processing children of ${task.name}`);
-        task.children.forEach(childId => {
-          const childTask = tasks.find(t => t.id === childId);
-          if (childTask) {
-            processTask(childTask);
-          }
-        });
+      if (!taskMap.has(task.id)) {
+        console.log(`Processing task for timeline: ${task.name} (${task.id})`);
+        taskMap.set(task.id, task);
+        
+        // If task has children and is expanded, process them
+        const children = tasks.filter(t => t.parentId === task.id);
+        if (children.length > 0 && task.isExpanded) {
+          children.forEach(processTask);
+        }
       }
     };
     
     // Start with root tasks (those without parents)
     const rootTasks = tasks.filter(t => !t.parentId);
-    console.log(`Found ${rootTasks.length} root tasks`);
     rootTasks.forEach(processTask);
     
-    console.log(`Total visible tasks: ${visibleItems.length}`);
-    return visibleItems;
+    return Array.from(taskMap.values());
   };
 
   const visibleTasks = getVisibleTasksInOrder();
+  console.log('Visible tasks in timeline:', visibleTasks.map(t => ({ id: t.id, name: t.name })));
+  
   const totalHeight = Math.max(visibleTasks.length * ROW_HEIGHT, ROW_HEIGHT);
 
   return (
