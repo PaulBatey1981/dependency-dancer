@@ -49,7 +49,7 @@ const Index = () => {
         setTasks(initialTasks);
       } else {
         console.log('Tasks loaded from Supabase:', tasksData);
-        const formattedTasks = tasksData.map(task => ({
+        const formattedTasks: Task[] = tasksData.map(task => ({
           ...task,
           startTime: task.start_time ? new Date(task.start_time) : undefined,
           endTime: task.end_time ? new Date(task.end_time) : undefined,
@@ -85,19 +85,23 @@ const Index = () => {
 
       // Then save all tasks
       for (const task of tasksToSave) {
+        const taskData = {
+          name: task.name,
+          type: task.type,
+          status: task.status,
+          duration: task.duration,
+          resource_id: task.resource_id,
+          start_time: task.startTime?.toISOString(),
+          end_time: task.endTime?.toISOString(),
+          is_fixed: task.is_fixed,
+          line_item_id: task.line_item_id
+        };
+
         const { error: taskError } = await supabase
           .from('tasks')
           .upsert({
             id: task.id,
-            name: task.name,
-            type: task.type,
-            status: task.status,
-            duration: task.duration,
-            resource_id: task.resource,
-            start_time: task.startTime?.toISOString(),
-            end_time: task.endTime?.toISOString(),
-            is_fixed: task.isFixed,
-            line_item_id: task.type === 'lineitem' ? task.id : undefined
+            ...taskData
           });
         if (taskError) throw taskError;
 
@@ -163,7 +167,7 @@ const Index = () => {
     try {
       const updatedTasks = tasks.map(task => 
         task.id === taskId
-          ? { ...task, isFixed: !task.isFixed }
+          ? { ...task, is_fixed: !task.is_fixed }
           : task
       );
       await saveTasks(updatedTasks);

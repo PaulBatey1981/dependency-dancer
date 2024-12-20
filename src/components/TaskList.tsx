@@ -13,10 +13,8 @@ const TaskList = ({ tasks, onToggleFixed }: TaskListProps) => {
     switch (type) {
       case 'lineitem':
         return 'bg-task-lineitem';
-      case 'component':
+      case 'task':
         return 'bg-task-component';
-      case 'element':
-        return 'bg-task-element';
       default:
         return 'bg-gray-500';
     }
@@ -24,16 +22,14 @@ const TaskList = ({ tasks, onToggleFixed }: TaskListProps) => {
 
   const getStatusBadgeColor = (status: Task['status']) => {
     switch (status) {
-      case 'wip':
+      case 'in_progress':
         return 'bg-blue-100 text-blue-800';
-      case 'paused':
+      case 'unscheduled':
         return 'bg-yellow-100 text-yellow-800';
-      case 'on_hold':
-        return 'bg-orange-100 text-orange-800';
-      case 'completed':
-        return 'bg-green-100 text-green-800';
       case 'scheduled':
         return 'bg-purple-100 text-purple-800';
+      case 'completed':
+        return 'bg-green-100 text-green-800';
       default:
         return 'bg-gray-100 text-gray-800';
     }
@@ -45,7 +41,7 @@ const TaskList = ({ tasks, onToggleFixed }: TaskListProps) => {
         <Card
           key={task.id}
           className={`p-4 animate-task-appear ${
-            task.isFixed ? 'border-task-fixed border-2' : ''
+            task.is_fixed ? 'border-task-fixed border-2' : ''
           }`}
         >
           <div className="flex items-center justify-between">
@@ -65,7 +61,7 @@ const TaskList = ({ tasks, onToggleFixed }: TaskListProps) => {
                 </span>
               </div>
               <p className="text-sm text-gray-500">
-                Duration: {task.duration}h | Resource: {task.resource}
+                Duration: {task.duration}h | Resource: {task.resource_id}
               </p>
               {task.startTime && (
                 <p className="text-sm text-gray-500">
@@ -82,9 +78,9 @@ const TaskList = ({ tasks, onToggleFixed }: TaskListProps) => {
               variant="ghost"
               size="icon"
               onClick={() => onToggleFixed(task.id)}
-              className={task.isFixed ? 'text-task-fixed' : ''}
+              className={task.is_fixed ? 'text-task-fixed' : ''}
             >
-              {task.isFixed ? <Lock /> : <Unlock />}
+              {task.is_fixed ? <Lock /> : <Unlock />}
             </Button>
           </div>
         </Card>

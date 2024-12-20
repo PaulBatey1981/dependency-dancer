@@ -1,20 +1,23 @@
-export type TaskType = 'lineitem' | 'component' | 'element';
+export type TaskType = 'lineitem' | 'task';
 
-export type TaskStatus = 'unscheduled' | 'scheduled' | 'wip' | 'paused' | 'on_hold' | 'completed';
+export type TaskStatus = 'unscheduled' | 'scheduled' | 'in_progress' | 'completed';
 
 export interface Task {
   id: string;
   name: string;
   type: TaskType;
-  resource: string;
-  duration: number; // in hours
+  resource_id: string | null;
+  duration: number;
   deadline?: Date;
   priority?: number;
   status: TaskStatus;
-  isFixed: boolean;
-  dependencies: string[]; // array of task IDs
+  is_fixed: boolean;
+  dependencies: string[];
   startTime?: Date;
   endTime?: Date;
+  line_item_id?: string | null;
+  created_at?: string;
+  updated_at?: string;
 }
 
 export interface Resource {
