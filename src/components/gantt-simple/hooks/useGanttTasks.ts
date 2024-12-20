@@ -26,21 +26,6 @@ export const useGanttTasks = () => {
 
         if (!tasksData?.length) {
           console.log('No tasks found in Supabase, using sample data');
-          console.log('Sample tasks:', sampleTasks);
-          
-          // Verify task relationships before setting
-          const taskMap = new Map(sampleTasks.map(task => [task.id, task]));
-          sampleTasks.forEach(task => {
-            if (task.parentId && !taskMap.has(task.parentId)) {
-              console.warn(`Task ${task.id} references non-existent parent ${task.parentId}`);
-            }
-            task.dependencies.forEach(depId => {
-              if (!taskMap.has(depId)) {
-                console.warn(`Task ${task.id} references non-existent dependency ${depId}`);
-              }
-            });
-          });
-          
           setTasks(sampleTasks);
           return;
         }
@@ -76,13 +61,12 @@ export const useGanttTasks = () => {
         setTasks(formattedTasks);
       } catch (error) {
         console.error('Error loading tasks:', error);
-        console.log('Falling back to sample data');
-        setTasks(sampleTasks);
         toast({
           title: "Error loading tasks",
           description: "Using sample data as fallback.",
           variant: "destructive",
         });
+        setTasks(sampleTasks);
       } finally {
         setIsLoading(false);
       }
