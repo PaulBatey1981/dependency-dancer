@@ -32,14 +32,13 @@ export const useGanttTasks = () => {
           return;
         }
 
-        // Simplified task formatting - accept any type
+        // Log each task as it's being processed
         const formattedTasks: SimpleTask[] = tasksData.map(task => {
-          console.log(`Formatting task:`, task);
-          return {
+          console.log('Processing task:', task);
+          const formattedTask: SimpleTask = {
             id: task.id,
             name: task.name,
-            // Cast any type to SimpleTask type, defaulting to 'task' if invalid
-            type: (task.type?.toLowerCase() || 'task') as SimpleTask['type'],
+            type: (task.type || 'task') as SimpleTask['type'],
             startTime: task.start_time ? new Date(task.start_time) : new Date(),
             duration: Number(task.duration),
             dependencies: task.task_dependencies?.map((dep: any) => dep.depends_on_id) || [],
@@ -49,7 +48,11 @@ export const useGanttTasks = () => {
             isFixed: task.is_fixed,
             children: []
           };
+          console.log('Formatted task:', formattedTask);
+          return formattedTask;
         });
+
+        console.log('All formatted tasks:', formattedTasks);
 
         // Process tasks to set up parent-child relationships
         const taskMap = new Map(formattedTasks.map(task => [task.id, task]));
@@ -63,10 +66,12 @@ export const useGanttTasks = () => {
             } else {
               console.warn(`Parent task ${task.parentId} not found for task ${task.id}`);
             }
+          } else {
+            console.log(`Task ${task.id} has no parent - it's a root task`);
           }
         });
 
-        console.log('Final formatted tasks:', formattedTasks);
+        console.log('Final formatted tasks with relationships:', formattedTasks);
         setTasks(formattedTasks);
       } catch (error) {
         console.error('Error loading tasks:', error);
