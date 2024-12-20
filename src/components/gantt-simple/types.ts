@@ -3,7 +3,7 @@ export interface SimpleTask {
   name: string;
   startTime: Date;
   duration: number;
-  type: 'lineitem' | 'task';
+  type: 'lineitem' | 'component' | 'element' | 'task';
   parentId?: string;
   children?: string[];
   dependencies?: string[];
