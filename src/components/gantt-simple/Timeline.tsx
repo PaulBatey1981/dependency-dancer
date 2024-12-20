@@ -26,47 +26,31 @@ const Timeline: React.FC<TimelineProps> = ({
   };
 
   const getVisibleTasksInOrder = () => {
-    const visibleItems: { task: SimpleTask; isGroupHeader: boolean }[] = [];
+    const visibleItems: SimpleTask[] = [];
     
-    const addTaskAndChildren = (taskId: string, tasks: SimpleTask[]) => {
-      const task = tasks.find(t => t.id === taskId);
-      if (!task || !isTaskVisible(task)) return;
+    const processTask = (task: SimpleTask) => {
+      if (!isTaskVisible(task)) return;
       
-      console.log(`Processing task: ${task.name}, type: ${task.type}`);
+      visibleItems.push(task);
       
-      // Only add line items as headers and actual tasks
-      if (task.type === 'lineitem') {
-        console.log(`Adding line item header: ${task.name}`);
-        visibleItems.push({ task, isGroupHeader: true });
-      } else if (task.type === 'task') {
-        console.log(`Adding task: ${task.name}`);
-        visibleItems.push({ task, isGroupHeader: false });
-      } else {
-        console.log(`Skipping non-task item: ${task.name} (type: ${task.type})`);
-      }
-      
-      // Process children if expanded
       if (task.children && task.isExpanded) {
         task.children.forEach(childId => {
-          addTaskAndChildren(childId, tasks);
+          const childTask = tasks.find(t => t.id === childId);
+          if (childTask) {
+            processTask(childTask);
+          }
         });
       }
     };
     
-    const rootTasks = tasks.filter(t => !t.parentId);
-    rootTasks.forEach(task => addTaskAndChildren(task.id, tasks));
-    
-    console.log('Final visible items:', visibleItems.map(item => ({
-      name: item.task.name,
-      type: item.task.type,
-      isHeader: item.isGroupHeader
-    })));
+    // Process root tasks (those without parents)
+    tasks.filter(t => !t.parentId).forEach(processTask);
     
     return visibleItems;
   };
 
-  const visibleItems = getVisibleTasksInOrder();
-  const totalHeight = Math.max(visibleItems.length, 1) * ROW_HEIGHT;
+  const visibleTasks = getVisibleTasksInOrder();
+  const totalHeight = Math.max(visibleTasks.length * ROW_HEIGHT, ROW_HEIGHT);
 
   return (
     <div 
@@ -93,28 +77,19 @@ const Timeline: React.FC<TimelineProps> = ({
         }}
       />
 
-      {/* Task bars - only render non-header items (actual tasks) */}
-      {visibleItems
-        .filter(item => !item.isGroupHeader && item.task.type === 'task')
-        .map((item, index) => {
-          const task = item.task;
-          if (!task.startTime) return null;
-          
-          console.log(`Rendering task bar for: ${task.name}`);
-          
-          return (
-            <GanttTask
-              key={task.id}
-              task={task}
-              index={index}
-              calculateTaskPosition={calculateTaskPosition}
-              calculateTaskWidth={calculateTaskWidth}
-              ROW_HEIGHT={ROW_HEIGHT}
-              TASK_HEIGHT={TASK_HEIGHT}
-              INDENT_WIDTH={20}
-            />
-          );
-        })}
+      {/* Task bars */}
+      {visibleTasks.map((task, index) => (
+        <GanttTask
+          key={task.id}
+          task={task}
+          index={index}
+          calculateTaskPosition={calculateTaskPosition}
+          calculateTaskWidth={calculateTaskWidth}
+          ROW_HEIGHT={ROW_HEIGHT}
+          TASK_HEIGHT={TASK_HEIGHT}
+          INDENT_WIDTH={20}
+        />
+      ))}
     </div>
   );
 };
