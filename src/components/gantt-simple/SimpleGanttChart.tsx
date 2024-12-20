@@ -7,6 +7,7 @@ import { HOUR_WIDTH, ROW_HEIGHT, MIN_HOURS_DISPLAY } from './constants';
 import GanttViewControls from './GanttViewControls';
 import { useGanttTasks } from './hooks/useGanttTasks';
 import { getTimeRange, getHoursForViewMode, generateHourMarkers } from './utils/ganttCalculations';
+import { SimpleTask } from './types';
 
 const SimpleGanttChart = () => {
   const timelineRef = useRef<HTMLDivElement>(null);
