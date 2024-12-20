@@ -14,7 +14,8 @@ export const baseTrayTasks: SimpleTask[] = [
       'MWB1_base_tray_wrap',
       'MWB1_base_tray_board'
     ],
-    isExpanded: true
+    isExpanded: true,
+    resource: 'gluing_machine'
   },
   {
     id: 'MWB1_base_tray_wrap',
@@ -28,7 +29,8 @@ export const baseTrayTasks: SimpleTask[] = [
       'MWB1_base_tray_wrap_laminate',
       'MWB1_base_tray_wrap_cut'
     ],
-    isExpanded: true
+    isExpanded: true,
+    resource: 'bench'
   },
   {
     id: 'MWB1_base_tray_wrap_print',
@@ -36,7 +38,8 @@ export const baseTrayTasks: SimpleTask[] = [
     startTime: new Date(baseDate),
     duration: 0.33,
     type: 'task',
-    parentId: 'MWB1_base_tray_wrap'
+    parentId: 'MWB1_base_tray_wrap',
+    resource: 'konica'
   },
   {
     id: 'MWB1_base_tray_wrap_laminate',
@@ -45,7 +48,8 @@ export const baseTrayTasks: SimpleTask[] = [
     duration: 0.25,
     type: 'task',
     parentId: 'MWB1_base_tray_wrap',
-    dependencies: ['MWB1_base_tray_wrap_print']
+    dependencies: ['MWB1_base_tray_wrap_print'],
+    resource: 'dk_europa'
   },
   {
     id: 'MWB1_base_tray_wrap_cut',
@@ -54,7 +58,8 @@ export const baseTrayTasks: SimpleTask[] = [
     duration: 0.75,
     type: 'task',
     parentId: 'MWB1_base_tray_wrap',
-    dependencies: ['MWB1_base_tray_wrap_laminate']
+    dependencies: ['MWB1_base_tray_wrap_laminate'],
+    resource: 'zund_m800'
   },
   {
     id: 'MWB1_base_tray_board',
@@ -69,7 +74,8 @@ export const baseTrayTasks: SimpleTask[] = [
       'MWB1_base_tray_board_magnets',
       'MWB1_base_tray_board_corner'
     ],
-    isExpanded: true
+    isExpanded: true,
+    resource: 'bench'
   },
   {
     id: 'MWB1_base_tray_board_cut',
@@ -77,7 +83,8 @@ export const baseTrayTasks: SimpleTask[] = [
     startTime: new Date(baseDate),
     duration: 1,
     type: 'task',
-    parentId: 'MWB1_base_tray_board'
+    parentId: 'MWB1_base_tray_board',
+    resource: 'zund_m800'
   },
   {
     id: 'MWB1_base_tray_board_drill',
@@ -86,7 +93,8 @@ export const baseTrayTasks: SimpleTask[] = [
     duration: 0.5,
     type: 'task',
     parentId: 'MWB1_base_tray_board',
-    dependencies: ['MWB1_base_tray_board_cut']
+    dependencies: ['MWB1_base_tray_board_cut'],
+    resource: 'magnet_drill'
   },
   {
     id: 'MWB1_base_tray_board_magnets',
@@ -95,7 +103,8 @@ export const baseTrayTasks: SimpleTask[] = [
     duration: 1,
     type: 'task',
     parentId: 'MWB1_base_tray_board',
-    dependencies: ['MWB1_base_tray_board_drill']
+    dependencies: ['MWB1_base_tray_board_drill'],
+    resource: 'bench'
   },
   {
     id: 'MWB1_base_tray_board_corner',
@@ -104,6 +113,7 @@ export const baseTrayTasks: SimpleTask[] = [
     duration: 0.5,
     type: 'task',
     parentId: 'MWB1_base_tray_board',
-    dependencies: ['MWB1_base_tray_board_magnets']
+    dependencies: ['MWB1_base_tray_board_magnets'],
+    resource: 'corner_taper'
   }
 ];
