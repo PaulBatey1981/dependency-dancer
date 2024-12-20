@@ -169,7 +169,7 @@ export type Database = {
     }
     Enums: {
       task_status: "unscheduled" | "scheduled" | "in_progress" | "completed"
-      task_type: "lineitem" | "task"
+      task_type: "lineitem" | "task" | "component" | "element"
     }
     CompositeTypes: {
       [_ in never]: never

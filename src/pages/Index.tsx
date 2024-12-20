@@ -2,24 +2,29 @@ import { useState, useEffect } from 'react';
 import { Task, Resource } from '@/types/scheduling';
 import { rescheduleAll } from '@/utils/scheduling';
 import { createProductTasks } from '@/utils/taskFactory';
-import TaskList from '@/components/TaskList';
-import ResourceTimeline from '@/components/ResourceTimeline';
-import GanttChart from '@/components/GanttChart';
-import SimpleGanttChart from '@/components/gantt-simple/SimpleGanttChart';
-import { Button } from '@/components/ui/button';
 import { toast } from '@/components/ui/use-toast';
-import { useNavigate } from 'react-router-dom';
-import { Settings, LayoutGrid, GanttChart as GanttIcon } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
+import ScheduleHeader from '@/components/schedule/ScheduleHeader';
+import ScheduleContent from '@/components/schedule/ScheduleContent';
+import { BrowserRouter as Router } from 'react-router-dom';
 
 const Index = () => {
-  const navigate = useNavigate();
   const [view, setView] = useState<'list' | 'resource' | 'gantt' | 'simple-gantt'>('list');
+  const [tasks, setTasks] = useState<Task[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+
   const baseDate = new Date('2024-12-20T10:00:00');
   const deadline = new Date(baseDate);
 
-  const [tasks, setTasks] = useState<Task[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
+  const resources: Resource[] = [
+    { id: 'bench', name: 'Bench Work', capacity: 1 },
+    { id: 'konica', name: 'Konica Printer', capacity: 1 },
+    { id: 'dk_europa', name: 'D&K Europa', capacity: 1 },
+    { id: 'zund_m800', name: 'Zund M800', capacity: 1 },
+    { id: 'gluing_machine', name: 'Gluing Machine', capacity: 1 },
+    { id: 'magnet_drill', name: 'Magnet Drill', capacity: 1 },
+    { id: 'corner_taper', name: 'Corner Taper', capacity: 1 }
+  ];
 
   useEffect(() => {
     loadTasks();
@@ -71,19 +76,6 @@ const Index = () => {
 
   const saveTasks = async (tasksToSave: Task[]) => {
     try {
-      // First, ensure all line items exist
-      const lineItems = tasksToSave.filter(task => task.type === 'lineitem');
-      for (const lineItem of lineItems) {
-        const { error } = await supabase
-          .from('line_items')
-          .upsert({ 
-            id: lineItem.id,
-            name: lineItem.name
-          });
-        if (error) throw error;
-      }
-
-      // Then save all tasks
       for (const task of tasksToSave) {
         const taskData = {
           name: task.name,
@@ -99,22 +91,18 @@ const Index = () => {
 
         const { error: taskError } = await supabase
           .from('tasks')
-          .upsert({
-            id: task.id,
-            ...taskData
-          });
+          .upsert(taskData);
+
         if (taskError) throw taskError;
 
-        // Update dependencies
         if (task.dependencies.length > 0) {
-          // First delete existing dependencies
           const { error: deleteError } = await supabase
             .from('task_dependencies')
             .delete()
             .eq('task_id', task.id);
+
           if (deleteError) throw deleteError;
 
-          // Then insert new ones
           const dependencyRecords = task.dependencies.map(depId => ({
             task_id: task.id,
             depends_on_id: depId
@@ -123,6 +111,7 @@ const Index = () => {
           const { error: depsError } = await supabase
             .from('task_dependencies')
             .insert(dependencyRecords);
+
           if (depsError) throw depsError;
         }
       }
@@ -133,16 +122,6 @@ const Index = () => {
       throw error;
     }
   };
-
-  const resources: Resource[] = [
-    { id: 'bench', name: 'Bench Work', capacity: 1 },
-    { id: 'konica', name: 'Konica Printer', capacity: 1 },
-    { id: 'dk_europa', name: 'D&K Europa', capacity: 1 },
-    { id: 'zund_m800', name: 'Zund M800', capacity: 1 },
-    { id: 'gluing_machine', name: 'Gluing Machine', capacity: 1 },
-    { id: 'magnet_drill', name: 'Magnet Drill', capacity: 1 },
-    { id: 'corner_taper', name: 'Corner Taper', capacity: 1 }
-  ];
 
   const handleReschedule = async () => {
     try {
@@ -194,83 +173,21 @@ const Index = () => {
   }
 
   return (
-    <div className="container mx-auto py-8 min-h-screen flex flex-col">
-      <div className="flex justify-between items-center mb-8">
-        <h1 className="text-3xl font-bold">Magnetic Wrap Box Production Schedule</h1>
-        <div className="flex gap-4">
-          <div className="flex gap-2">
-            <Button
-              variant={view === 'list' ? 'default' : 'outline'}
-              onClick={() => setView('list')}
-            >
-              <LayoutGrid className="w-4 h-4 mr-2" />
-              List
-            </Button>
-            <Button
-              variant={view === 'resource' ? 'default' : 'outline'}
-              onClick={() => setView('resource')}
-            >
-              <LayoutGrid className="w-4 h-4 mr-2" />
-              Resources
-            </Button>
-            <Button
-              variant={view === 'gantt' ? 'default' : 'outline'}
-              onClick={() => setView('gantt')}
-            >
-              <GanttIcon className="w-4 h-4 mr-2" />
-              Gantt
-            </Button>
-            <Button
-              variant={view === 'simple-gantt' ? 'default' : 'outline'}
-              onClick={() => setView('simple-gantt')}
-            >
-              <GanttIcon className="w-4 h-4 mr-2" />
-              Simple Gantt
-            </Button>
-          </div>
-          <Button onClick={() => navigate('/settings')} variant="outline">
-            <Settings className="mr-2" />
-            Line Item Settings
-          </Button>
-        </div>
+    <Router>
+      <div className="container mx-auto py-8 min-h-screen flex flex-col">
+        <ScheduleHeader 
+          view={view}
+          setView={setView}
+          onReschedule={handleReschedule}
+        />
+        <ScheduleContent 
+          view={view}
+          tasks={tasks}
+          resources={resources}
+          onToggleFixed={toggleFixTask}
+        />
       </div>
-      
-      <div className="mb-6">
-        <Button onClick={handleReschedule} className="mr-4">
-          Reschedule Tasks
-        </Button>
-      </div>
-
-      <div className="flex-1">
-        {view === 'list' && (
-          <div>
-            <h2 className="text-xl font-semibold mb-4">Tasks</h2>
-            <TaskList tasks={tasks} onToggleFixed={toggleFixTask} />
-          </div>
-        )}
-
-        {view === 'resource' && (
-          <div>
-            <h2 className="text-xl font-semibold mb-4">Resource Timeline</h2>
-            <ResourceTimeline tasks={tasks} resources={resources} />
-          </div>
-        )}
-
-        {view === 'gantt' && (
-          <div>
-            <h2 className="text-xl font-semibold mb-4">Gantt Chart</h2>
-            <GanttChart tasks={tasks} resources={resources} />
-          </div>
-        )}
-
-        {view === 'simple-gantt' && (
-          <div>
-            <h2 className="text-xl font-semibold mb-4">Simple Gantt Chart</h2>
-            <SimpleGanttChart />
-          </div>
-        )}
-      </div>
-    </div>
+    </Router>
   );
 };
 

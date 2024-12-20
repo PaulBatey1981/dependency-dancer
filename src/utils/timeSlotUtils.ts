@@ -7,12 +7,10 @@ export function findEarliestSlot(
 ): Date {
   console.log(`Finding earliest slot for task ${task.id} on resource ${task.resource_id}`);
   
-  // Get all tasks scheduled on the same resource
   const resourceTasks = scheduledTasks.filter(
     t => t.resource_id === task.resource_id && t.startTime && t.endTime
   );
   
-  // Sort tasks by start time
   resourceTasks.sort((a, b) => 
     (a.startTime!.getTime()) - (b.startTime!.getTime())
   );
@@ -25,10 +23,8 @@ export function findEarliestSlot(
     slotFound = true;
     
     for (const scheduledTask of resourceTasks) {
-      // Check if there's an overlap
       if (proposedStart < scheduledTask.endTime! && 
           proposedEnd > scheduledTask.startTime!) {
-        // Move to end of current task
         proposedStart = new Date(scheduledTask.endTime!.getTime());
         proposedEnd = new Date(proposedStart.getTime() + task.duration * 3600000);
         slotFound = false;
