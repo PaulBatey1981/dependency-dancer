@@ -84,21 +84,24 @@ const SimpleGanttChart = () => {
         <GanttHeader hourMarkers={hourMarkers} />
         <div className="grid grid-cols-[300px,1fr] h-[calc(100%-2rem)]">
           <div className="min-w-[300px] h-full overflow-hidden border-r">
-            <div ref={taskListRef} className="h-full" style={{ overflowY: 'hidden' }}>
-              {getRootTasks().map(task => (
-                <TaskHierarchy
-                  key={task.id}
-                  task={task}
-                  level={0}
-                  onToggleExpand={toggleExpand}
-                  getChildTasks={getChildTasks}
-                />
-              ))}
-            </div>
+            <ScrollArea className="h-full">
+              <div ref={taskListRef} className="h-full">
+                {getRootTasks().map(task => (
+                  <TaskHierarchy
+                    key={task.id}
+                    task={task}
+                    level={0}
+                    onToggleExpand={toggleExpand}
+                    getChildTasks={getChildTasks}
+                  />
+                ))}
+              </div>
+              <ScrollBar />
+            </ScrollArea>
           </div>
 
           <div className="relative overflow-hidden">
-            <ScrollArea className="h-full w-full" orientation="horizontal">
+            <ScrollArea>
               <div
                 ref={timelineRef}
                 style={{ 
@@ -114,7 +117,7 @@ const SimpleGanttChart = () => {
                   calculateTaskWidth={calculateTaskWidth}
                 />
               </div>
-              <ScrollBar orientation="horizontal" />
+              <ScrollBar />
             </ScrollArea>
           </div>
         </div>

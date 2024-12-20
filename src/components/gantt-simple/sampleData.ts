@@ -17,9 +17,17 @@ export const sampleTasks: SimpleTask[] = [
     name: 'MWB1 - Wrap Case',
     startTime: new Date(baseDate),
     duration: 1.17,
-    type: 'component',
+    type: 'task',
     parentId: 'MWB1_final_assembly',
-    children: ['MWB1_case_wrap_cut', 'MWB1_case_board_insert', 'MWB1_case_liner_cut'],
+    children: [
+      'MWB1_case_wrap_print',
+      'MWB1_case_wrap_laminate',
+      'MWB1_case_wrap_cut',
+      'MWB1_case_board_cut',
+      'MWB1_case_board_insert',
+      'MWB1_case_liner_laminate',
+      'MWB1_case_liner_cut'
+    ],
     isExpanded: true
   },
   {
@@ -83,12 +91,16 @@ export const sampleTasks: SimpleTask[] = [
     name: 'MWB1 - Wrap Base Tray',
     startTime: new Date(baseDate.getTime() + 2 * 3600000),
     duration: 2,
-    type: 'component',
+    type: 'task',
     parentId: 'MWB1_final_assembly',
     children: [
+      'MWB1_base_tray_board_cut',
+      'MWB1_base_tray_board_drill',
+      'MWB1_base_tray_board_magnets',
       'MWB1_base_tray_board_corner',
-      'MWB1_base_tray_wrap_cut',
-      'MWB1_base_tray_board_magnets'
+      'MWB1_base_tray_wrap_print',
+      'MWB1_base_tray_wrap_laminate',
+      'MWB1_base_tray_wrap_cut'
     ],
     isExpanded: true
   },
@@ -153,8 +165,7 @@ export const sampleTasks: SimpleTask[] = [
     name: 'MWB1 - Line Case',
     startTime: new Date(baseDate.getTime() + 1.17 * 3600000),
     duration: 0.67,
-    type: 'component',
-    parentId: 'MWB1_final_assembly',
-    isExpanded: true
+    type: 'task',
+    parentId: 'MWB1_final_assembly'
   }
 ];
