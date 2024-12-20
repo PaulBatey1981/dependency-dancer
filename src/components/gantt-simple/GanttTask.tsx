@@ -36,7 +36,7 @@ const GanttTask: React.FC<GanttTaskProps> = ({
           : 'bg-blue-500'
       } rounded-sm text-sm ${
         task.type === 'lineitem' ? 'text-blue-800' : 'text-white'
-      } flex items-center whitespace-nowrap overflow-hidden`}
+      } flex items-center whitespace-nowrap overflow-visible`}
       style={{
         left: task.type === 'lineitem' ? 0 : `${taskPosition}%`,
         top: index * ROW_HEIGHT + ((ROW_HEIGHT - TASK_HEIGHT) / 2),
@@ -53,6 +53,11 @@ const GanttTask: React.FC<GanttTaskProps> = ({
       </div>
       {task.isFixed && (
         <Lock className="w-4 h-4 mr-2 text-yellow-500" />
+      )}
+      {task.resource && !task.type.includes('lineitem') && (
+        <div className="absolute left-[calc(100%+8px)] text-gray-600 whitespace-nowrap">
+          {task.resource}
+        </div>
       )}
     </div>
   );

@@ -9,4 +9,5 @@ export interface SimpleTask {
   dependencies?: string[];
   isFixed?: boolean;
   isExpanded?: boolean;
+  resource?: string;
 }
