@@ -48,19 +48,17 @@ const Timeline: React.FC<TimelineProps> = ({
   };
 
   const visibleTasks = getVisibleTasksInOrder();
-  const totalHeight = Math.max(visibleTasks.length * ROW_HEIGHT, 400);
+  const totalHeight = visibleTasks.length * ROW_HEIGHT + 100; // Added padding
 
   console.log('Visible tasks count:', visibleTasks.length);
   console.log('Total height calculated:', totalHeight);
 
   return (
-    <div className="flex">
-      {/* Timeline content */}
+    <div className="flex h-full">
       <div 
-        className="relative bg-white w-full"
+        className="relative bg-white w-full h-full"
         style={{ 
-          minHeight: '100%',
-          height: `${totalHeight}px`
+          minHeight: `${Math.max(totalHeight, 400)}px`
         }}
       >
         {/* Grid lines */}
