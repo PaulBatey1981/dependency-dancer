@@ -26,6 +26,7 @@ export const useGanttTasks = () => {
 
         if (!tasksData?.length) {
           console.log('No tasks found in Supabase, using sample data');
+          console.log('Sample tasks:', sampleTasks);
           setTasks(sampleTasks);
           return;
         }

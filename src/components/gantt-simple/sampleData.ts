@@ -33,6 +33,9 @@ const assembleBaseTrayToCase: SimpleTask = {
   isFixed: false
 };
 
+// Log sample data for debugging
+console.log('Sample tasks being loaded:', [finalAssembly, assembleBaseTrayToCase, ...baseTrayTasks, ...caseTasks]);
+
 export const sampleTasks: SimpleTask[] = [
   finalAssembly,
   assembleBaseTrayToCase,
