@@ -131,6 +131,7 @@ const SimpleGanttChart = () => {
             <ScrollArea className="h-full">
               <div
                 ref={timelineRef}
+                className="h-full"
                 style={{ 
                   width: `${timelineWidth}px`,
                   minWidth: '100%',

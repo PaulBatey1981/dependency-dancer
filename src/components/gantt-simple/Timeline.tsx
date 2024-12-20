@@ -54,26 +54,24 @@ const Timeline: React.FC<TimelineProps> = ({
   console.log('Total height calculated:', totalHeight);
 
   return (
-    <div className="relative w-full" style={{ minHeight: totalHeight }}>
+    <div className="relative w-full h-full" style={{ minHeight: totalHeight }}>
       {/* Grid lines */}
       {hourMarkers.map((marker, index) => (
         <div
           key={index}
-          className="absolute top-0 bottom-0 border-l"
+          className="absolute top-0 bottom-0 border-l h-full"
           style={{ 
             left: `${marker.position}%`,
-            borderColor: COLORS.gridLine,
-            height: totalHeight
+            borderColor: COLORS.gridLine
           }}
         />
       ))}
 
       {/* Today line */}
       <div
-        className="absolute top-0 w-px bg-gantt-today"
+        className="absolute top-0 bottom-0 w-px bg-gantt-today h-full"
         style={{ 
-          left: `${(new Date().getHours() / 24) * 100}%`,
-          height: totalHeight
+          left: `${(new Date().getHours() / 24) * 100}%`
         }}
       />
 
