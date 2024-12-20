@@ -31,12 +31,7 @@ const Index = () => {
 
   const loadTasks = async () => {
     try {
-      const { data: lineItems, error: lineItemsError } = await supabase
-        .from('line_items')
-        .select('*');
-
-      if (lineItemsError) throw lineItemsError;
-
+      console.log('Loading tasks from Supabase...');
       const { data: tasksData, error: tasksError } = await supabase
         .from('tasks')
         .select(`
@@ -75,8 +70,10 @@ const Index = () => {
 
   const saveTasks = async (tasksToSave: Task[]) => {
     try {
+      console.log('Saving tasks to Supabase:', tasksToSave);
       for (const task of tasksToSave) {
         const taskData = {
+          id: task.id,
           name: task.name,
           type: task.type,
           status: task.status,
@@ -94,7 +91,9 @@ const Index = () => {
 
         if (taskError) throw taskError;
 
+        // Handle dependencies
         if (task.dependencies.length > 0) {
+          // Delete existing dependencies
           const { error: deleteError } = await supabase
             .from('task_dependencies')
             .delete()
@@ -102,6 +101,7 @@ const Index = () => {
 
           if (deleteError) throw deleteError;
 
+          // Insert new dependencies
           const dependencyRecords = task.dependencies.map(depId => ({
             task_id: task.id,
             depends_on_id: depId
@@ -116,8 +116,17 @@ const Index = () => {
       }
 
       console.log('Tasks saved successfully');
+      toast({
+        title: "Success",
+        description: "Tasks saved successfully.",
+      });
     } catch (error) {
       console.error('Error saving tasks:', error);
+      toast({
+        title: "Error saving tasks",
+        description: "There was an error saving the tasks. Please try again.",
+        variant: "destructive",
+      });
       throw error;
     }
   };
