@@ -32,32 +32,14 @@ export const useGanttTasks = () => {
           return;
         }
 
+        // Simplified task formatting - accept any type
         const formattedTasks: SimpleTask[] = tasksData.map(task => {
           console.log(`Formatting task:`, task);
-          // Ensure the type is one of the allowed values
-          const taskType = task.type.toLowerCase() as SimpleTask['type'];
-          if (!['lineitem', 'task', 'component', 'element'].includes(taskType)) {
-            console.warn(`Invalid task type for task ${task.id}: ${task.type}`);
-            // Default to 'task' if invalid type
-            return {
-              id: task.id,
-              name: task.name,
-              type: 'task',
-              startTime: task.start_time ? new Date(task.start_time) : new Date(),
-              duration: Number(task.duration),
-              dependencies: task.task_dependencies?.map((dep: any) => dep.depends_on_id) || [],
-              isExpanded: false,
-              parentId: task.line_item_id || undefined,
-              resource: task.resource_id,
-              isFixed: task.is_fixed,
-              children: []
-            };
-          }
-
           return {
             id: task.id,
             name: task.name,
-            type: taskType,
+            // Cast any type to SimpleTask type, defaulting to 'task' if invalid
+            type: (task.type?.toLowerCase() || 'task') as SimpleTask['type'],
             startTime: task.start_time ? new Date(task.start_time) : new Date(),
             duration: Number(task.duration),
             dependencies: task.task_dependencies?.map((dep: any) => dep.depends_on_id) || [],
