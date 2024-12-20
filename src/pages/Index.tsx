@@ -6,7 +6,6 @@ import { toast } from '@/components/ui/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import ScheduleHeader from '@/components/schedule/ScheduleHeader';
 import ScheduleContent from '@/components/schedule/ScheduleContent';
-import { BrowserRouter as Router } from 'react-router-dom';
 
 const Index = () => {
   const [view, setView] = useState<'list' | 'resource' | 'gantt' | 'simple-gantt'>('list');
@@ -173,21 +172,19 @@ const Index = () => {
   }
 
   return (
-    <Router>
-      <div className="container mx-auto py-8 min-h-screen flex flex-col">
-        <ScheduleHeader 
-          view={view}
-          setView={setView}
-          onReschedule={handleReschedule}
-        />
-        <ScheduleContent 
-          view={view}
-          tasks={tasks}
-          resources={resources}
-          onToggleFixed={toggleFixTask}
-        />
-      </div>
-    </Router>
+    <div className="container mx-auto py-8 min-h-screen flex flex-col">
+      <ScheduleHeader 
+        view={view}
+        setView={setView}
+        onReschedule={handleReschedule}
+      />
+      <ScheduleContent 
+        view={view}
+        tasks={tasks}
+        resources={resources}
+        onToggleFixed={toggleFixTask}
+      />
+    </div>
   );
 };
 

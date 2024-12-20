@@ -1,80 +1,35 @@
 import { Task } from '@/types/scheduling';
-import {
-  HoverCard,
-  HoverCardContent,
-  HoverCardTrigger,
-} from '@/components/ui/hover-card';
+import { getTaskColor } from '@/utils/taskColors';
 
 interface GanttTaskBarProps {
   task: Task;
-  position: number;
+  x: number;
+  y: number;
   width: number;
-  verticalPosition: number;
-  level: number;
-  indentWidth: number;
-  taskHeight: number;
+  height: number;
+  onMouseEnter?: () => void;
+  onMouseLeave?: () => void;
 }
 
-const GanttTaskBar = ({
-  task,
-  position,
-  width,
-  verticalPosition,
-  level,
-  indentWidth,
-  taskHeight,
-}: GanttTaskBarProps) => {
-  const getTaskColor = (type: Task['type']) => {
-    switch (type) {
-      case 'lineitem':
-        return 'bg-task-lineitem';
-      case 'component':
-        return 'bg-task-component';
-      case 'element':
-        return 'bg-task-element';
-      default:
-        return 'bg-gray-500';
-    }
-  };
-
+const GanttTaskBar = ({ task, x, y, width, height, onMouseEnter, onMouseLeave }: GanttTaskBarProps) => {
   return (
-    <HoverCard>
-      <HoverCardTrigger>
-        <div
-          className="absolute"
-          style={{
-            left: `${position}%`,
-            top: `${verticalPosition + 4}px`,
-            marginLeft: `${level * indentWidth}px`,
-            width: `${width}%`,
-            height: `${taskHeight - 8}px`,
-          }}
-        >
-          <div
-            className={`absolute inset-0 ${getTaskColor(task.type)} opacity-80 rounded ${
-              task.isFixed ? 'border-2 border-task-fixed' : ''
-            }`}
-          />
-          <span 
-            className="absolute left-2 top-1/2 -translate-y-1/2 text-xs text-black whitespace-nowrap"
-            style={{ zIndex: 10 }}
-          >
-            {task.name}
-          </span>
-        </div>
-      </HoverCardTrigger>
-      <HoverCardContent>
-        <div className="space-y-2">
-          <h4 className="font-semibold">{task.name}</h4>
-          <div className="text-sm">
-            <p>Type: {task.type}</p>
-            <p>Duration: {task.duration}h</p>
-            <p>Status: {task.status}</p>
-            <p>Start: {task.startTime?.toLocaleString()}</p>
-          </div>
-        </div>
-      </HoverCardContent>
-    </HoverCard>
+    <div
+      className={`absolute h-8 rounded ${getTaskColor(task.type)} ${
+        task.is_fixed ? 'border-2 border-task-fixed' : ''
+      }`}
+      style={{
+        left: `${x}px`,
+        top: `${y}px`,
+        width: `${width}px`,
+        height: `${height}px`,
+      }}
+      onMouseEnter={onMouseEnter}
+      onMouseLeave={onMouseLeave}
+    >
+      <div className="px-2 py-1 text-xs text-white truncate">
+        {task.name}
+      </div>
+    </div>
   );
 };
 
