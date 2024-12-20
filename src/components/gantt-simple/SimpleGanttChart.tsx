@@ -109,12 +109,9 @@ const SimpleGanttChart = () => {
           </div>
 
           <ScrollArea 
-            className="h-full"
-            onWheel={(e) => {
-              if (taskListRef.current) {
-                taskListRef.current.scrollTop = e.currentTarget.scrollTop;
-              }
-            }}
+            className="h-full overflow-x-auto"
+            scrollHideDelay={0}
+            type="always"
           >
             <div
               ref={timelineRef}
