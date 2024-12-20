@@ -32,11 +32,17 @@ const Timeline: React.FC<TimelineProps> = ({
       const task = tasks.find(t => t.id === taskId);
       if (!task || !isTaskVisible(task)) return;
       
-      // Only add line items as headers and actual tasks with type 'task'
+      console.log(`Processing task: ${task.name}, type: ${task.type}`);
+      
+      // Only add line items as headers and actual tasks
       if (task.type === 'lineitem') {
+        console.log(`Adding line item header: ${task.name}`);
         visibleItems.push({ task, isGroupHeader: true });
       } else if (task.type === 'task') {
+        console.log(`Adding task: ${task.name}`);
         visibleItems.push({ task, isGroupHeader: false });
+      } else {
+        console.log(`Skipping non-task item: ${task.name} (type: ${task.type})`);
       }
       
       // Process children if expanded
@@ -50,14 +56,17 @@ const Timeline: React.FC<TimelineProps> = ({
     const rootTasks = tasks.filter(t => !t.parentId);
     rootTasks.forEach(task => addTaskAndChildren(task.id, tasks));
     
+    console.log('Final visible items:', visibleItems.map(item => ({
+      name: item.task.name,
+      type: item.task.type,
+      isHeader: item.isGroupHeader
+    })));
+    
     return visibleItems;
   };
 
   const visibleItems = getVisibleTasksInOrder();
   const totalHeight = Math.max(visibleItems.length, 1) * ROW_HEIGHT;
-
-  console.log('Visible items count:', visibleItems.length);
-  console.log('Total height calculated:', totalHeight);
 
   return (
     <div 
