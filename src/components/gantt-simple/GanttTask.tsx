@@ -36,7 +36,7 @@ const GanttTask: React.FC<GanttTaskProps> = ({
           : 'bg-blue-500'
       } rounded-sm text-sm ${
         task.type === 'lineitem' ? 'text-blue-800' : 'text-white'
-      } flex items-center`}
+      } flex items-center whitespace-nowrap overflow-hidden`}
       style={{
         left: task.type === 'lineitem' ? 0 : `${taskPosition}%`,
         top: index * ROW_HEIGHT + ((ROW_HEIGHT - TASK_HEIGHT) / 2),
