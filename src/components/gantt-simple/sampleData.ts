@@ -17,7 +17,8 @@ const finalAssembly: SimpleTask = {
     'MWB1_assemble_base_tray_to_case'
   ],
   dependencies: ['MWB1_assemble_base_tray_to_case'],
-  isExpanded: true
+  isExpanded: true,
+  isFixed: false
 };
 
 const assembleBaseTrayToCase: SimpleTask = {
@@ -27,7 +28,9 @@ const assembleBaseTrayToCase: SimpleTask = {
   duration: 1,
   type: 'task',
   parentId: 'MWB1_final_assembly',
-  dependencies: ['MWB1_line_case']
+  dependencies: ['MWB1_line_case'],
+  isExpanded: false,
+  isFixed: false
 };
 
 export const sampleTasks: SimpleTask[] = [

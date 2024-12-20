@@ -17,6 +17,7 @@ export const caseTasks: SimpleTask[] = [
     ],
     dependencies: ['MWB1_wrap_base_tray'],
     isExpanded: true,
+    isFixed: false,
     resource: 'gluing_machine'
   },
   {
@@ -31,7 +32,9 @@ export const caseTasks: SimpleTask[] = [
       'MWB1_case_wrap_laminate',
       'MWB1_case_wrap_cut'
     ],
+    dependencies: [],
     isExpanded: true,
+    isFixed: false,
     resource: 'bench'
   },
   {
@@ -41,6 +44,9 @@ export const caseTasks: SimpleTask[] = [
     duration: 0.42,
     type: 'task',
     parentId: 'MWB1_case_wrap',
+    dependencies: [],
+    isExpanded: false,
+    isFixed: false,
     resource: 'konica'
   },
   {
@@ -51,6 +57,8 @@ export const caseTasks: SimpleTask[] = [
     type: 'task',
     parentId: 'MWB1_case_wrap',
     dependencies: ['MWB1_case_wrap_print'],
+    isExpanded: false,
+    isFixed: false,
     resource: 'dk_europa'
   },
   {
@@ -61,6 +69,8 @@ export const caseTasks: SimpleTask[] = [
     type: 'task',
     parentId: 'MWB1_case_wrap',
     dependencies: ['MWB1_case_wrap_laminate'],
+    isExpanded: false,
+    isFixed: false,
     resource: 'zund_m800'
   },
   {
@@ -74,7 +84,9 @@ export const caseTasks: SimpleTask[] = [
       'MWB1_case_board_cut',
       'MWB1_case_board_insert'
     ],
+    dependencies: [],
     isExpanded: true,
+    isFixed: false,
     resource: 'bench'
   },
   {
@@ -84,6 +96,9 @@ export const caseTasks: SimpleTask[] = [
     duration: 0.5,
     type: 'task',
     parentId: 'MWB1_case_board',
+    dependencies: [],
+    isExpanded: false,
+    isFixed: false,
     resource: 'zund_m800'
   },
   {
@@ -94,6 +109,8 @@ export const caseTasks: SimpleTask[] = [
     type: 'task',
     parentId: 'MWB1_case_board',
     dependencies: ['MWB1_case_board_cut'],
+    isExpanded: false,
+    isFixed: false,
     resource: 'bench'
   },
   {
@@ -107,7 +124,9 @@ export const caseTasks: SimpleTask[] = [
       'MWB1_case_liner_laminate',
       'MWB1_case_liner_cut'
     ],
+    dependencies: [],
     isExpanded: true,
+    isFixed: false,
     resource: 'bench'
   },
   {
@@ -117,6 +136,9 @@ export const caseTasks: SimpleTask[] = [
     duration: 0.33,
     type: 'task',
     parentId: 'MWB1_case_liner',
+    dependencies: [],
+    isExpanded: false,
+    isFixed: false,
     resource: 'dk_europa'
   },
   {
@@ -127,6 +149,8 @@ export const caseTasks: SimpleTask[] = [
     type: 'task',
     parentId: 'MWB1_case_liner',
     dependencies: ['MWB1_case_liner_laminate'],
+    isExpanded: false,
+    isFixed: false,
     resource: 'zund_m800'
   },
   {
@@ -138,6 +162,7 @@ export const caseTasks: SimpleTask[] = [
     parentId: 'MWB1_final_assembly',
     dependencies: ['MWB1_wrap_case'],
     isExpanded: true,
+    isFixed: false,
     resource: 'gluing_machine'
   }
 ];
