@@ -19,10 +19,20 @@ const TaskHierarchy: React.FC<TaskHierarchyProps> = ({
   const childTasks = getChildTasks(task.id);
   const hasChildren = childTasks.length > 0;
 
-  const getTaskDot = (level: number) => {
+  console.log(`Rendering task ${task.id} (${task.name}) at level ${level} with ${childTasks.length} children`);
+
+  const getTaskDot = (type: SimpleTask['type']) => {
     const baseClasses = "w-2 h-2 rounded-full inline-block mr-2";
-    const colorKey = `level${Math.min(level, 3)}` as keyof typeof COLORS.taskDots;
-    return `${baseClasses} ${COLORS.taskDots[colorKey]}`;
+    switch (type) {
+      case 'lineitem':
+        return `${baseClasses} ${COLORS.taskDots.level0}`;
+      case 'component':
+        return `${baseClasses} ${COLORS.taskDots.level1}`;
+      case 'element':
+        return `${baseClasses} ${COLORS.taskDots.level2}`;
+      default:
+        return `${baseClasses} ${COLORS.taskDots.level3}`;
+    }
   };
 
   return (
@@ -47,8 +57,10 @@ const TaskHierarchy: React.FC<TaskHierarchyProps> = ({
         ) : (
           <div className="w-6" />
         )}
-        <span className={getTaskDot(level)} />
-        <span className="text-sm whitespace-nowrap overflow-hidden truncate flex-1">{task.name}</span>
+        <span className={getTaskDot(task.type)} />
+        <span className="text-sm whitespace-nowrap overflow-hidden truncate flex-1">
+          {task.name}
+        </span>
       </div>
       
       {task.isExpanded && hasChildren && (

@@ -1,4 +1,4 @@
-import { useRef, useState } from 'react';
+import { useRef, useState, useEffect } from 'react';
 import { ScrollArea, ScrollBar } from '@/components/ui/scroll-area';
 import GanttHeader from './GanttHeader';
 import TaskHierarchy from './TaskHierarchy';
@@ -13,7 +13,11 @@ const SimpleGanttChart = () => {
   const timelineRef = useRef<HTMLDivElement>(null);
   const taskListRef = useRef<HTMLDivElement>(null);
   const [viewMode, setViewMode] = useState<'day' | 'week' | 'month'>('day');
-  const { tasks, setTasks, isLoading } = useGanttTasks();
+  const { tasks, setTasks, isLoading, loadTasks } = useGanttTasks();
+
+  useEffect(() => {
+    loadTasks();
+  }, []);
 
   if (isLoading) {
     return <div className="flex items-center justify-center h-full">Loading tasks...</div>;
@@ -60,10 +64,12 @@ const SimpleGanttChart = () => {
 
   // Get child tasks for a given parent ID
   const getChildTasks = (parentId: string): SimpleTask[] => {
-    console.log(`Getting children for task ${parentId}`);
-    const children = tasks.filter(task => task.parentId === parentId);
-    console.log(`Found ${children.length} children for task ${parentId}:`, children.map(c => ({ id: c.id, name: c.name })));
-    return children;
+    const parent = tasks.find(t => t.id === parentId);
+    if (!parent?.children) return [];
+    
+    return parent.children
+      .map(childId => tasks.find(t => t.id === childId))
+      .filter((t): t is SimpleTask => t !== undefined);
   };
 
   const hourMarkers = generateHourMarkers(earliestStart, totalHours, viewMode);
