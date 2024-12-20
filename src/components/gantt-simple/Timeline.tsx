@@ -93,25 +93,28 @@ const Timeline: React.FC<TimelineProps> = ({
         }}
       />
 
-      {/* Task bars */}
-      {visibleItems.map((item, index) => {
-        if (item.isGroupHeader) {
-          return null; // Don't render task bars for group headers
-        }
-        
-        return (
-          <GanttTask
-            key={item.task.id}
-            task={item.task}
-            index={index}
-            calculateTaskPosition={calculateTaskPosition}
-            calculateTaskWidth={calculateTaskWidth}
-            ROW_HEIGHT={ROW_HEIGHT}
-            TASK_HEIGHT={TASK_HEIGHT}
-            INDENT_WIDTH={20}
-          />
-        );
-      })}
+      {/* Task bars - only render non-header items (actual tasks) */}
+      {visibleItems
+        .filter(item => !item.isGroupHeader && item.task.type === 'task')
+        .map((item, index) => {
+          const task = item.task;
+          if (!task.startTime) return null;
+          
+          console.log(`Rendering task bar for: ${task.name}`);
+          
+          return (
+            <GanttTask
+              key={task.id}
+              task={task}
+              index={index}
+              calculateTaskPosition={calculateTaskPosition}
+              calculateTaskWidth={calculateTaskWidth}
+              ROW_HEIGHT={ROW_HEIGHT}
+              TASK_HEIGHT={TASK_HEIGHT}
+              INDENT_WIDTH={20}
+            />
+          );
+        })}
     </div>
   );
 };
