@@ -28,12 +28,21 @@ const Timeline: React.FC<TimelineProps> = ({
   const getVisibleTasksInOrder = () => {
     const visibleItems: SimpleTask[] = [];
     
+    // Helper function to process a task and its children
     const processTask = (task: SimpleTask) => {
-      if (!isTaskVisible(task)) return;
+      console.log(`Processing task: ${task.name}, type: ${task.type}`);
+      
+      if (!isTaskVisible(task)) {
+        console.log(`Task ${task.name} is not visible - parent not expanded`);
+        return;
+      }
       
       visibleItems.push(task);
+      console.log(`Added task to visible items: ${task.name}`);
       
+      // If task has children and is expanded, process them
       if (task.children && task.isExpanded) {
+        console.log(`Processing children of ${task.name}`);
         task.children.forEach(childId => {
           const childTask = tasks.find(t => t.id === childId);
           if (childTask) {
@@ -43,9 +52,12 @@ const Timeline: React.FC<TimelineProps> = ({
       }
     };
     
-    // Process root tasks (those without parents)
-    tasks.filter(t => !t.parentId).forEach(processTask);
+    // Start with root tasks (those without parents)
+    const rootTasks = tasks.filter(t => !t.parentId);
+    console.log(`Found ${rootTasks.length} root tasks`);
+    rootTasks.forEach(processTask);
     
+    console.log(`Total visible tasks: ${visibleItems.length}`);
     return visibleItems;
   };
 
