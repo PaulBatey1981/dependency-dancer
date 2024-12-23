@@ -11,38 +11,18 @@ export const useGanttTasks = () => {
   const buildTaskHierarchy = (tasksData: any[]) => {
     console.log('Building task hierarchy from:', tasksData);
     
-    // First, identify unique line items
-    const lineItems = tasksData
-      .filter(task => task.type === 'lineitem')
-      .reduce((unique: any[], task: any) => {
-        const exists = unique.find(t => t.line_item_id === task.line_item_id);
-        if (!exists) {
-          unique.push(task);
-        } else {
-          console.log(`Skipping duplicate line item: ${task.id} (${task.name})`);
-        }
-        return unique;
-      }, []);
-
-    console.log('Unique line items:', lineItems.map(item => ({ id: item.id, name: item.name })));
-    
-    // Create a map of tasks for easy lookup
+    // Create a map for quick task lookup
     const taskMap = new Map();
+    
+    // First pass: Create all task objects
     tasksData.forEach(task => {
-      // Skip if this is a duplicate line item
-      if (task.type === 'lineitem' && !lineItems.find(li => li.id === task.id)) {
-        console.log(`Skipping duplicate line item during map creation: ${task.id}`);
-        return;
-      }
-
-      const dependencies = task.task_dependencies?.map((dep: any) => dep.depends_on_id) || [];
       const startTime = task.start_time ? new Date(task.start_time) : new Date();
+      const dependencies = task.task_dependencies?.map((dep: any) => dep.depends_on_id) || [];
       
-      console.log(`Processing task: ${task.id}`, {
+      console.log(`Creating task object for ${task.id}:`, {
         name: task.name,
         type: task.type,
         startTime: startTime.toISOString(),
-        duration: task.duration,
         dependencies
       });
 
@@ -53,21 +33,21 @@ export const useGanttTasks = () => {
         startTime,
         duration: Number(task.duration),
         dependencies,
-        isExpanded: false,
+        isExpanded: task.type === 'lineitem', // Line items start expanded
         children: [],
         resource: task.resource_id,
-        isFixed: task.is_fixed,
+        isFixed: task.is_fixed
       });
     });
-
-    // Build parent-child relationships based on dependencies
-    taskMap.forEach((task) => {
+    
+    // Second pass: Build parent-child relationships
+    taskMap.forEach((task, taskId) => {
       task.dependencies.forEach(depId => {
-        const dependentTask = taskMap.get(depId);
-        if (dependentTask) {
-          if (!dependentTask.children.includes(task.id)) {
-            dependentTask.children.push(task.id);
-            console.log(`Added ${task.id} (${task.name}) as child of ${depId} (${dependentTask.name})`);
+        const parentTask = taskMap.get(depId);
+        if (parentTask) {
+          if (!parentTask.children.includes(taskId)) {
+            parentTask.children.push(taskId);
+            console.log(`Added ${taskId} as child of ${depId}`);
           }
         }
       });
@@ -79,8 +59,7 @@ export const useGanttTasks = () => {
       name: t.name,
       type: t.type,
       children: t.children,
-      startTime: t.startTime,
-      duration: t.duration
+      dependencies: t.dependencies
     })));
     
     return finalTasks;
