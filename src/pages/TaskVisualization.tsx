@@ -23,6 +23,7 @@ interface Task {
 const TaskVisualization = () => {
   const [tasks, setTasks] = useState<Task[]>([]);
   const [loading, setLoading] = useState(true);
+  const [taskMap, setTaskMap] = useState<Map<string, Task>>(new Map());
 
   useEffect(() => {
     loadTasks();
@@ -52,15 +53,19 @@ const TaskVisualization = () => {
 
       console.log('Transformed tasks:', transformedTasks);
 
-      // Build task hierarchy
-      const taskMap = new Map<string, Task>();
-      transformedTasks.forEach(task => taskMap.set(task.id, { ...task, children: [] }));
+      // Create a map for quick task lookups
+      const newTaskMap = new Map<string, Task>();
+      transformedTasks.forEach(task => {
+        newTaskMap.set(task.id, { ...task, children: [] });
+      });
+      setTaskMap(newTaskMap);
 
-      // Populate children arrays
+      // Build task hierarchy
+      const taskMapWithChildren = new Map(newTaskMap);
       transformedTasks.forEach(task => {
         task.dependencies.forEach(depId => {
-          const parentTask = taskMap.get(depId);
-          const childTask = taskMap.get(task.id);
+          const parentTask = taskMapWithChildren.get(depId);
+          const childTask = taskMapWithChildren.get(task.id);
           if (parentTask && childTask) {
             if (!parentTask.children) {
               parentTask.children = [];
@@ -71,8 +76,8 @@ const TaskVisualization = () => {
       });
 
       // Get root level tasks (those that are not children of any other task)
-      const rootTasks = Array.from(taskMap.values()).filter(task => {
-        return !Array.from(taskMap.values()).some(t => 
+      const rootTasks = Array.from(taskMapWithChildren.values()).filter(task => {
+        return !Array.from(taskMapWithChildren.values()).some(t => 
           t.children?.some(child => child.id === task.id)
         );
       });
@@ -128,8 +133,8 @@ const TaskVisualization = () => {
               <div className="text-sm text-gray-600">
                 Depends on:{' '}
                 {task.dependencies.map(depId => {
-                  const depTask = tasks.find(t => t.id === depId);
-                  return depTask ? depTask.name : depId;
+                  const depTask = taskMap.get(depId);
+                  return depTask ? `${depTask.name} (${depId})` : depId;
                 }).join(', ')}
               </div>
             </CardContent>
