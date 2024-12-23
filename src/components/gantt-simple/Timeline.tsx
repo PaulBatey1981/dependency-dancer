@@ -25,10 +25,12 @@ const Timeline: React.FC<TimelineProps> = ({
         console.log(`Processing task for timeline: ${task.name} (${task.id})`);
         taskMap.set(task.id, task);
         
-        if (task.children && task.children.length > 0 && task.isExpanded) {
+        // If task is expanded, process its children
+        if (task.isExpanded && task.children && task.children.length > 0) {
           task.children.forEach(childId => {
             const childTask = tasks.find(t => t.id === childId);
             if (childTask) {
+              console.log(`Processing child task: ${childTask.name} of parent: ${task.name}`);
               processTask(childTask);
             }
           });
@@ -38,10 +40,15 @@ const Timeline: React.FC<TimelineProps> = ({
     
     // Start with line items only
     const lineItems = tasks.filter(t => t.type === 'lineitem');
+    console.log('Processing line items:', lineItems.map(t => t.name));
     lineItems.forEach(processTask);
     
     const visibleTasks = Array.from(taskMap.values());
-    console.log('Visible tasks in timeline:', visibleTasks.map(t => ({ id: t.id, name: t.name })));
+    console.log('Visible tasks in timeline:', visibleTasks.map(t => ({ 
+      id: t.id, 
+      name: t.name,
+      children: t.children?.length || 0
+    })));
     return visibleTasks;
   };
 
