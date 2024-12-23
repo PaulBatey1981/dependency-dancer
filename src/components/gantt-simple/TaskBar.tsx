@@ -10,11 +10,11 @@ import {
 import { Button } from '@/components/ui/button';
 
 interface TaskBarProps {
-  task: SimpleTask;
-  position: number; // Horizontal position in %
-  width: number; // Task bar width in %
-  rowIndex: number; // Index of the row
-  level: number; // Indentation level
+  task: SimpleTask & { rowIndex: number };
+  position: number;
+  width: number;
+  rowIndex: number;
+  level: number;
   onToggleExpand: (taskId: string) => void;
 }
 

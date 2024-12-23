@@ -10,6 +10,11 @@ interface TimelineProps {
   calculateTaskWidth: (duration: number) => number;
 }
 
+// Define an interface for tasks with row indices
+interface TaskWithIndex extends SimpleTask {
+  rowIndex: number;
+}
+
 const Timeline: React.FC<TimelineProps> = ({
   hourMarkers,
   tasks,
@@ -18,14 +23,14 @@ const Timeline: React.FC<TimelineProps> = ({
 }) => {
   // Get all visible tasks in the correct order
   const getVisibleTasksInOrder = () => {
-    const visibleTasks: SimpleTask[] = [];
+    const visibleTasks: TaskWithIndex[] = [];
     let currentIndex = 0;
     
     const processTask = (task: SimpleTask, level: number) => {
       console.log(`Processing task for timeline: ${task.name} (${task.id}) at level ${level}`);
       
       // Add task to visible tasks with its row index
-      const taskWithIndex = {
+      const taskWithIndex: TaskWithIndex = {
         ...task,
         rowIndex: currentIndex++
       };
@@ -98,7 +103,7 @@ const Timeline: React.FC<TimelineProps> = ({
             task={task}
             position={position}
             width={width}
-            rowIndex={task.rowIndex || 0}
+            rowIndex={task.rowIndex}
             level={0}
             onToggleExpand={(taskId) => {
               const taskToToggle = tasks.find(t => t.id === taskId);
