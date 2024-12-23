@@ -34,7 +34,7 @@ const SimpleGanttChart = () => {
   const getChildTasks = (parentId: string) => {
     console.log(`Getting children for task ${parentId}`);
     const childTasks = tasks.filter(task => task.dependencies.includes(parentId));
-    console.log(`Found ${childTasks.length} children for task ${parentId}:`, childTasks.map(t => t.id));
+    console.log(`Found ${childTasks.length} children for task ${parentId}:`, childTasks.map(t => ({ id: t.id, name: t.name })));
     return childTasks;
   };
 
@@ -61,18 +61,23 @@ const SimpleGanttChart = () => {
     
     const processTask = (task: any) => {
       visibleTasks.add(task.id);
-      if (task.isExpanded) {
+      // For line items or expanded tasks, process their children
+      if (task.type === 'lineitem' || task.isExpanded) {
         const children = getChildTasks(task.id);
         children.forEach(child => processTask(child));
       }
     };
 
+    // Process all tasks starting from line items
     lineItems.forEach(task => processTask(task));
-    return Array.from(visibleTasks);
+    
+    const visibleTaskIds = Array.from(visibleTasks);
+    console.log('Visible task IDs:', visibleTaskIds);
+    console.log('Visible tasks:', tasks.filter(t => visibleTaskIds.includes(t.id)).map(t => t.name));
+    return visibleTaskIds;
   };
 
   const visibleTaskIds = getVisibleTasks();
-  console.log('Visible task IDs:', visibleTaskIds);
 
   return (
     <div className="flex flex-col h-full">
