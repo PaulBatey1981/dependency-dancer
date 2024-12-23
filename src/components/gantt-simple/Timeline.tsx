@@ -18,24 +18,28 @@ const Timeline: React.FC<TimelineProps> = ({
 }) => {
   // Get all visible tasks in the correct order
   const getVisibleTasksInOrder = () => {
-    const taskMap = new Map<string, SimpleTask>();
-    let rowIndex = 0;
+    const visibleTasks: SimpleTask[] = [];
+    let currentIndex = 0;
     
     const processTask = (task: SimpleTask, level: number) => {
-      if (!taskMap.has(task.id)) {
-        console.log(`Processing task for timeline: ${task.name} (${task.id}) at level ${level}`);
-        taskMap.set(task.id, { ...task, rowIndex: rowIndex++ });
-        
-        // If task is expanded, process its children
-        if (task.isExpanded && task.children && task.children.length > 0) {
-          task.children.forEach(childId => {
-            const childTask = tasks.find(t => t.id === childId);
-            if (childTask) {
-              console.log(`Processing child task: ${childTask.name} of parent: ${task.name}`);
-              processTask(childTask, level + 1);
-            }
-          });
-        }
+      console.log(`Processing task for timeline: ${task.name} (${task.id}) at level ${level}`);
+      
+      // Add task to visible tasks with its row index
+      const taskWithIndex = {
+        ...task,
+        rowIndex: currentIndex++
+      };
+      visibleTasks.push(taskWithIndex);
+      
+      // If task is expanded, process its children
+      if (task.isExpanded && task.children && task.children.length > 0) {
+        task.children.forEach(childId => {
+          const childTask = tasks.find(t => t.id === childId);
+          if (childTask) {
+            console.log(`Processing child task: ${childTask.name} of parent: ${task.name}`);
+            processTask(childTask, level + 1);
+          }
+        });
       }
     };
     
@@ -44,13 +48,13 @@ const Timeline: React.FC<TimelineProps> = ({
     console.log('Processing line items:', lineItems.map(t => t.name));
     lineItems.forEach(task => processTask(task, 0));
     
-    const visibleTasks = Array.from(taskMap.values());
     console.log('Visible tasks in timeline:', visibleTasks.map(t => ({ 
       id: t.id, 
       name: t.name,
       rowIndex: t.rowIndex,
       children: t.children?.length || 0
     })));
+    
     return visibleTasks;
   };
 
