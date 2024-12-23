@@ -4,6 +4,13 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { Button } from '@/components/ui/button';
 import { ArrowRight } from 'lucide-react';
 import { toast } from '@/components/ui/use-toast';
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 
 interface Task {
   id: string;
@@ -44,7 +51,34 @@ const TaskVisualization = () => {
       }));
 
       console.log('Transformed tasks:', transformedTasks);
-      setTasks(transformedTasks);
+
+      // Build task hierarchy
+      const taskMap = new Map<string, Task>();
+      transformedTasks.forEach(task => taskMap.set(task.id, { ...task, children: [] }));
+
+      // Populate children arrays
+      transformedTasks.forEach(task => {
+        task.dependencies.forEach(depId => {
+          const parentTask = taskMap.get(depId);
+          const childTask = taskMap.get(task.id);
+          if (parentTask && childTask) {
+            if (!parentTask.children) {
+              parentTask.children = [];
+            }
+            parentTask.children.push(childTask);
+          }
+        });
+      });
+
+      // Get root level tasks (those that are not children of any other task)
+      const rootTasks = Array.from(taskMap.values()).filter(task => {
+        return !Array.from(taskMap.values()).some(t => 
+          t.children?.some(child => child.id === task.id)
+        );
+      });
+
+      console.log('Root tasks:', rootTasks);
+      setTasks(rootTasks);
     } catch (error) {
       console.error('Error loading tasks:', error);
       toast({
@@ -57,65 +91,58 @@ const TaskVisualization = () => {
     }
   };
 
-  const renderTask = (task: Task, level: number = 0, visited = new Set<string>()) => {
-    // Prevent infinite recursion
-    if (visited.has(task.id)) {
-      console.log(`Circular dependency detected for task: ${task.id}`);
-      return null;
+  const getTypeStyle = (type: string) => {
+    switch (type) {
+      case 'lineitem':
+        return 'bg-purple-50 border-purple-200';
+      case 'component':
+        return 'bg-blue-50 border-blue-200';
+      case 'element':
+        return 'bg-green-50 border-green-200';
+      default:
+        return 'bg-gray-50 border-gray-200';
     }
-    visited.add(task.id);
+  };
 
-    // Find child tasks (tasks that depend on this task)
-    const childTasks = tasks.filter(t => t.dependencies.includes(task.id));
-    console.log(`Task ${task.id} has ${childTasks.length} children`);
-
-    const getTypeColor = (type: string) => {
-      switch (type) {
-        case 'lineitem':
-          return 'bg-purple-100 border-purple-300';
-        case 'component':
-          return 'bg-blue-100 border-blue-300';
-        case 'element':
-          return 'bg-green-100 border-green-300';
-        default:
-          return 'bg-gray-100 border-gray-300';
-      }
-    };
-
+  const renderTask = (task: Task, level: number = 0) => {
     return (
-      <div key={task.id} className="mb-2" style={{ marginLeft: `${level * 24}px` }}>
-        <div className={`p-3 rounded-lg border ${getTypeColor(task.type)} relative`}>
-          <div className="flex items-center justify-between">
-            <div>
-              <span className="font-medium">{task.name}</span>
-              <span className="ml-2 text-sm text-gray-500">({task.type})</span>
-            </div>
-            {task.dependencies.length > 0 && (
-              <div className="text-sm text-gray-500">
-                Dependencies: {task.dependencies.length}
+      <div key={task.id} className="mb-4" style={{ marginLeft: `${level * 24}px` }}>
+        <Card className={`${getTypeStyle(task.type)} border`}>
+          <CardHeader className="py-3">
+            <div className="flex justify-between items-center">
+              <div>
+                <CardTitle className="text-base">{task.name}</CardTitle>
+                <CardDescription className="text-sm">
+                  Type: {task.type}
+                </CardDescription>
               </div>
-            )}
-          </div>
-          {task.dependencies.length > 0 && (
-            <div className="mt-2 text-sm text-gray-600">
-              Depends on:{' '}
-              {task.dependencies.map(depId => {
-                const depTask = tasks.find(t => t.id === depId);
-                return depTask ? depTask.name : depId;
-              }).join(', ')}
+              {task.dependencies.length > 0 && (
+                <span className="text-sm text-gray-500">
+                  Dependencies: {task.dependencies.length}
+                </span>
+              )}
             </div>
+          </CardHeader>
+          {task.dependencies.length > 0 && (
+            <CardContent className="py-2">
+              <div className="text-sm text-gray-600">
+                Depends on:{' '}
+                {task.dependencies.map(depId => {
+                  const depTask = tasks.find(t => t.id === depId);
+                  return depTask ? depTask.name : depId;
+                }).join(', ')}
+              </div>
+            </CardContent>
           )}
-        </div>
-        {childTasks.length > 0 && (
+        </Card>
+        {task.children && task.children.length > 0 && (
           <div className="ml-4 mt-2 pl-4 border-l border-gray-300">
-            {childTasks.map(childTask => renderTask(childTask, level + 1, new Set(visited)))}
+            {task.children.map(childTask => renderTask(childTask, level + 1))}
           </div>
         )}
       </div>
     );
   };
-
-  const lineItems = tasks.filter(task => task.type === 'lineitem');
 
   if (loading) {
     return <div className="flex items-center justify-center h-screen">Loading tasks...</div>;
@@ -133,7 +160,7 @@ const TaskVisualization = () => {
       
       <div className="bg-white rounded-lg shadow">
         <ScrollArea className="h-[calc(100vh-12rem)] p-6">
-          {lineItems.map(task => renderTask(task))}
+          {tasks.map(task => renderTask(task))}
         </ScrollArea>
       </div>
     </div>
