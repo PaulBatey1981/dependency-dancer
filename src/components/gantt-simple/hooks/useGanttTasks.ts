@@ -36,13 +36,23 @@ export const useGanttTasks = () => {
       }
 
       const dependencies = task.task_dependencies?.map((dep: any) => dep.depends_on_id) || [];
+      const startTime = task.start_time ? new Date(task.start_time) : new Date();
+      
+      console.log(`Processing task: ${task.id}`, {
+        name: task.name,
+        type: task.type,
+        startTime: startTime.toISOString(),
+        duration: task.duration,
+        dependencies
+      });
+
       taskMap.set(task.id, {
         id: task.id,
         name: task.name,
         type: task.type,
-        startTime: task.start_time ? new Date(task.start_time) : new Date(),
+        startTime,
         duration: Number(task.duration),
-        dependencies: dependencies,
+        dependencies,
         isExpanded: false,
         children: [],
         resource: task.resource_id,
@@ -85,8 +95,7 @@ export const useGanttTasks = () => {
           .select(`
             *,
             task_dependencies!task_dependencies_task_id_fkey(depends_on_id)
-          `)
-          .order('type', { ascending: true });
+          `);
 
         if (tasksError) {
           console.error('Error fetching tasks:', tasksError);

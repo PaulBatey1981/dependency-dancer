@@ -38,22 +38,33 @@ export const useScheduleData = () => {
           task_dependencies!task_dependencies_task_id_fkey(depends_on_id)
         `);
 
-      if (tasksError) throw tasksError;
+      if (tasksError) {
+        console.error('Error fetching tasks:', tasksError);
+        throw tasksError;
+      }
 
       if (!tasksData?.length) {
         console.log('No tasks found, creating initial tasks...');
         const deadline = new Date('2024-12-20T10:00:00');
         const initialTasks = [...createProductTasks('MWB1', deadline), ...createProductTasks('MWB2', deadline)];
         await saveTasks(initialTasks);
+        console.log('Initial tasks created:', initialTasks);
         setTasks(initialTasks);
       } else {
-        console.log('Tasks loaded from Supabase:', tasksData);
-        const formattedTasks: Task[] = tasksData.map(task => ({
-          ...task,
-          startTime: task.start_time ? new Date(task.start_time) : undefined,
-          endTime: task.end_time ? new Date(task.end_time) : undefined,
-          dependencies: task.task_dependencies?.map((dep: any) => dep.depends_on_id) || []
-        }));
+        console.log('Raw tasks data from Supabase:', tasksData);
+        
+        const formattedTasks: Task[] = tasksData.map(task => {
+          const formattedTask = {
+            ...task,
+            startTime: task.start_time ? new Date(task.start_time) : undefined,
+            endTime: task.end_time ? new Date(task.end_time) : undefined,
+            dependencies: task.task_dependencies?.map((dep: any) => dep.depends_on_id) || []
+          };
+          console.log('Formatted task:', formattedTask);
+          return formattedTask;
+        });
+        
+        console.log('All formatted tasks:', formattedTasks);
         setTasks(formattedTasks);
       }
     } catch (error) {
