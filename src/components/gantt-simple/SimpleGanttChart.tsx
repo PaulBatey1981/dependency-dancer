@@ -45,7 +45,7 @@ const SimpleGanttChart = () => {
     if (!task.startTime) return 0;
     const hoursFromStart = (task.startTime.getTime() - earliestStart.getTime()) / (1000 * 60 * 60);
     const position = (hoursFromStart / totalHours) * 100;
-    console.log(`Task ${task.id} position: ${position}`);
+    console.log(`Task ${task.id} position: ${position}%`);
     return position;
   };
 
@@ -54,6 +54,25 @@ const SimpleGanttChart = () => {
     console.log(`Task width: ${width}%`);
     return width;
   };
+
+  // Get all visible tasks based on expansion state
+  const getVisibleTasks = () => {
+    const visibleTasks = new Set<string>();
+    
+    const processTask = (task: any) => {
+      visibleTasks.add(task.id);
+      if (task.isExpanded) {
+        const children = getChildTasks(task.id);
+        children.forEach(child => processTask(child));
+      }
+    };
+
+    lineItems.forEach(task => processTask(task));
+    return Array.from(visibleTasks);
+  };
+
+  const visibleTaskIds = getVisibleTasks();
+  console.log('Visible task IDs:', visibleTaskIds);
 
   return (
     <div className="flex flex-col h-full">
@@ -103,7 +122,7 @@ const SimpleGanttChart = () => {
               >
                 <Timeline 
                   hourMarkers={hourMarkers}
-                  tasks={tasks}
+                  tasks={tasks.filter(t => visibleTaskIds.includes(t.id))}
                   calculateTaskPosition={calculateTaskPosition}
                   calculateTaskWidth={calculateTaskWidth}
                 />
