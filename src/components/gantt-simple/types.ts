@@ -10,4 +10,5 @@ export interface SimpleTask {
   children?: string[];
   resource?: string | null;
   isFixed: boolean;
+  rowIndex?: number; // Added this optional property
 }
