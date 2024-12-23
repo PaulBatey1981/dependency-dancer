@@ -30,11 +30,14 @@ const SimpleGanttChart = () => {
   const lineItems = tasks.filter(task => task.type === 'lineitem');
   console.log('Line items:', lineItems.map(t => ({ id: t.id, name: t.name })));
 
-  // Get child tasks for a given parent ID
+  // Get child tasks for a given parent ID - tasks that have this parent in their dependencies
   const getChildTasks = (parentId: string) => {
     console.log(`Getting children for task ${parentId}`);
-    const childTasks = tasks.filter(task => task.dependencies.includes(parentId));
-    console.log(`Found ${childTasks.length} children for task ${parentId}:`, childTasks.map(t => ({ id: t.id, name: t.name })));
+    // A task is a child if the parent ID is in its dependencies array
+    const childTasks = tasks.filter(task => task.dependencies?.includes(parentId));
+    console.log(`Found ${childTasks.length} children for task ${parentId}:`, 
+      childTasks.map(t => ({ id: t.id, name: t.name, dependencies: t.dependencies }))
+    );
     return childTasks;
   };
 
@@ -60,20 +63,32 @@ const SimpleGanttChart = () => {
     const visibleTasks = new Set<string>();
     
     const processTask = (task: any) => {
+      console.log(`Processing task for visibility: ${task.name} (${task.id})`);
       visibleTasks.add(task.id);
-      // For line items or expanded tasks, process their children
+      
+      // Always process children for line items, and for expanded tasks
       if (task.type === 'lineitem' || task.isExpanded) {
         const children = getChildTasks(task.id);
-        children.forEach(child => processTask(child));
+        console.log(`Processing ${children.length} children for task ${task.name}`);
+        children.forEach(child => {
+          console.log(`Processing child: ${child.name} (${child.id})`);
+          processTask(child);
+        });
       }
     };
 
-    // Process all tasks starting from line items
-    lineItems.forEach(task => processTask(task));
+    // Start with line items
+    lineItems.forEach(task => {
+      console.log(`Starting visibility processing for line item: ${task.name}`);
+      processTask(task);
+    });
     
     const visibleTaskIds = Array.from(visibleTasks);
-    console.log('Visible task IDs:', visibleTaskIds);
-    console.log('Visible tasks:', tasks.filter(t => visibleTaskIds.includes(t.id)).map(t => t.name));
+    const visibleTasksDetails = tasks
+      .filter(t => visibleTaskIds.includes(t.id))
+      .map(t => ({ id: t.id, name: t.name, type: t.type }));
+    
+    console.log('Visible tasks:', visibleTasksDetails);
     return visibleTaskIds;
   };
 
