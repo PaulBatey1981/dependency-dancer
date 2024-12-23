@@ -33,7 +33,7 @@ export const useGanttTasks = () => {
         startTime,
         duration: Number(task.duration),
         dependencies,
-        isExpanded: task.type === 'lineitem', // Line items start expanded
+        isExpanded: task.type === 'lineitem',
         children: [], // Will be populated in second pass
         resource: task.resource_id,
         isFixed: task.is_fixed
@@ -41,14 +41,14 @@ export const useGanttTasks = () => {
     });
     
     // Second pass: Build parent-child relationships
-    // Important: If A depends on B, then B is A's parent (not child)
+    // If A depends on B, then A is B's child
     taskMap.forEach((task, taskId) => {
       task.dependencies.forEach(parentId => {
         const parentTask = taskMap.get(parentId);
         if (parentTask) {
           if (!parentTask.children.includes(taskId)) {
             parentTask.children.push(taskId);
-            console.log(`Added ${taskId} as child of ${parentId} (${task.name} depends on ${parentTask.name})`);
+            console.log(`Added ${task.name} as child of ${parentTask.name}`);
           }
         }
       });
