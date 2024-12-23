@@ -1,5 +1,5 @@
 import { Button } from '@/components/ui/button';
-import { Settings, LayoutGrid, GanttChart as GanttIcon } from 'lucide-react';
+import { Settings, LayoutGrid, GanttChart as GanttIcon, Tree } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 
 interface ScheduleHeaderProps {
@@ -46,10 +46,16 @@ const ScheduleHeader = ({ view, setView, onReschedule }: ScheduleHeaderProps) =>
               Simple Gantt
             </Button>
           </div>
-          <Button onClick={() => navigate('/settings')} variant="outline">
-            <Settings className="mr-2" />
-            Line Item Settings
-          </Button>
+          <div className="flex gap-2">
+            <Button onClick={() => navigate('/visualization')} variant="outline">
+              <Tree className="w-4 h-4 mr-2" />
+              Task Visualization
+            </Button>
+            <Button onClick={() => navigate('/settings')} variant="outline">
+              <Settings className="w-4 h-4 mr-2" />
+              Line Item Settings
+            </Button>
+          </div>
         </div>
       </div>
       
