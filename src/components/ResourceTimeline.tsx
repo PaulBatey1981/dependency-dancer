@@ -12,6 +12,9 @@ interface ResourceTimelineProps {
 }
 
 const ResourceTimeline = ({ tasks, resources }: ResourceTimelineProps) => {
+  console.log('ResourceTimeline - Tasks:', tasks);
+  console.log('ResourceTimeline - Resources:', resources);
+
   const getTaskColor = (type: Task['type']) => {
     switch (type) {
       case 'lineitem':
@@ -31,21 +34,25 @@ const ResourceTimeline = ({ tasks, resources }: ResourceTimelineProps) => {
     return `${(hoursFromStart / 24) * 100}%`;
   };
 
+  // Filter out tasks without resource_id or startTime
+  const validTasks = tasks.filter(task => task.resource_id && task.startTime);
+  console.log('Valid tasks for timeline:', validTasks.length);
+
   return (
     <div className="space-y-6">
-      {resources.map(resource => (
-        <Card key={resource.id} className="p-4">
-          <h3 className="font-semibold mb-2">{resource.name}</h3>
-          <div className="relative h-20 bg-gray-100 rounded">
-            {tasks
-              .filter(task => task.resource_id === resource.id && task.startTime)
-              .map(task => (
+      {resources.map(resource => {
+        const resourceTasks = validTasks.filter(task => task.resource_id === resource.id);
+        console.log(`Tasks for resource ${resource.id}:`, resourceTasks.length);
+        
+        return (
+          <Card key={resource.id} className="p-4">
+            <h3 className="font-semibold mb-2">{resource.name}</h3>
+            <div className="relative h-20 bg-gray-100 rounded">
+              {resourceTasks.map(task => (
                 <HoverCard key={task.id} openDelay={0} closeDelay={0}>
                   <HoverCardTrigger asChild>
                     <div
-                      className={`absolute h-16 mt-2 rounded ${getTaskColor(
-                        task.type
-                      )} opacity-80 cursor-pointer ${
+                      className={`absolute h-16 mt-2 rounded ${getTaskColor(task.type)} opacity-80 cursor-pointer ${
                         task.is_fixed ? 'border-2 border-task-fixed' : ''
                       }`}
                       style={{
@@ -83,9 +90,10 @@ const ResourceTimeline = ({ tasks, resources }: ResourceTimelineProps) => {
                   </HoverCardContent>
                 </HoverCard>
               ))}
-          </div>
-        </Card>
-      ))}
+            </div>
+          </Card>
+        );
+      })}
     </div>
   );
 };

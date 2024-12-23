@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { SimpleTask } from '../types';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/components/ui/use-toast';
@@ -68,50 +68,56 @@ export const useGanttTasks = () => {
       id: t.id,
       name: t.name,
       type: t.type,
-      children: t.children
+      children: t.children,
+      startTime: t.startTime,
+      duration: t.duration
     })));
     
     return finalTasks;
   };
 
-  const loadTasks = async () => {
-    try {
-      console.log('Loading tasks from Supabase...');
-      const { data: tasksData, error: tasksError } = await supabase
-        .from('tasks')
-        .select(`
-          *,
-          task_dependencies!task_dependencies_task_id_fkey(depends_on_id)
-        `)
-        .order('type', { ascending: true });
+  useEffect(() => {
+    const loadTasks = async () => {
+      try {
+        console.log('Loading tasks from Supabase...');
+        const { data: tasksData, error: tasksError } = await supabase
+          .from('tasks')
+          .select(`
+            *,
+            task_dependencies!task_dependencies_task_id_fkey(depends_on_id)
+          `)
+          .order('type', { ascending: true });
 
-      if (tasksError) {
-        console.error('Error fetching tasks:', tasksError);
-        throw tasksError;
-      }
+        if (tasksError) {
+          console.error('Error fetching tasks:', tasksError);
+          throw tasksError;
+        }
 
-      if (!tasksData?.length) {
-        console.log('No tasks found in Supabase, using sample data');
+        if (!tasksData?.length) {
+          console.log('No tasks found in Supabase, using sample data');
+          setTasks(sampleTasks);
+          return;
+        }
+
+        console.log('Raw tasks data from Supabase:', tasksData);
+        const hierarchicalTasks = buildTaskHierarchy(tasksData);
+        setTasks(hierarchicalTasks);
+
+      } catch (error) {
+        console.error('Error loading tasks:', error);
+        toast({
+          title: "Error loading tasks",
+          description: "Using sample data as fallback.",
+          variant: "destructive",
+        });
         setTasks(sampleTasks);
-        return;
+      } finally {
+        setIsLoading(false);
       }
+    };
 
-      console.log('Raw tasks data from Supabase:', tasksData);
-      const hierarchicalTasks = buildTaskHierarchy(tasksData);
-      setTasks(hierarchicalTasks);
+    loadTasks();
+  }, []);
 
-    } catch (error) {
-      console.error('Error loading tasks:', error);
-      toast({
-        title: "Error loading tasks",
-        description: "Using sample data as fallback.",
-        variant: "destructive",
-      });
-      setTasks(sampleTasks);
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  return { tasks, setTasks, isLoading, loadTasks };
+  return { tasks, setTasks, isLoading };
 };

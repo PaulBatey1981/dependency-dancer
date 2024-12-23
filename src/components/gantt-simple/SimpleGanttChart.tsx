@@ -40,6 +40,21 @@ const SimpleGanttChart = () => {
 
   const hourMarkers = generateHourMarkers(earliestStart, totalHours, viewMode);
 
+  // Calculate task positions
+  const calculateTaskPosition = (task: any) => {
+    if (!task.startTime) return 0;
+    const hoursFromStart = (task.startTime.getTime() - earliestStart.getTime()) / (1000 * 60 * 60);
+    const position = (hoursFromStart / totalHours) * 100;
+    console.log(`Task ${task.id} position: ${position}`);
+    return position;
+  };
+
+  const calculateTaskWidth = (duration: number) => {
+    const width = (duration / totalHours) * 100;
+    console.log(`Task width: ${width}%`);
+    return width;
+  };
+
   return (
     <div className="flex flex-col h-full">
       <div className="shrink-0 mb-4">
@@ -89,18 +104,8 @@ const SimpleGanttChart = () => {
                 <Timeline 
                   hourMarkers={hourMarkers}
                   tasks={tasks}
-                  calculateTaskPosition={(task) => {
-                    if (!task.startTime) return 0;
-                    const hoursFromStart = (task.startTime.getTime() - earliestStart.getTime()) / (1000 * 60 * 60);
-                    const position = (hoursFromStart / totalHours) * 100;
-                    console.log(`Task ${task.id} position: ${position}`);
-                    return position;
-                  }}
-                  calculateTaskWidth={(duration) => {
-                    const width = (duration / totalHours) * 100;
-                    console.log(`Task width: ${width}%`);
-                    return width;
-                  }}
+                  calculateTaskPosition={calculateTaskPosition}
+                  calculateTaskWidth={calculateTaskWidth}
                 />
               </div>
               <ScrollBar />
